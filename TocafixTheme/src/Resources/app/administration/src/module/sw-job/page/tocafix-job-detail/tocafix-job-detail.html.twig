@@ -1,0 +1,64 @@
+{% block tocafix_job_detail %}
+    <sw-page class="tocafix-job-detail">
+        <template slot="smart-bar-actions">
+            <sw-button :routerLink="{ name: 'tocafix.job.list' }">
+                {{ $t('tocafix-job.detail.cancelButtonText') }}
+            </sw-button>
+
+            <sw-button-process
+                :isLoading="isLoading"
+                :processSuccess="processSuccess"
+                variant="primary"
+                @process-finish="saveFinish"
+                @click="onClickSave">
+                {{ $t('tocafix-job.detail.saveButtonText') }}
+            </sw-button-process>
+        </template>
+
+        <template #language-switch>
+            <sw-language-switch slot="language-switch" @on-change="onChangeLanguage"></sw-language-switch>
+        </template>
+
+        <template slot="content">
+            <sw-card-view>
+                <sw-card v-if="job" :isLoading="isLoading">
+                    <sw-field
+                        :label="$t('tocafix-job.detail.nameLabel')"
+                        v-model="job.name"
+                        required
+                        :error="jobNameError">
+                    </sw-field>
+
+                    <sw-datepicker
+                        dateType="date"
+                        :label="$t('tocafix-job.detail.jobDateLabel')"
+                        size="default"
+                        v-model="job.jobDate"
+                        required
+                        :error="jobJobDateError">
+                    </sw-datepicker>
+
+                    <sw-text-editor 
+                        :label="$t('tocafix-job.detail.shortDescriptionTeaserLabel')"
+                        v-model="job.shortDescriptionTeaser">
+                    </sw-text-editor>
+
+                    <sw-text-editor 
+                        :label="$t('tocafix-job.detail.shortDescriptionDetailLabel')"
+                        v-model="job.shortDescriptionDetail">
+                    </sw-text-editor>
+
+                    <sw-text-editor 
+                        :label="$t('tocafix-job.detail.descriptionLabel')"
+                        v-model="job.description">
+                    </sw-text-editor>
+
+                    <sw-media-field
+                        :label="$t('tocafix-job.detail.mediaLabel')"
+                        v-model="job.mediaId">
+                    </sw-media-field>
+                </sw-card>
+            </sw-card-view>
+        </template>
+    </sw-page>
+{% endblock %}

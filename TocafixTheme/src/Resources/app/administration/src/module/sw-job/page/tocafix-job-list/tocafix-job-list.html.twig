@@ -1,0 +1,52 @@
+{% block tocafix_job_list %}
+    <sw-page class="tocafix-job-list">
+
+        {% block tocafix_job_list_smart_bar_header %}
+            <template slot="smart-bar-header">
+                {% block tocafix_job_list_smart_bar_header_title %}
+                    <h2>
+                        {% block tocafix_job_list_smart_bar_header_title_text %}
+                            {{ $tc('tocafix-job.list.textJobOverview') }}
+                        {% endblock %}
+
+                        {% block tocafix_job_list_smart_bar_header_amount %}
+                            <span v-if="!isLoading" class="sw-page__smart-bar-amount">
+                                ({{ jobs.total }})
+                            </span>
+                        {% endblock %}
+                    </h2>
+                {% endblock %}
+            </template>
+        {% endblock %}
+
+        {% block tocafix_job_list_smart_bar_actions %}
+            <template slot="smart-bar-actions">
+                <sw-button variant="primary" :routerLink="{ name: 'tocafix.job.create' }">
+                    {{ $t('tocafix-job.list.addButtonText') }}
+                </sw-button>
+            </template>
+        {% endblock %}
+
+        <template #language-switch>
+            <sw-language-switch @on-change="onChangeLanguage"></sw-language-switch>
+        </template>
+
+        <template slot="content">
+            {% block tocafix_job_list_content %}
+                <sw-entity-listing
+                    v-if="jobs"
+                    :items="jobs"
+                    :repository="repository"
+                    :showSelection="false"
+                    :columns="columns"
+                    detailRoute="tocafix.job.detail">
+                    {% block tocafix_job_list_grid_columns_job_date %}
+                        <template #column-jobDate="{ item }">
+                            {{ item.jobDate|dateFilter() }}
+                        </template>
+                    {% endblock %}
+                </sw-entity-listing>
+            {% endblock %}
+        </template>
+    </sw-page>
+{% endblock %}

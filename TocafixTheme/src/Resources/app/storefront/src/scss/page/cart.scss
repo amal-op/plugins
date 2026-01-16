@@ -1,0 +1,13 @@
+@include media-breakpoint-up(md) {
+    .cart-add-product {
+        max-width: 100%;
+    }
+}
+
+.cart-add-delivery-date{
+    margin-top: rem(20);
+}
+
+.checkout-aside-summary-total, .cart-item-label{
+    font-weight: 600;
+}

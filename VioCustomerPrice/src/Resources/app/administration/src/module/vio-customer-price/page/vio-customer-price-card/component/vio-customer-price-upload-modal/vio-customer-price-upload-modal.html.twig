@@ -1,0 +1,26 @@
+{% block vio_customer_price_collective_entry %}
+<sw-modal
+    :title="$tc('vio-customer-price.list.importUpload')"
+    @modal-close="$emit('modal-close')"
+>
+    <sw-container>
+        <sw-alert :variant="importCount > 0 ? 'success' : 'error'" :showIcon="true" :closable="false" v-if="importCount != null">
+            {{ $tc('vio-customer-price.importUpload.hint', importCount) }}
+        </sw-alert>
+        <sw-file-input v-model="importFile">
+            <template #caption-label>
+                {{ $tc('sw-import-export.importer.labelUploadCaption') }}
+            </template>
+        </sw-file-input>
+        <sw-button
+            :disabled="importFile == null"
+            @click="upload('importUpload')"
+        >
+            {{ $tc('vio-customer-price.importUpload.uploadButton') }}
+        </sw-button>
+    </sw-container>
+
+    <sw-loader size="100" v-if="isLoading"></sw-loader>
+
+</sw-modal>
+{% endblock %}

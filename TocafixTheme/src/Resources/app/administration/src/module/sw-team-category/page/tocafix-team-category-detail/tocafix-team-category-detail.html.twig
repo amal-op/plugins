@@ -1,0 +1,35 @@
+{% block tocafix_team_category_detail %}
+    <sw-page class="tocafix-team-category-detail">
+        <template slot="smart-bar-actions">
+            <sw-button :routerLink="{ name: 'tocafix.team.category.list' }">
+                {{ $t('tocafix-team-category.detail.cancelButtonText') }}
+            </sw-button>
+
+            <sw-button-process
+                :isLoading="isLoading"
+                :processSuccess="processSuccess"
+                variant="primary"
+                @process-finish="saveFinish"
+                @click="onClickSave">
+                {{ $t('tocafix-team-category.detail.saveButtonText') }}
+            </sw-button-process>
+        </template>
+
+        <template #language-switch>
+            <sw-language-switch slot="language-switch" @on-change="onChangeLanguage"></sw-language-switch>
+        </template>
+
+        <template slot="content">
+            <sw-card-view>
+                <sw-card v-if="teamCategory" :isLoading="isLoading">
+                    <sw-field
+                        :label="$t('tocafix-team-category.detail.nameLabel')"
+                        v-model="teamCategory.name"
+                        required
+                        :error="teamCategoryNameError">
+                    </sw-field>
+                </sw-card>
+            </sw-card-view>
+        </template>
+    </sw-page>
+{% endblock %}

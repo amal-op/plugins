@@ -1,0 +1,68 @@
+{% sw_extends '@ShopwareBundlePlugin/storefront/block/cms-block-hatslogic-section.html.twig' %}
+
+{% block block_hatslogic_section %}
+
+	{# CTA Block Background #}
+	{% set backgroundElement = block.slots.getSlot('background') %}
+	{% set desktopMedia = backgroundElement.data.mediaDesktop %}
+	{% set tabletMedia = backgroundElement.data.mediaTablet %}
+	{% set mobileMedia = backgroundElement.data.mediaMobile %}	
+
+	{% set hasBgImage = false %}
+	{% if (desktopMedia || tabletMedia || mobileMedia) %}
+		{% set hasBgImage = true %}
+	{% endif %}
+
+	<div class="section__block-wrapper padding-top padding-bottom{% if hasBgImage %} has-bg-image{% endif %}">
+		{% block block_hatslogic_section_foreground %}
+			<div class="section__foreground">
+				<div class="container">
+					{% block block_hatslogic_section_title %}
+						{% set element = block.slots.getSlot('title') %}
+						{% sw_include "@Storefront/storefront/element/cms-element-" ~ element.type ~ ".html.twig" ignore missing  %}
+					{% endblock %}
+
+					{% block block_hatslogic_section_content %}
+						<div class="section__content cms-element-hatslogic-section-block">
+							{% set element = block.slots.getSlot('content1') %}
+							<div class="item item-1">
+							{% sw_include "@Storefront/storefront/element/cms-element-" ~ element.type ~ ".html.twig" ignore missing  %}
+							</div>
+
+							{% set element = block.slots.getSlot('content2') %}
+							<div class="item item-2">
+							{% sw_include "@Storefront/storefront/element/cms-element-" ~ element.type ~ ".html.twig" ignore missing  %}
+							</div>
+
+							{% set element = block.slots.getSlot('content3') %}
+							<div class="item item-3">
+							{% sw_include "@Storefront/storefront/element/cms-element-" ~ element.type ~ ".html.twig" ignore missing  %}
+							</div>
+
+							{% set element = block.slots.getSlot('content4') %}
+							<div class="item item-4">
+							{% sw_include "@Storefront/storefront/element/cms-element-" ~ element.type ~ ".html.twig" ignore missing  %}
+							</div>
+
+							{% set element = block.slots.getSlot('content5') %}
+							<div class="item item-5">
+							{% sw_include "@Storefront/storefront/element/cms-element-" ~ element.type ~ ".html.twig" ignore missing  %}
+							</div>
+						</div>
+					{% endblock %}
+
+					{% block block_hatslogic_section_button %}
+						{% set element = block.slots.getSlot('button') %}
+						{% sw_include "@Storefront/storefront/element/cms-element-" ~ element.type ~ ".html.twig" ignore missing  %}
+					{% endblock %}
+				</div>
+			</div>
+		{% endblock %}
+		{% block block_hatslogic_section_background %}
+			<div class="section__background">
+				{% set element = block.slots.getSlot('background') %}
+				{% sw_include "@Storefront/storefront/element/cms-element-" ~ element.type ~ ".html.twig" ignore missing %}
+			</div>
+		{% endblock %}
+	</div>
+{% endblock %}

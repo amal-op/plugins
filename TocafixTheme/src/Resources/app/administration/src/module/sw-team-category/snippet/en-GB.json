@@ -1,0 +1,19 @@
+{
+    "tocafix-team-category": {
+        "general": {
+            "mainMenuItemGeneral": "Team Categories",
+            "descriptionTextModule": "Manage team categories here"
+        },
+        "list": {
+            "addButtonText": "Add team category",
+            "columnName": "Name",
+            "textTeamOverview": "Team Categories"
+        },
+        "detail": {
+            "nameLabel": "Name",
+            "cancelButtonText": "Cancel",
+            "saveButtonText": "Save",
+            "errorTitle": "Error saving the category"
+        }
+    }
+}

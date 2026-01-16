@@ -1,0 +1,47 @@
+{% block tocafix_team_category_list %}
+    <sw-page class="tocafix-team-category-list">
+
+        {% block tocafix_team_category_list_smart_bar_header %}
+            <template slot="smart-bar-header">
+                {% block tocafix_team_category_list_smart_bar_header_title %}
+                    <h2>
+                        {% block tocafix_team_category_list_smart_bar_header_title_text %}
+                            {{ $tc('tocafix-team-category.list.textTeamOverview') }}
+                        {% endblock %}
+
+                        {% block tocafix_team_category_list_smart_bar_header_amount %}
+                            <span v-if="!isLoading" class="sw-page__smart-bar-amount">
+                                ({{ teamCategories.total }})
+                            </span>
+                        {% endblock %}
+                    </h2>
+                {% endblock %}
+            </template>
+        {% endblock %}
+
+        {% block tocafix_team_category_list_smart_bar_actions %}
+            <template slot="smart-bar-actions">
+                <sw-button variant="primary" :routerLink="{ name: 'tocafix.team.category.create' }">
+                    {{ $t('tocafix-team-category.list.addButtonText') }}
+                </sw-button>
+            </template>
+        {% endblock %}
+
+        <template #language-switch>
+            <sw-language-switch @on-change="onChangeLanguage"></sw-language-switch>
+        </template>
+
+        <template slot="content">
+            {% block tocafix_team_category_list_content %}
+                <sw-entity-listing
+                    v-if="teamCategories"
+                    :items="teamCategories"
+                    :repository="repository"
+                    :showSelection="false"
+                    :columns="columns"
+                    detailRoute="tocafix.team.category.detail">
+                </sw-entity-listing>
+            {% endblock %}
+        </template>
+    </sw-page>
+{% endblock %}
