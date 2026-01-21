@@ -5,9 +5,7 @@ import './page/tocafix-team-category-detail';
 import deDE from './snippet/de-DE.json';
 import enGB from './snippet/en-GB.json';
 
-const { Module } = Shopware;
-
-Module.register('tocafix-team-category', {
+Shopware.Module.register('tocafix-team-category', {
     type: 'plugin',
     name: 'team',
     title: 'tocafix-team-category.general.mainMenuItemGeneral',
@@ -23,27 +21,32 @@ Module.register('tocafix-team-category', {
     routes: {
         list: {
             component: 'tocafix-team-category-list',
-            path: 'list'
+            path: 'list',
+            meta: {
+                privilege: 'tocafix_team_category:read'
+            }
         },
         create: {
             component: 'tocafix-team-category-create',
             path: 'create',
             meta: {
-                parentPath: 'tocafix.team.category.list'
+                parentPath: 'tocafix.team.category.list',
+                privilege: 'tocafix_team_category:create'
             }
         },
         detail: {
             component: 'tocafix-team-category-detail',
             path: 'detail/:id',
             meta: {
-                parentPath: 'tocafix.team.category.list'
+                parentPath: 'tocafix.team.category.list',
+                privilege: 'tocafix_team_category:read'
             }
-        },
+        }
     },
 
     settingsItem: [{
         to: 'tocafix.team.category.list',
         group: 'plugins',
-        icon: 'default-symbol-content'
+        icon: 'default-symbol-content',
     }]
 });

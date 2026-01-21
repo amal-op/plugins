@@ -7,28 +7,23 @@
 
 namespace Swag\PayPal\Storefront\Framework\Cookie;
 
-use Shopware\Core\Framework\Log\Package;
-use Shopware\Core\PlatformRequest;
 use Shopware\Storefront\Framework\Cookie\CookieProviderInterface;
-use Swag\PayPal\Util\PaymentMethodUtil;
-use Symfony\Component\HttpFoundation\RequestStack;
 
-#[Package('checkout')]
 class PayPalCookieProvider implements CookieProviderInterface
 {
+    private CookieProviderInterface $original;
+
     /**
      * @internal
      */
-    public function __construct(
-        private readonly CookieProviderInterface $cookieProvider,
-        private readonly PaymentMethodUtil $paymentMethodUtil,
-        private readonly RequestStack $requestStack,
-    ) {
+    public function __construct(CookieProviderInterface $cookieProvider)
+    {
+        $this->original = $cookieProvider;
     }
 
     public function getCookieGroups(): array
     {
-        $cookies = $this->cookieProvider->getCookieGroups();
+        $cookies = $this->original->getCookieGroups();
 
         foreach ($cookies as &$cookie) {
             if (!\is_array($cookie)) {
@@ -40,10 +35,6 @@ class PayPalCookieProvider implements CookieProviderInterface
             }
 
             if (!\array_key_exists('entries', $cookie)) {
-                continue;
-            }
-
-            if (!$this->isPayPalPaymentActive()) {
                 continue;
             }
 
@@ -60,15 +51,5 @@ class PayPalCookieProvider implements CookieProviderInterface
     {
         return (\array_key_exists('isRequired', $cookie) && $cookie['isRequired'] === true)
             && (\array_key_exists('snippet_name', $cookie) && $cookie['snippet_name'] === 'cookie.groupRequired');
-    }
-
-    private function isPayPalPaymentActive(): bool
-    {
-        $salesChannelContext = $this->requestStack->getMainRequest()?->attributes->get(PlatformRequest::ATTRIBUTE_SALES_CHANNEL_CONTEXT_OBJECT);
-        if (!$salesChannelContext) {
-            return false;
-        }
-
-        return $this->paymentMethodUtil->isPaymentMethodActive($salesChannelContext);
     }
 }

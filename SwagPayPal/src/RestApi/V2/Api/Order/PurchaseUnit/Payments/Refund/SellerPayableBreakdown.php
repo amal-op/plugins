@@ -7,63 +7,74 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Payments\Refund;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V2\Api\Common\Money;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Payments\Refund\SellerPayableBreakdown\GrossAmount;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Payments\Refund\SellerPayableBreakdown\NetAmount;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Payments\Refund\SellerPayableBreakdown\PaypalFee;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Payments\Refund\SellerPayableBreakdown\TotalRefundedAmount;
 
-#[OA\Schema(schema: 'swag_paypal_v2_order_purchase_unit_payments_refund_seller_payable_breakdown')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_order_refund_seller_paypable_breakdown")
+ */
 class SellerPayableBreakdown extends PayPalApiStruct
 {
-    #[OA\Property(ref: Money::class)]
-    protected Money $grossAmount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money")
+     */
+    protected GrossAmount $grossAmount;
 
-    #[OA\Property(ref: Money::class)]
-    protected Money $paypalFee;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money")
+     */
+    protected PaypalFee $paypalFee;
 
-    #[OA\Property(ref: Money::class)]
-    protected Money $netAmount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money")
+     */
+    protected NetAmount $netAmount;
 
-    #[OA\Property(ref: Money::class)]
-    protected Money $totalRefundedAmount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money")
+     */
+    protected TotalRefundedAmount $totalRefundedAmount;
 
-    public function getGrossAmount(): Money
+    public function getGrossAmount(): GrossAmount
     {
         return $this->grossAmount;
     }
 
-    public function setGrossAmount(Money $grossAmount): void
+    public function setGrossAmount(GrossAmount $grossAmount): void
     {
         $this->grossAmount = $grossAmount;
     }
 
-    public function getPaypalFee(): Money
+    public function getPaypalFee(): PaypalFee
     {
         return $this->paypalFee;
     }
 
-    public function setPaypalFee(Money $paypalFee): void
+    public function setPaypalFee(PaypalFee $paypalFee): void
     {
         $this->paypalFee = $paypalFee;
     }
 
-    public function getNetAmount(): Money
+    public function getNetAmount(): NetAmount
     {
         return $this->netAmount;
     }
 
-    public function setNetAmount(Money $netAmount): void
+    public function setNetAmount(NetAmount $netAmount): void
     {
         $this->netAmount = $netAmount;
     }
 
-    public function getTotalRefundedAmount(): Money
+    public function getTotalRefundedAmount(): TotalRefundedAmount
     {
         return $this->totalRefundedAmount;
     }
 
-    public function setTotalRefundedAmount(Money $totalRefundedAmount): void
+    public function setTotalRefundedAmount(TotalRefundedAmount $totalRefundedAmount): void
     {
         $this->totalRefundedAmount = $totalRefundedAmount;
     }

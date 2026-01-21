@@ -7,6 +7,7 @@
 
 namespace Swag\PayPal\Checkout\Order\Shipping;
 
+use Psr\Log\LoggerInterface;
 use Shopware\Core\Checkout\Order\Aggregate\OrderDelivery\OrderDeliveryDefinition;
 use Shopware\Core\Checkout\Order\OrderEvents;
 use Shopware\Core\Defaults;
@@ -14,20 +15,24 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityWriteResult;
 use Shopware\Core\Framework\DataAbstractionLayer\Event\EntityWrittenEvent;
 use Shopware\Core\Framework\DataAbstractionLayer\Write\Command\ChangeSetAware;
 use Shopware\Core\Framework\DataAbstractionLayer\Write\Validation\PreWriteValidationEvent;
-use Shopware\Core\Framework\Log\Package;
-use Swag\PayPal\Checkout\Order\Shipping\MessageQueue\ShippingInformationMessage;
+use Swag\PayPal\Checkout\Order\Shipping\Service\ShippingService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
  * @internal
  */
-#[Package('checkout')]
 class ShippingSubscriber implements EventSubscriberInterface
 {
+    private ShippingService $shippingService;
+
+    private LoggerInterface $logger;
+
     public function __construct(
-        private readonly MessageBusInterface $bus,
+        ShippingService $shippingService,
+        LoggerInterface $logger
     ) {
+        $this->shippingService = $shippingService;
+        $this->logger = $logger;
     }
 
     public static function getSubscribedEvents(): array
@@ -72,17 +77,31 @@ class ShippingSubscriber implements EventSubscriberInterface
                 continue;
             }
 
+            $before = [];
             $changeSet = $writeResult->getChangeSet();
-            if ($changeSet && !$changeSet->hasChanged('tracking_codes')) {
+            if ($changeSet !== null && !$changeSet->hasChanged('tracking_codes')) {
                 continue;
+            }
+
+            if ($changeSet !== null) {
+                $codesBefore = $changeSet->getBefore('tracking_codes') ?? [];
+                $before = !\is_array($codesBefore) ? \json_decode($codesBefore) : [];
             }
 
             $orderDeliveryId = $writeResult->getPrimaryKey();
-            if (!\is_string($orderDeliveryId)) {
+            $after = $writeResult->getProperty('trackingCodes') ?? [];
+            if (!\is_string($orderDeliveryId) || !\is_array($after) || !\is_array($before)) {
                 continue;
             }
 
-            $this->bus->dispatch(new ShippingInformationMessage($orderDeliveryId));
+            try {
+                $this->shippingService->updateTrackingCodes($orderDeliveryId, $after, $before, $event->getContext());
+            } catch (\Throwable $e) {
+                $this->logger->warning('Could not update tracking codes', [
+                    'exception' => $e,
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
         }
     }
 }

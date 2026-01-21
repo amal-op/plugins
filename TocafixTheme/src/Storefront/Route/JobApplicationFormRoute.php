@@ -8,7 +8,7 @@ use Shopware\Core\Content\Mail\Service\AbstractMailService;
 use Shopware\Core\Content\MailTemplate\Aggregate\MailTemplateType\MailTemplateTypeEntity;
 use Shopware\Core\Content\MailTemplate\MailTemplateEntity;
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\Event\EventData\MailRecipientStruct;
@@ -73,30 +73,30 @@ class JobApplicationFormRoute extends ApplicationFormRoute
     /**
      * Repository interface for CMS slot entities, providing methods to interact with the data source.
      *
-     * @var EntityRepositoryInterface
+     * @var EntityRepository
      */
-    protected EntityRepositoryInterface $cmsSlotRepository;
+    protected EntityRepository $cmsSlotRepository;
     
     /**
      * Repository interface for managing category entities.
      *
-     * @var EntityRepositoryInterface
+     * @var EntityRepository
      */
-    protected EntityRepositoryInterface $categoryRepository;
+    protected EntityRepository $categoryRepository;
     
     /**
      * Repository for managing landing page entities.
      *
-     * @var EntityRepositoryInterface
+     * @var EntityRepository
      */
-    protected EntityRepositoryInterface $landingPageRepository;
+    protected EntityRepository $landingPageRepository;
     
     /**
      * The repository interface for managing product entities.
      *
-     * @var EntityRepositoryInterface
+     * @var EntityRepository
      */
-    protected EntityRepositoryInterface $productRepository;
+    protected EntityRepository $productRepository;
     
     /**
      * The stack of requests for the current session.
@@ -115,9 +115,9 @@ class JobApplicationFormRoute extends ApplicationFormRoute
     /**
      * Repository for handling mail template types.
      *
-     * @var EntityRepositoryInterface
+     * @var EntityRepository
      */
-    protected EntityRepositoryInterface $mailTemplateTypeRepository;
+    protected EntityRepository $mailTemplateTypeRepository;
     
     /**
      * The mail service used for sending emails.
@@ -126,7 +126,7 @@ class JobApplicationFormRoute extends ApplicationFormRoute
      */
     protected AbstractMailService $mailService;
     
-    public function __construct(DataValidationFactoryInterface $applicationFormValidationFactory, DataValidator $validator, EventDispatcherInterface $eventDispatcher, SystemConfigService $systemConfigService, EntityRepositoryInterface $cmsSlotRepository, EntityRepositoryInterface $categoryRepository, EntityRepositoryInterface $landingPageRepository, EntityRepositoryInterface $productRepository, RequestStack $requestStack, RateLimiter $rateLimiter, EntityRepositoryInterface $mailTemplateTypeRepository, AbstractMailService $mailService)
+    public function __construct(DataValidationFactoryInterface $applicationFormValidationFactory, DataValidator $validator, EventDispatcherInterface $eventDispatcher, SystemConfigService $systemConfigService, EntityRepository $cmsSlotRepository, EntityRepository $categoryRepository, EntityRepository $landingPageRepository, EntityRepository $productRepository, RequestStack $requestStack, RateLimiter $rateLimiter, EntityRepository $mailTemplateTypeRepository, AbstractMailService $mailService)
     {
         $this->applicationFormValidationFactory = $applicationFormValidationFactory;
         $this->validator = $validator;

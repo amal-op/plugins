@@ -7,24 +7,32 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Item;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_item_adjudication')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_adjudication")
+ */
 class Adjudication extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $type;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $adjudicationTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $reason;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $disputeLifeCycleStage;
 
     public function getType(): string

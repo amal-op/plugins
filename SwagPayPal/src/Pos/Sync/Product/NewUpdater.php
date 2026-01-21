@@ -8,14 +8,12 @@
 namespace Swag\PayPal\Pos\Sync\Product;
 
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Error\PosApiError;
 use Swag\PayPal\Pos\Api\Exception\PosApiException;
 use Swag\PayPal\Pos\Resource\ProductResource;
 use Swag\PayPal\Pos\Sync\Context\ProductContext;
 use Swag\PayPal\Pos\Sync\Product\Util\ProductGroupingCollection;
 
-#[Package('checkout')]
 class NewUpdater
 {
     private ProductResource $productResource;
@@ -46,12 +44,12 @@ class NewUpdater
                     $this->productResource->createProduct($productContext->getPosSalesChannel(), $product);
                     $productContext->changeProduct($shopwareProduct, $product);
                     $this->logger->info('Product created', ['product' => $shopwareProduct]);
-                } catch (PosApiException $e) {
-                    if ($e->getApiError()->getErrorType() === PosApiError::ERROR_TYPE_ITEM_ALREADY_EXISTS) {
+                } catch (PosApiException $posApiException) {
+                    if ($posApiException->getApiError()->getErrorType() === PosApiError::ERROR_TYPE_ITEM_ALREADY_EXISTS) {
                         $productContext->changeProduct($shopwareProduct);
                         $this->logger->notice('The product was not marked as synced, but was found at Zettle. Overwriting.', ['product' => $shopwareProduct]);
                     } else {
-                        $this->logger->error('Product creation error: ' . $e->getMessage(), ['product' => $shopwareProduct, 'error' => $e]);
+                        $this->logger->error('Product creation error: ' . $posApiException, ['product' => $shopwareProduct]);
                     }
                 }
             }

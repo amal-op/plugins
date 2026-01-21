@@ -11,7 +11,6 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelCollection;
 use Swag\PayPal\Pos\MessageQueue\Manager\InventorySyncManager;
 use Swag\PayPal\Pos\MessageQueue\Message\InventoryUpdateMessage;
@@ -24,7 +23,6 @@ use Symfony\Component\Messenger\Handler\MessageSubscriberInterface;
 /**
  * @internal
  */
-#[Package('checkout')]
 class InventoryUpdateHandler implements MessageSubscriberInterface
 {
     private RunService $runService;

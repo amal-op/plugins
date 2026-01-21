@@ -7,23 +7,12 @@
 
 namespace Swag\PayPal\Util\Lifecycle\Method;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations;
+use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\Product;
 use Swag\PayPal\Util\Availability\AvailabilityContext;
 
-/**
- * @internal
- */
-#[Package('checkout')]
 class TrustlyMethodData extends AbstractMethodData
 {
-    public const AVAILABLE_COUNTRIES = ['AT', 'DE', 'DK', 'EE', 'ES', 'FI', 'GB', 'LT', 'LV', 'NL', 'NO', 'SE'];
-
-    public const AVAILABLE_CURRENCIES = ['EUR', 'DKK', 'SEK', 'GBP', 'NOK'];
-
-    /**
-     * @return array<string, array<string, string>>
-     */
     public function getTranslations(): array
     {
         return [
@@ -50,8 +39,10 @@ class TrustlyMethodData extends AbstractMethodData
 
     public function isAvailable(AvailabilityContext $availabilityContext): bool
     {
-        return \in_array($availabilityContext->getCurrencyCode(), self::AVAILABLE_CURRENCIES, true)
-            && \in_array($availabilityContext->getBillingCountryCode(), self::AVAILABLE_COUNTRIES, true);
+        return ($availabilityContext->getCurrencyCode() === 'EUR'
+                && \in_array($availabilityContext->getBillingCountryCode(), ['EE', 'FI', 'NL'], true))
+            || (\in_array($availabilityContext->getCurrencyCode(), ['EUR', 'SEK'], true)
+                && $availabilityContext->getBillingCountryCode() === 'SE');
     }
 
     public function getInitialState(): bool
@@ -66,6 +57,11 @@ class TrustlyMethodData extends AbstractMethodData
 
     public function validateCapability(MerchantIntegrations $merchantIntegrations): string
     {
-        return self::CAPABILITY_ACTIVE;
+        $product = $merchantIntegrations->getSpecificProduct('PPCP_STANDARD');
+        if ($product !== null && (\in_array($product->getVettingStatus(), [Product::VETTING_STATUS_APPROVED, Product::VETTING_STATUS_SUBSCRIBED], true))) {
+            return self::CAPABILITY_ACTIVE;
+        }
+
+        return self::CAPABILITY_INELIGIBLE;
     }
 }

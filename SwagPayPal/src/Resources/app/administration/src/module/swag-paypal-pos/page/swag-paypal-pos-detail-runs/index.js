@@ -14,9 +14,9 @@ Component.register('swag-paypal-pos-detail-runs', {
     ],
 
     mixins: [
-        Shopware.Mixin.getByName('swag-paypal-pos-catch-error'),
-        Shopware.Mixin.getByName('notification'),
-        Shopware.Mixin.getByName('listing'),
+        'swag-paypal-pos-catch-error',
+        'notification',
+        'listing',
     ],
 
     props: {
@@ -62,10 +62,6 @@ Component.register('swag-paypal-pos-detail-runs', {
                 label: 'swag-paypal-pos.detail.runs.columns.date',
                 sortable: true,
             }];
-        },
-
-        dateFilter() {
-            return Shopware.Filter.getByName('date');
         },
     },
 

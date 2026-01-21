@@ -12,7 +12,6 @@ use Shopware\Core\Framework\DataAbstractionLayer\Exception\EntityRepositoryNotFo
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Swag\PayPal\Pos\Api\Inventory\Status;
 use Swag\PayPal\Pos\Api\Service\Converter\UuidConverter;
@@ -21,7 +20,6 @@ use Swag\PayPal\Pos\DataAbstractionLayer\Entity\PosSalesChannelInventoryCollecti
 use Swag\PayPal\Pos\Resource\InventoryResource;
 use Swag\PayPal\SwagPayPal;
 
-#[Package('checkout')]
 class InventoryContextFactory
 {
     private InventoryResource $inventoryResource;
@@ -70,8 +68,8 @@ class InventoryContextFactory
     {
         $newInventoryContext = clone $inventoryContext;
 
-        $convertedProductIds = \array_unique(\array_map([$this->uuidConverter, 'convertUuidToV1'], $productIds));
-        $trackedProductIds = \array_unique(\array_merge($convertedProductIds, \array_map([$this->uuidConverter, 'convertUuidToV1'], $parentIds)));
+        $convertedProductIds = \array_map([$this->uuidConverter, 'convertUuidToV1'], $productIds);
+        $trackedProductIds = \array_merge($convertedProductIds, \array_map([$this->uuidConverter, 'convertUuidToV1'], $parentIds));
 
         $status = new Status();
         $status->setTrackedProducts(\array_intersect($trackedProductIds, $inventoryContext->getRemoteInventory()->getTrackedProducts()));

@@ -7,13 +7,14 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V2\Api\Common\Money;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Item\Tax;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Item\UnitAmount;
 
-#[OA\Schema(schema: 'swag_paypal_v2_order_purchase_unit_item')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_order_item")
+ */
 class Item extends PayPalApiStruct
 {
     public const MAX_LENGTH_NAME = 120;
@@ -23,25 +24,41 @@ class Item extends PayPalApiStruct
     public const CATEGORY_DIGITAL_GOODS = 'DIGITAL_GOODS';
     public const CATEGORY_DONATION = 'DONATION';
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $name;
 
-    #[OA\Property(ref: Money::class)]
-    protected Money $unitAmount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money")
+     */
+    protected UnitAmount $unitAmount;
 
-    #[OA\Property(ref: Money::class)]
-    protected Money $tax;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money")
+     */
+    protected Tax $tax;
 
-    #[OA\Property(oneOf: [new OA\Schema(type: 'string'), new OA\Schema(type: 'integer'), new OA\Schema(type: 'float')])]
-    protected string|int|float $taxRate;
+    /**
+     * @OA\Property(oneOf={"integer", "float", "string"})
+     *
+     * @var float|int|string
+     */
+    protected $taxRate;
 
-    #[OA\Property(type: 'string', enum: [self::CATEGORY_PHYSICAL_GOODS, self::CATEGORY_DIGITAL_GOODS, self::CATEGORY_DONATION])]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $category;
 
-    #[OA\Property(type: 'integer')]
+    /**
+     * @OA\Property(type="integer")
+     */
     protected int $quantity;
 
-    #[OA\Property(type: 'string', nullable: true)]
+    /**
+     * @OA\Property(type="string", nullable=true)
+     */
     protected ?string $sku = null;
 
     public function getName(): string
@@ -63,32 +80,38 @@ class Item extends PayPalApiStruct
         $this->name = $name;
     }
 
-    public function getUnitAmount(): Money
+    public function getUnitAmount(): UnitAmount
     {
         return $this->unitAmount;
     }
 
-    public function setUnitAmount(Money $unitAmount): void
+    public function setUnitAmount(UnitAmount $unitAmount): void
     {
         $this->unitAmount = $unitAmount;
     }
 
-    public function getTax(): Money
+    public function getTax(): Tax
     {
         return $this->tax;
     }
 
-    public function setTax(Money $tax): void
+    public function setTax(Tax $tax): void
     {
         $this->tax = $tax;
     }
 
-    public function getTaxRate(): string|int|float
+    /**
+     * @return string|int|float
+     */
+    public function getTaxRate()
     {
         return $this->taxRate;
     }
 
-    public function setTaxRate(string|int|float $taxRate): void
+    /**
+     * @param string|int|float $taxRate
+     */
+    public function setTaxRate($taxRate): void
     {
         $this->taxRate = $taxRate;
     }
@@ -108,7 +131,10 @@ class Item extends PayPalApiStruct
         return $this->quantity;
     }
 
-    public function setQuantity(int|string $quantity): void
+    /**
+     * @param int|string $quantity
+     */
+    public function setQuantity($quantity): void
     {
         $this->quantity = (int) $quantity;
     }

@@ -12,46 +12,59 @@ use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStat
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\SynchronousPaymentHandlerInterface;
 use Shopware\Core\Checkout\Payment\Cart\SyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Exception\SyncPaymentProcessException;
-use Shopware\Core\Checkout\Payment\PaymentException;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Swag\PayPal\Checkout\Payment\Service\OrderExecuteService;
 use Swag\PayPal\Checkout\Payment\Service\OrderPatchService;
 use Swag\PayPal\Checkout\Payment\Service\TransactionDataService;
-use Swag\PayPal\Checkout\Payment\Service\VaultTokenService;
 use Swag\PayPal\RestApi\PartnerAttributionId;
 use Swag\PayPal\RestApi\V2\Api\Order;
-use Swag\PayPal\RestApi\V2\Api\Order\PaymentSource\AbstractPaymentSource;
-use Swag\PayPal\RestApi\V2\Api\Order\PaymentSource\VaultablePaymentSourceInterface;
 use Swag\PayPal\RestApi\V2\Resource\OrderResource;
 use Swag\PayPal\Setting\Service\SettingsValidationServiceInterface;
 
-#[Package('checkout')]
 abstract class AbstractSyncAPMHandler extends AbstractPaymentMethodHandler implements SynchronousPaymentHandlerInterface
 {
+    private OrderExecuteService $orderExecuteService;
+
+    private OrderPatchService $orderPatchService;
+
+    private TransactionDataService $transactionDataService;
+
+    private OrderTransactionStateHandler $orderTransactionStateHandler;
+
+    private SettingsValidationServiceInterface $settingsValidationService;
+
+    private LoggerInterface $logger;
+
+    private OrderResource $orderResource;
+
     /**
      * @internal
      */
     public function __construct(
-        protected readonly SettingsValidationServiceInterface $settingsValidationService,
-        private readonly OrderTransactionStateHandler $orderTransactionStateHandler,
-        protected readonly OrderExecuteService $orderExecuteService,
-        private readonly OrderPatchService $orderPatchService,
-        protected readonly TransactionDataService $transactionDataService,
-        protected readonly LoggerInterface $logger,
-        protected readonly OrderResource $orderResource,
-        protected readonly VaultTokenService $vaultTokenService,
+        SettingsValidationServiceInterface $settingsValidationService,
+        OrderTransactionStateHandler $orderTransactionStateHandler,
+        OrderExecuteService $orderExecuteService,
+        OrderPatchService $orderPatchService,
+        TransactionDataService $transactionDataService,
+        LoggerInterface $logger,
+        OrderResource $orderResource
     ) {
+        $this->settingsValidationService = $settingsValidationService;
+        $this->orderTransactionStateHandler = $orderTransactionStateHandler;
+        $this->orderPatchService = $orderPatchService;
+        $this->orderExecuteService = $orderExecuteService;
+        $this->transactionDataService = $transactionDataService;
+        $this->logger = $logger;
+        $this->orderResource = $orderResource;
     }
 
     public function pay(SyncPaymentTransactionStruct $transaction, RequestDataBag $dataBag, SalesChannelContext $salesChannelContext): void
     {
         $transactionId = $transaction->getOrderTransaction()->getId();
         $paypalOrderId = $dataBag->get(self::PAYPAL_PAYMENT_ORDER_ID_INPUT_NAME);
-        $customerId = $salesChannelContext->getCustomerId();
 
-        if (!$paypalOrderId || !$customerId) {
+        if (!$paypalOrderId) {
             throw new SyncPaymentProcessException($transactionId, 'Missing PayPal order id');
         }
 
@@ -64,7 +77,7 @@ abstract class AbstractSyncAPMHandler extends AbstractPaymentMethodHandler imple
                 $transactionId,
                 $paypalOrderId,
                 PartnerAttributionId::PAYPAL_PPCP,
-                $salesChannelContext
+                $salesChannelContext->getContext()
             );
 
             $this->orderPatchService->patchOrder(
@@ -82,20 +95,8 @@ abstract class AbstractSyncAPMHandler extends AbstractPaymentMethodHandler imple
             );
 
             $this->transactionDataService->setResourceId($paypalOrder, $transactionId, $salesChannelContext->getContext());
-
-            /** @var (VaultablePaymentSourceInterface&AbstractPaymentSource)|null $vaultable */
-            $vaultable = $paypalOrder->getPaymentSource()?->first(VaultablePaymentSourceInterface::class);
-            if ($vaultable) {
-                $this->vaultTokenService->saveToken($transaction, $vaultable, $customerId, $salesChannelContext->getContext());
-            }
-        } catch (PaymentException $e) {
-            if ($e->getOrderTransactionId() === null && \method_exists($e, 'setOrderTransactionId')) {
-                $e->setOrderTransactionId($transactionId);
-            }
-
-            throw $e;
         } catch (\Exception $e) {
-            $this->logger->error($e->getMessage(), ['error' => $e]);
+            $this->logger->error($e->getMessage());
 
             throw new SyncPaymentProcessException($transactionId, $e->getMessage());
         }

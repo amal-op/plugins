@@ -8,19 +8,19 @@
 namespace Swag\PayPal\Webhook;
 
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Util\Random;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
+use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\CreateWebhooks;
-use Swag\PayPal\RestApi\V1\Api\Webhook;
+use Swag\PayPal\RestApi\V1\Api\Webhook as WebhookV1;
 use Swag\PayPal\RestApi\V1\Resource\WebhookResource;
+use Swag\PayPal\RestApi\V2\Api\Webhook as WebhookV2;
 use Swag\PayPal\Setting\Settings;
 use Swag\PayPal\Webhook\Exception\WebhookAlreadyExistsException;
 use Swag\PayPal\Webhook\Exception\WebhookIdInvalidException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
-#[Package('checkout')]
 class WebhookService implements WebhookServiceInterface
 {
     public const WEBHOOK_CREATED = 'created';
@@ -30,10 +30,6 @@ class WebhookService implements WebhookServiceInterface
 
     public const PAYPAL_WEBHOOK_TOKEN_NAME = 'sw-token';
     public const PAYPAL_WEBHOOK_TOKEN_LENGTH = 32;
-
-    public const STATUS_WEBHOOK_MISSING = 'missing';
-    public const STATUS_WEBHOOK_INVALID = 'invalid';
-    public const STATUS_WEBHOOK_VALID = 'valid';
 
     private WebhookResource $webhookResource;
 
@@ -58,25 +54,6 @@ class WebhookService implements WebhookServiceInterface
         $this->systemConfigService = $systemConfigService;
     }
 
-    public function getStatus(?string $salesChannelId): string
-    {
-        $webhookId = $this->systemConfigService->getString(Settings::WEBHOOK_ID, $salesChannelId);
-        if ($webhookId === '') {
-            return self::STATUS_WEBHOOK_MISSING;
-        }
-
-        try {
-            $registeredWebhookUrl = $this->webhookResource->getWebhookUrl($webhookId, $salesChannelId);
-        } catch (WebhookIdInvalidException) {
-            return self::STATUS_WEBHOOK_MISSING;
-        }
-
-        $webhookExecuteToken = $this->systemConfigService->getString(Settings::WEBHOOK_EXECUTE_TOKEN, $salesChannelId);
-        $webhookUrl = $this->createWebhookUrl($webhookExecuteToken);
-
-        return $registeredWebhookUrl === $webhookUrl ? self::STATUS_WEBHOOK_VALID : self::STATUS_WEBHOOK_INVALID;
-    }
-
     public function registerWebhook(?string $salesChannelId): string
     {
         $webhookExecuteToken = $this->systemConfigService->getString(Settings::WEBHOOK_EXECUTE_TOKEN, $salesChannelId);
@@ -90,7 +67,13 @@ class WebhookService implements WebhookServiceInterface
             $webhookExecuteToken = Random::getAlphanumericString(self::PAYPAL_WEBHOOK_TOKEN_LENGTH);
         }
 
-        $webhookUrl = $this->createWebhookUrl($webhookExecuteToken);
+        $this->router->getContext()->setScheme('https');
+        $webhookUrl = $this->router->generate(
+            'api.action.paypal.webhook.execute',
+            [self::PAYPAL_WEBHOOK_TOKEN_NAME => $webhookExecuteToken],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+
         $webhookId = $this->systemConfigService->getString(Settings::WEBHOOK_ID, $salesChannelId);
 
         if ($salesChannelId !== null && $webhookId === $this->systemConfigService->getString(Settings::WEBHOOK_ID)) {
@@ -106,7 +89,7 @@ class WebhookService implements WebhookServiceInterface
             if ($registeredWebhookUrl === $webhookUrl) {
                 return self::NO_WEBHOOK_ACTION_REQUIRED;
             }
-        } catch (WebhookIdInvalidException) {
+        } catch (WebhookIdInvalidException $e) {
             // do nothing, so the following code will be executed
         }
 
@@ -114,12 +97,15 @@ class WebhookService implements WebhookServiceInterface
             $this->webhookResource->updateWebhook($webhookUrl, $webhookId, $salesChannelId);
 
             return self::WEBHOOK_UPDATED;
-        } catch (WebhookIdInvalidException) {
+        } catch (WebhookIdInvalidException $e) {
             return $this->createWebhook($salesChannelId, $webhookUrl, $webhookExecuteToken);
         }
     }
 
-    public function executeWebhook(Webhook $webhook, Context $context): void
+    /**
+     * @param WebhookV1|WebhookV2 $webhook
+     */
+    public function executeWebhook(PayPalApiStruct $webhook, Context $context): void
     {
         $webhookHandler = $this->webhookRegistry->getWebhookHandler($webhook->getEventType());
         $webhookHandler->invoke($webhook, $context);
@@ -141,7 +127,7 @@ class WebhookService implements WebhookServiceInterface
         try {
             $this->webhookResource->deleteWebhook($webhookId, $salesChannelId);
             $deleted = true;
-        } catch (WebhookIdInvalidException) {
+        } catch (WebhookIdInvalidException $e) {
             $deleted = false;
         }
 
@@ -175,29 +161,8 @@ class WebhookService implements WebhookServiceInterface
             $this->systemConfigService->set(Settings::WEBHOOK_ID, $webhookId, $salesChannelId);
 
             return self::WEBHOOK_CREATED;
-        } catch (WebhookAlreadyExistsException) {
-            $webhooks = $this->webhookResource->getAllWebhooks($salesChannelId);
-
-            foreach ($webhooks as $webhook) {
-                if ($webhook->getUrl() === $webhookUrl) {
-                    $this->systemConfigService->set(Settings::WEBHOOK_ID, $webhook->getId(), $salesChannelId);
-
-                    break;
-                }
-            }
-
+        } catch (WebhookAlreadyExistsException $e) {
             return self::NO_WEBHOOK_ACTION_REQUIRED;
         }
-    }
-
-    private function createWebhookUrl(string $executeToken): string
-    {
-        $this->router->getContext()->setScheme('https');
-
-        return $this->router->generate(
-            'api.action.paypal.webhook.execute',
-            [self::PAYPAL_WEBHOOK_TOKEN_NAME => $executeToken],
-            UrlGeneratorInterface::ABSOLUTE_URL
-        );
     }
 }

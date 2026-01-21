@@ -8,14 +8,12 @@
 namespace Swag\PayPal\Pos\Sync\Product;
 
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Exception\PosApiException;
 use Swag\PayPal\Pos\Api\Service\Converter\UuidConverter;
 use Swag\PayPal\Pos\DataAbstractionLayer\Entity\PosSalesChannelEntity;
 use Swag\PayPal\Pos\Resource\ProductResource;
 use Swag\PayPal\Pos\Sync\Context\ProductContext;
 
-#[Package('checkout')]
 class UnsyncedChecker
 {
     private ProductResource $productResource;
@@ -50,14 +48,13 @@ class UnsyncedChecker
         $deletions = [];
 
         foreach ($existingPosProducts as $posProduct) {
-            $uuidV4 = $this->uuidConverter->convertUuidToV4($posProduct->getUuid());
-            $uuidV7 = $this->uuidConverter->convertUuidToV7($posProduct->getUuid());
+            $uuid = $this->uuidConverter->convertUuidToV4($posProduct->getUuid());
 
-            if (\in_array($uuidV4, $productIds, true) || \in_array($uuidV7, $productIds, true)) {
+            if (\in_array($uuid, $productIds, true)) {
                 continue;
             }
 
-            if ($productContext->getPosProductCollection()->hasProduct($uuidV4) || $productContext->getPosProductCollection()->hasProduct($uuidV7)) {
+            if ($productContext->getPosProductCollection()->hasProduct($uuid)) {
                 continue;
             }
 
@@ -71,8 +68,8 @@ class UnsyncedChecker
         try {
             $this->productResource->deleteProducts($productContext->getPosSalesChannel(), $deletions);
             $this->logger->info('Removed unsynced products at Zettle: {productIds}', ['productIds' => \implode(', ', $deletions)]);
-        } catch (PosApiException $e) {
-            $this->logger->warning('Unsynced product deletion error: ' . $e->getMessage(), ['error' => $e]);
+        } catch (PosApiException $posApiException) {
+            $this->logger->warning('Unsynced product deletion error: ' . $posApiException);
         }
     }
 }

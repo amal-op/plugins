@@ -7,13 +7,11 @@
 
 namespace Swag\PayPal\Pos\Util;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Swag\PayPal\Pos\DataAbstractionLayer\Entity\PosSalesChannelEntity;
 use Swag\PayPal\Pos\Exception\UnexpectedSalesChannelTypeException;
 use Swag\PayPal\SwagPayPal;
 
-#[Package('checkout')]
 trait PosSalesChannelTrait
 {
     protected function getPosSalesChannel(SalesChannelEntity $salesChannel): PosSalesChannelEntity

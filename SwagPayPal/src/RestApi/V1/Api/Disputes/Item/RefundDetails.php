@@ -7,24 +7,26 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Item;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V1\Api\Common\Money;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\RefundDetails\AllowedRefundAmount;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_item_refund_details')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_refund_details")
+ */
 class RefundDetails extends PayPalApiStruct
 {
-    #[OA\Property(ref: Money::class)]
-    protected Money $allowedRefundAmount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_money")
+     */
+    protected AllowedRefundAmount $allowedRefundAmount;
 
-    public function getAllowedRefundAmount(): Money
+    public function getAllowedRefundAmount(): AllowedRefundAmount
     {
         return $this->allowedRefundAmount;
     }
 
-    public function setAllowedRefundAmount(Money $allowedRefundAmount): void
+    public function setAllowedRefundAmount(AllowedRefundAmount $allowedRefundAmount): void
     {
         $this->allowedRefundAmount = $allowedRefundAmount;
     }

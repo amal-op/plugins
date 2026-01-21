@@ -11,7 +11,6 @@ use Psr\Log\LoggerInterface;
 use Shopware\Core\Content\Product\ProductCollection;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\MultiFilter;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\Entity\SalesChannelRepository;
 use Swag\PayPal\Pos\MessageQueue\Message\AbstractSyncMessage;
 use Swag\PayPal\Pos\MessageQueue\Message\Sync\ProductVariantSyncMessage;
@@ -25,7 +24,6 @@ use Swag\PayPal\Pos\Util\PosSalesChannelTrait;
 /**
  * @internal
  */
-#[Package('checkout')]
 class ProductVariantSyncHandler extends AbstractSyncHandler
 {
     use PosSalesChannelTrait;

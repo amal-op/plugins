@@ -7,56 +7,80 @@
 
 namespace Swag\PayPal\RestApi\V2\Api;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V2\Api\Common\Link;
-use Swag\PayPal\RestApi\V2\Api\Common\LinkCollection;
 use Swag\PayPal\RestApi\V2\Api\Order\ApplicationContext;
+use Swag\PayPal\RestApi\V2\Api\Order\Link;
 use Swag\PayPal\RestApi\V2\Api\Order\Payer;
 use Swag\PayPal\RestApi\V2\Api\Order\PaymentSource;
 use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit;
-use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnitCollection;
 use Swag\PayPal\RestApi\V2\PaymentIntentV2;
 
-#[OA\Schema(schema: 'swag_paypal_v2_order')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_order")
+ */
 class Order extends PayPalApiStruct
 {
     public const PROCESSING_INSTRUCTION_COMPLETE_ON_APPROVAL = 'ORDER_COMPLETE_ON_PAYMENT_APPROVAL';
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $createTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $updateTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $id;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $intent = PaymentIntentV2::CAPTURE;
 
-    #[OA\Property(ref: Payer::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_order_payer")
+     */
     protected Payer $payer;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: PurchaseUnit::class), nullable: true)]
-    protected ?PurchaseUnitCollection $purchaseUnits;
+    /**
+     * @var PurchaseUnit[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v2_order_purchase_unit"})
+     */
+    protected array $purchaseUnits = [];
 
-    #[OA\Property(ref: ApplicationContext::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_order_application_context")
+     */
     protected ApplicationContext $applicationContext;
 
-    #[OA\Property(ref: PaymentSource::class, nullable: true)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_order_payment_source")
+     */
     protected ?PaymentSource $paymentSource = null;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $status;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $processingInstruction;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Link::class))]
-    protected LinkCollection $links;
+    /**
+     * @var Link[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v2_common_link"})
+     */
+    protected array $links;
 
     public function getCreateTime(): string
     {
@@ -108,12 +132,18 @@ class Order extends PayPalApiStruct
         $this->payer = $payer;
     }
 
-    public function getPurchaseUnits(): PurchaseUnitCollection
+    /**
+     * @return PurchaseUnit[]
+     */
+    public function getPurchaseUnits(): array
     {
-        return $this->purchaseUnits ?? $this->purchaseUnits = new PurchaseUnitCollection();
+        return $this->purchaseUnits;
     }
 
-    public function setPurchaseUnits(PurchaseUnitCollection $purchaseUnits): void
+    /**
+     * @param PurchaseUnit[] $purchaseUnits
+     */
+    public function setPurchaseUnits(array $purchaseUnits): void
     {
         $this->purchaseUnits = $purchaseUnits;
     }
@@ -158,19 +188,33 @@ class Order extends PayPalApiStruct
         $this->processingInstruction = $processingInstruction;
     }
 
-    public function getLinks(): LinkCollection
+    /**
+     * @return Link[]
+     */
+    public function getLinks(): array
     {
         return $this->links;
     }
 
-    public function setLinks(LinkCollection $links): void
+    /**
+     * @param Link[] $links
+     */
+    public function setLinks(array $links): void
     {
         $this->links = $links;
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    public function getRelLink(string $rel): ?Link
+    {
+        foreach ($this->links as $link) {
+            if ($link->getRel() === $rel) {
+                return $link;
+            }
+        }
+
+        return null;
+    }
+
     public function jsonSerialize(): array
     {
         return \array_filter(parent::jsonSerialize());

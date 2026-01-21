@@ -13,9 +13,9 @@ Component.register('swag-paypal-pos-detail-logs', {
     ],
 
     mixins: [
-        Shopware.Mixin.getByName('notification'),
-        Shopware.Mixin.getByName('swag-paypal-pos-log-label'),
-        Shopware.Mixin.getByName('listing'),
+        'notification',
+        'swag-paypal-pos-log-label',
+        'listing',
     ],
 
     props: {
@@ -61,10 +61,6 @@ Component.register('swag-paypal-pos-detail-logs', {
                 label: 'swag-paypal-pos.detail.logs.columnLastSync',
                 sortable: true,
             }];
-        },
-
-        dateFilter() {
-            return Shopware.Filter.getByName('date');
         },
     },
 

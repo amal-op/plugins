@@ -107,10 +107,6 @@ Component.register('swag-paypal-pos-status-view', {
         disabled() {
             return this.salesChannel !== null && this.salesChannel.id !== null && this.salesChannel.active === false;
         },
-
-        dateFilter() {
-            return Shopware.Filter.getByName('date');
-        },
     },
 
     watch: {

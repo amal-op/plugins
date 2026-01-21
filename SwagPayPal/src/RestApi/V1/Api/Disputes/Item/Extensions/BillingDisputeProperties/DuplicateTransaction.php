@@ -7,20 +7,24 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V1\Api\Disputes\Common\Transaction;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties\DuplicateTransaction\OriginalTransaction;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_item_extensions_billing_dispute_properties_duplicate_transaction')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_extensions_duplicate_transaction")
+ */
 class DuplicateTransaction extends PayPalApiStruct
 {
-    #[OA\Property(type: 'boolean')]
+    /**
+     * @OA\Property(type="boolean")
+     */
     protected bool $receivedDuplicate;
 
-    #[OA\Property(ref: Transaction::class)]
-    protected Transaction $originalTransaction;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_disputes_common_transaction")
+     */
+    protected OriginalTransaction $originalTransaction;
 
     public function isReceivedDuplicate(): bool
     {
@@ -32,12 +36,12 @@ class DuplicateTransaction extends PayPalApiStruct
         $this->receivedDuplicate = $receivedDuplicate;
     }
 
-    public function getOriginalTransaction(): Transaction
+    public function getOriginalTransaction(): OriginalTransaction
     {
         return $this->originalTransaction;
     }
 
-    public function setOriginalTransaction(Transaction $originalTransaction): void
+    public function setOriginalTransaction(OriginalTransaction $originalTransaction): void
     {
         $this->originalTransaction = $originalTransaction;
     }

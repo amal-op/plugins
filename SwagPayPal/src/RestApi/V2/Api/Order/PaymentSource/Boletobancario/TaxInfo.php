@@ -7,18 +7,22 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Order\PaymentSource\Boletobancario;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(schema: 'swag_paypal_v2_order_payment_source_boletobancario_tax_info')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_order_payment_source_boletobancario_taxinfo")
+ */
 class TaxInfo extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $taxId;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $taxIdType;
 
     public function getTaxId(): string

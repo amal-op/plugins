@@ -1,0 +1,22 @@
+.object-fit-cover{
+    object-fit: cover;
+}
+.object-fit-contain{
+    object-fit: contain;
+}
+.object-fit-fill{
+    object-fit: fill;
+}
+.object-fit-scale{
+    object-fit: scale-down;
+}
+.object-fit-none{
+    object-fit: none;
+}
+.center{
+    text-align: center;
+}
+
+.translate-v-center{
+    transform: translate(0, -50%);
+}

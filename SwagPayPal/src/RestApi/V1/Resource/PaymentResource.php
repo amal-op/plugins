@@ -7,7 +7,6 @@
 
 namespace Swag\PayPal\RestApi\V1\Resource;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\RestApi\Client\PayPalClientFactoryInterface;
 use Swag\PayPal\RestApi\PartnerAttributionId;
 use Swag\PayPal\RestApi\V1\Api\Patch;
@@ -15,7 +14,6 @@ use Swag\PayPal\RestApi\V1\Api\Payment;
 use Swag\PayPal\RestApi\V1\Api\Payment\Payer\ExecutePayerInfo;
 use Swag\PayPal\RestApi\V1\RequestUriV1;
 
-#[Package('checkout')]
 class PaymentResource
 {
     private PayPalClientFactoryInterface $payPalClientFactory;

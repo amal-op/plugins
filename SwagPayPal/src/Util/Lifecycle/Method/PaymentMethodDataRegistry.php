@@ -13,13 +13,8 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Log\Package;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-/**
- * @internal
- */
-#[Package('checkout')]
 class PaymentMethodDataRegistry
 {
     /**
@@ -34,18 +29,18 @@ class PaymentMethodDataRegistry
         SEPAMethodData::class,
         BancontactMethodData::class,
         BlikMethodData::class,
-        // BoletoBancarioMethodData::class,
+        //BoletoBancarioMethodData::class,
         EpsMethodData::class,
+        GiropayMethodData::class,
         IdealMethodData::class,
         MultibancoMethodData::class,
         MyBankMethodData::class,
         OxxoMethodData::class,
         P24MethodData::class,
+        SofortMethodData::class,
         TrustlyMethodData::class,
         VenmoMethodData::class,
         PayLaterMethodData::class,
-        ApplePayMethodData::class,
-        GooglePayMethodData::class,
     ];
 
     private EntityRepository $paymentMethodRepository;
@@ -81,21 +76,7 @@ class PaymentMethodDataRegistry
         $criteria->addAssociation('availabilityRule');
         $criteria->addFilter(new EqualsFilter('handlerIdentifier', $method->getHandler()));
 
-        /** @var PaymentMethodEntity|null $paymentMethod */
-        $paymentMethod = $this->paymentMethodRepository->search($criteria, $context)->first();
-
-        return $paymentMethod;
-    }
-
-    /**
-     * @return array<string>
-     */
-    public function getPaymentHandlers(): array
-    {
-        return \array_map(
-            fn (AbstractMethodData $method) => $method->getHandler(),
-            $this->getPaymentMethods()
-        );
+        return $this->paymentMethodRepository->search($criteria, $context)->first();
     }
 
     /**
@@ -113,6 +94,7 @@ class PaymentMethodDataRegistry
 
         $methods = [];
         foreach (self::PAYMENT_METHODS as $methodDataClass) {
+            /** @var AbstractMethodData $method */
             $method = new $methodDataClass($this->container);
             $methods[] = $method;
         }

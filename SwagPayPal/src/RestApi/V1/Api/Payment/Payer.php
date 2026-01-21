@@ -7,25 +7,33 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Payment;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\Payment\Payer\PayerInfo;
 
-#[OA\Schema(schema: 'swag_paypal_v1_payment_payer')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_payment_payer")
+ */
 class Payer extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $paymentMethod;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $status;
 
-    #[OA\Property(ref: PayerInfo::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_payment_payer_info")
+     */
     protected PayerInfo $payerInfo;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $externalSelectedFundingInstrumentType;
 
     public function getPaymentMethod(): string

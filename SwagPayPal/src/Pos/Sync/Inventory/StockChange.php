@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Pos\Sync\Inventory;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Struct\Struct;
 
-#[Package('checkout')]
 class StockChange extends Struct
 {
     public const STOCK_CHANGE_EXTENSION = 'stockChange';

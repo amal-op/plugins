@@ -7,11 +7,9 @@
 
 namespace Swag\PayPal\Pos\Api\Inventory\BulkChanges;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Common\PosStruct;
 use Swag\PayPal\Pos\Api\Inventory\BulkChanges\ProductChange\VariantChange;
 
-#[Package('checkout')]
 class ProductChange extends PosStruct
 {
     public const TRACKING_START = 'START_TRACKING';

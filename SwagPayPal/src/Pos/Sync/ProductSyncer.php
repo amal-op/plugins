@@ -10,7 +10,6 @@ namespace Swag\PayPal\Pos\Sync;
 use Shopware\Core\Content\Product\ProductCollection;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityCollection;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Swag\PayPal\Pos\Api\Service\ProductConverter;
 use Swag\PayPal\Pos\Sync\Context\ProductContextFactory;
@@ -19,7 +18,6 @@ use Swag\PayPal\Pos\Sync\Product\NewUpdater;
 use Swag\PayPal\Pos\Sync\Product\OutdatedUpdater;
 use Swag\PayPal\Pos\Sync\Product\UnsyncedChecker;
 
-#[Package('checkout')]
 class ProductSyncer
 {
     private ProductConverter $productConverter;

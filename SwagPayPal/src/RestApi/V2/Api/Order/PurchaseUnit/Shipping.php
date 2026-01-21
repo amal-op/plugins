@@ -7,26 +7,25 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V2\Api\Common\Address;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Shipping\Address;
 use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Shipping\Name;
-use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Shipping\Tracker;
-use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Shipping\TrackerCollection;
 
-#[OA\Schema(schema: 'swag_paypal_v2_order_purchase_unit_shipping')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_order_shipping")
+ */
 class Shipping extends PayPalApiStruct
 {
-    #[OA\Property(ref: Name::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_order_shipping_name")
+     */
     protected Name $name;
 
-    #[OA\Property(ref: Address::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_address")
+     */
     protected Address $address;
-
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Tracker::class), nullable: true)]
-    protected ?TrackerCollection $trackers = null;
 
     public function getName(): Name
     {
@@ -46,15 +45,5 @@ class Shipping extends PayPalApiStruct
     public function setAddress(Address $address): void
     {
         $this->address = $address;
-    }
-
-    public function getTrackers(): ?TrackerCollection
-    {
-        return $this->trackers;
-    }
-
-    public function setTrackers(?TrackerCollection $trackers): void
-    {
-        $this->trackers = $trackers;
     }
 }

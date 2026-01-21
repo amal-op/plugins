@@ -7,72 +7,82 @@
 
 namespace Swag\PayPal\RestApi\V2\Api;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V2\Api\Common\Link;
-use Swag\PayPal\RestApi\V2\Api\Common\LinkCollection;
 use Swag\PayPal\RestApi\V2\Api\Referral\BusinessEntity;
 use Swag\PayPal\RestApi\V2\Api\Referral\LegalConsent;
-use Swag\PayPal\RestApi\V2\Api\Referral\LegalConsentCollection;
+use Swag\PayPal\RestApi\V2\Api\Referral\Link;
 use Swag\PayPal\RestApi\V2\Api\Referral\Operation;
-use Swag\PayPal\RestApi\V2\Api\Referral\OperationCollection;
 use Swag\PayPal\RestApi\V2\Api\Referral\PartnerConfigOverride;
 
-#[OA\Schema(schema: 'swag_paypal_v2_referral')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_referral")
+ */
 class Referral extends PayPalApiStruct
 {
+    /**
+     * @deprecated tag:v7.0.0 - will be removed
+     */
+    public const PRODUCT_TYPE_EXPRESS_CHECKOUT = 'EXPRESS_CHECKOUT';
+
     public const PRODUCT_TYPE_PPCP = 'PPCP';
     public const PRODUCT_TYPE_PAYMENT_METHODS = 'PAYMENT_METHODS';
-    public const PRODUCT_TYPE_ADVANCED_VAULTING = 'ADVANCED_VAULTING';
-
-    public const CAPABILITY_PAYPAL_WALLET_VAULTING_ADVANCED = 'PAYPAL_WALLET_VAULTING_ADVANCED';
     public const CAPABILITY_PAY_UPON_INVOICE = 'PAY_UPON_INVOICE';
-    public const CAPABILITY_APPLE_PAY = 'APPLE_PAY';
-    public const CAPABILITY_GOOGLE_PAY = 'GOOGLE_PAY';
 
-    #[OA\Property(ref: BusinessEntity::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_referral_business_entity")
+     */
     protected BusinessEntity $businessEntity;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $preferredLanguageCode;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $trackingId;
 
-    #[OA\Property(ref: PartnerConfigOverride::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_referral_partner_config_override")
+     */
     protected PartnerConfigOverride $partnerConfigOverride;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Operation::class))]
-    protected OperationCollection $operations;
+    /**
+     * @var Operation[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v2_referral_operation"})
+     */
+    protected array $operations;
 
     /**
      * @var string[]
+     *
+     * @OA\Property(type="array", items={"type": "string"})
      */
-    #[OA\Property(type: 'array', items: new OA\Items(type: 'string'))]
-    protected array $products = [
-        self::PRODUCT_TYPE_PPCP,
-        self::PRODUCT_TYPE_PAYMENT_METHODS,
-        self::PRODUCT_TYPE_ADVANCED_VAULTING,
-    ];
+    protected array $products = [self::PRODUCT_TYPE_PPCP, self::PRODUCT_TYPE_PAYMENT_METHODS];
 
     /**
      * @var string[]
+     *
+     * @OA\Property(type="array", items={"type": "string"})
      */
-    #[OA\Property(type: 'array', items: new OA\Items(type: 'string'))]
-    protected array $capabilities = [
-        self::CAPABILITY_PAY_UPON_INVOICE,
-        self::CAPABILITY_PAYPAL_WALLET_VAULTING_ADVANCED,
-        self::CAPABILITY_APPLE_PAY,
-        self::CAPABILITY_GOOGLE_PAY,
-    ];
+    protected array $capabilities = [self::CAPABILITY_PAY_UPON_INVOICE];
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: LegalConsent::class))]
-    protected LegalConsentCollection $legalConsents;
+    /**
+     * @var LegalConsent[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v2_referral_legal_consent"})
+     */
+    protected array $legalConsents;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Link::class))]
-    protected LinkCollection $links;
+    /**
+     * @var Link[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v2_common_link"})
+     */
+    protected array $links;
 
     public function getBusinessEntity(): BusinessEntity
     {
@@ -114,12 +124,18 @@ class Referral extends PayPalApiStruct
         $this->partnerConfigOverride = $partnerConfigOverride;
     }
 
-    public function getOperations(): OperationCollection
+    /**
+     * @return Operation[]
+     */
+    public function getOperations(): array
     {
         return $this->operations;
     }
 
-    public function setOperations(OperationCollection $operations): void
+    /**
+     * @param Operation[] $operations
+     */
+    public function setOperations(array $operations): void
     {
         $this->operations = $operations;
     }
@@ -140,11 +156,6 @@ class Referral extends PayPalApiStruct
         $this->products = $products;
     }
 
-    public function addProduct(string $product): void
-    {
-        $this->products[] = $product;
-    }
-
     /**
      * @return string[]
      */
@@ -161,22 +172,34 @@ class Referral extends PayPalApiStruct
         $this->capabilities = $capabilities;
     }
 
-    public function getLegalConsents(): LegalConsentCollection
+    /**
+     * @return LegalConsent[]
+     */
+    public function getLegalConsents(): array
     {
         return $this->legalConsents;
     }
 
-    public function setLegalConsents(LegalConsentCollection $legalConsents): void
+    /**
+     * @param LegalConsent[] $legalConsents
+     */
+    public function setLegalConsents(array $legalConsents): void
     {
         $this->legalConsents = $legalConsents;
     }
 
-    public function getLinks(): LinkCollection
+    /**
+     * @return Link[]
+     */
+    public function getLinks(): array
     {
         return $this->links;
     }
 
-    public function setLinks(LinkCollection $links): void
+    /**
+     * @param Link[] $links
+     */
+    public function setLinks(array $links): void
     {
         $this->links = $links;
     }

@@ -1,0 +1,63 @@
+{% block sw_cms_element_category_slider %}
+	<div class="sw-cms-el-product-slider" :class="classes" :style="verticalAlignStyle">
+
+
+		{% block sw_cms_element_category_slider_content %}
+			<div class="sw-cms-el-product-slider__content">
+
+				{% block sw_cms_element_category_slider_arrow_left %}
+					<div v-if="hasNavigation" class="sw-cms-el-product-slider__navigation">
+						<sw-icon class="sw-cms-el-product-slider__navigation-button" name="regular-chevron-left" size="24"/>
+					</div>
+				{% endblock %}
+
+				{% block sw_cms_element_category_slider_category_holder %}
+					<div ref="ctaHolder" class="sw-cms-el-product-slider__product-holder" :style="sliderBoxMinWidth">
+						<template v-if="!element.data || !element.data.categories">
+
+							{% block sw_cms_element_category_slider_demo_data %}
+								<div v-for="index in sliderBoxLimit" :key="index" :element="demoCategoryElement">
+									<div class="sw-cms-el-product-box box-standard">
+										<div class="sw-cms-el-product-box__content">
+											<div class="sw-cms-el-product-box__media">
+												<a href="#" title="Variant product" class="sw-cms-el-product-box__image-link"><img src="" class="sw-cms-el-product-box__image"></a>
+											</div>
+											<div>
+												{{ $tc('cmsbundle.element.general.config.category') }}
+											</div>
+										</div>
+									</div>
+								</div>
+							{% endblock %}
+						</template>
+
+						<template v-else>
+
+							{% block sw_cms_element_category_slider_categories %}
+
+								<div v-for="(category, index) in element.data.categories" v-if="index < sliderBoxLimit" :key="category.id">
+									<div class="sw-cms-el-product-box box-standard">
+										<div class="sw-cms-el-product-box__content" style="flex-direction: column;align-items: center;align-content: center;">
+											<div class="sw-cms-el-product-box__media">
+												<a href="#" title="Variant product" class="sw-cms-el-product-box__image-link"><img src="" class="sw-cms-el-product-box__image"></a>
+											</div>
+											<div>
+												{{ category.name }}
+											</div>
+										</div>
+									</div>
+								</div>
+							{% endblock %}
+						</template>
+					</div>
+				{% endblock %}
+
+				{% block sw_cms_element_product_slider_arrow_right %}
+					<div v-if="hasNavigation" class="sw-cms-el-product-slider__navigation">
+						<sw-icon class="sw-cms-el-product-slider__navigation-button" name="regular-chevron-right" size="24"/>
+					</div>
+				{% endblock %}
+			</div>
+		{% endblock %}
+	</div>
+{% endblock %}

@@ -1,122 +1,28 @@
 {% block swag_paypal_content_card_channel_config_installment %}
-<sw-card
-    position-identifier="swag-paypal-card-channel-config-installment"
-    :title="$tc('swag-paypal.settingForm.installment.cardTitle')"
-    :subtitle="$tc('swag-paypal.settingForm.installment.cardSubtitle')"
->
+    <sw-card position-identifier="swag-paypal-card-channel-config-installment"
+             :title="$tc('swag-paypal.settingForm.installment.cardTitle')">
 
-    {% block swag_paypal_content_card_channel_config_installment_settings %}
-    <div v-if="actualConfigData" class="swag-paypal-settings-installment-fields">
+        {% block swag_paypal_content_card_channel_config_installment_settings %}
+            <div v-if="actualConfigData" class="swag-paypal-settings-installment-fields">
 
-        {% block swag_paypal_content_card_channel_config_installment_settings_detail_page_enabled %}
-        <swag-paypal-inherit-wrapper
-            v-bind="{ actualConfigData, allConfigs, selectedSalesChannelId }"
-            path="SwagPayPal.settings.installmentBannerDetailPageEnabled"
-        >
-            <template #content="props">
-                <sw-switch-field
-                    name="SwagPayPal.settings.installmentBannerDetailPageEnabled"
-                    bordered
-                    :mapInheritance="props"
-                    :label="$tc('swag-paypal.settingForm.installment.installmentBannerEnabled.detailPage.label')"
-                    :helpText="$tc('swag-paypal.settingForm.installment.installmentBannerEnabled.detailPage.helpText')"
-                    :disabled="props.isInherited || !acl.can('swag_paypal.editor')"
-                    :value="props.currentValue"
-                    {% if VUE3 %}
-                    @update:value="props.updateCurrentValue"
-                    {% else %}
-                    @change="props.updateCurrentValue"
-                    {% endif %}
-                />
-            </template>
-        </swag-paypal-inherit-wrapper>
+                {% block swag_paypal_content_card_channel_config_installment_settings_checkout_enabled %}
+                    <sw-inherit-wrapper
+                        v-model="actualConfigData['SwagPayPal.settings.installmentBannerEnabled']"
+                        :inheritedValue="selectedSalesChannelId == null ? null : allConfigs['null']['SwagPayPal.settings.installmentBannerEnabled']"
+                        :customInheritationCheckFunction="checkBoolFieldInheritance">
+                        <template #content="props">
+                            <sw-switch-field name="SwagPayPal.settings.installmentBannerEnabled"
+                                             bordered
+                                             :mapInheritance="props"
+                                             :label="$tc('swag-paypal.settingForm.installment.installmentBannerEnabled.label')"
+                                             :disabled="props.isInherited || !acl.can('swag_paypal.editor')"
+                                             :value="props.currentValue"
+                                             @change="props.updateCurrentValue">
+                            </sw-switch-field>
+                        </template>
+                    </sw-inherit-wrapper>
+                {% endblock %}
+            </div>
         {% endblock %}
-
-        {% block swag_paypal_content_card_channel_config_installment_settings_cart_enabled %}
-        <swag-paypal-inherit-wrapper
-            v-bind="{ actualConfigData, allConfigs, selectedSalesChannelId }"
-            path="SwagPayPal.settings.installmentBannerCartEnabled"
-        >
-            <template #content="props">
-                <sw-switch-field
-                    name="SwagPayPal.settings.installmentBannerCartEnabled"
-                    bordered
-                    :mapInheritance="props"
-                    :label="$tc('swag-paypal.settingForm.installment.installmentBannerEnabled.cart.label')"
-                    :helpText="$tc('swag-paypal.settingForm.installment.installmentBannerEnabled.cart.helpText')"
-                    :disabled="props.isInherited || !acl.can('swag_paypal.editor')"
-                    :value="props.currentValue"
-                    {% if VUE3 %}
-                    @update:value="props.updateCurrentValue"
-                    {% else %}
-                    @change="props.updateCurrentValue"
-                    {% endif %}
-                />
-            </template>
-        </swag-paypal-inherit-wrapper>
-        {% endblock %}
-
-        {% block swag_paypal_content_card_channel_config_installment_settings_off_canvas_cart_enabled %}
-        <swag-paypal-inherit-wrapper
-            v-bind="{ actualConfigData, allConfigs, selectedSalesChannelId }"
-            path="SwagPayPal.settings.installmentBannerOffCanvasCartEnabled"
-        >
-            <template #content="props">
-                <sw-switch-field
-                    name="SwagPayPal.settings.installmentBannerOffCanvasCartEnabled"
-                    bordered
-                    :mapInheritance="props"
-                    :label="$tc('swag-paypal.settingForm.installment.installmentBannerEnabled.offCanvasCart.label')"
-                    :helpText="$tc('swag-paypal.settingForm.installment.installmentBannerEnabled.offCanvasCart.helpText')"
-                    :disabled="props.isInherited || !acl.can('swag_paypal.editor')"
-                    :value="props.currentValue"
-                    @change="props.updateCurrentValue"
-                />
-            </template>
-        </swag-paypal-inherit-wrapper>
-        {% endblock %}
-
-        {% block swag_paypal_content_card_channel_config_installment_settings_login_page_enabled %}
-        <swag-paypal-inherit-wrapper
-            v-bind="{ actualConfigData, allConfigs, selectedSalesChannelId }"
-            path="SwagPayPal.settings.installmentBannerLoginPageEnabled"
-        >
-            <template #content="props">
-                <sw-switch-field
-                    name="SwagPayPal.settings.installmentBannerLoginPageEnabled"
-                    bordered
-                    :mapInheritance="props"
-                    :label="$tc('swag-paypal.settingForm.installment.installmentBannerEnabled.loginPage.label')"
-                    :helpText="$tc('swag-paypal.settingForm.installment.installmentBannerEnabled.loginPage.helpText')"
-                    :disabled="props.isInherited || !acl.can('swag_paypal.editor')"
-                    :value="props.currentValue"
-                    @change="props.updateCurrentValue"
-                />
-            </template>
-        </swag-paypal-inherit-wrapper>
-        {% endblock %}
-
-        {% block swag_paypal_content_card_channel_config_installment_settings_footer_enabled %}
-        <swag-paypal-inherit-wrapper
-            v-bind="{ actualConfigData, allConfigs, selectedSalesChannelId }"
-            path="SwagPayPal.settings.installmentBannerFooterEnabled"
-        >
-            <template #content="props">
-                <sw-switch-field
-                    name="SwagPayPal.settings.installmentBannerFooterEnabled"
-                    bordered
-                    :mapInheritance="props"
-                    :label="$tc('swag-paypal.settingForm.installment.installmentBannerEnabled.footer.label')"
-                    :helpText="$tc('swag-paypal.settingForm.installment.installmentBannerEnabled.footer.helpText')"
-                    :disabled="props.isInherited || !acl.can('swag_paypal.editor')"
-                    :value="props.currentValue"
-                    @change="props.updateCurrentValue"
-                />
-            </template>
-        </swag-paypal-inherit-wrapper>
-        {% endblock %}
-
-    </div>
-    {% endblock %}
-</sw-card>
+    </sw-card>
 {% endblock %}

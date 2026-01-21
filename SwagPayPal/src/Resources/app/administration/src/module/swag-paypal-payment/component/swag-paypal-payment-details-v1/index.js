@@ -98,7 +98,7 @@ Component.register('swag-paypal-payment-details-v1', {
 
         setRelatedResources() {
             const rawRelatedResources = this.paymentResource.transactions[0].related_resources;
-            if (!rawRelatedResources) {
+            if (rawRelatedResources === null) {
                 return;
             }
 

@@ -7,27 +7,40 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Common;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties\CreditNotProcessed\ServiceDetails\SubReason;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_common_service_details')]
-#[Package('checkout')]
-class ServiceDetails extends PayPalApiStruct
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_common_service_details")
+ */
+abstract class ServiceDetails extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $description;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $serviceStarted;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $note;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: SubReason::class))]
-    protected SubReasonCollection $subReasons;
+    /**
+     * @var SubReason[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_disputes_common_sub_reason"})
+     */
+    protected array $subReasons;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $purchaseUrl;
 
     public function getDescription(): string
@@ -60,12 +73,18 @@ class ServiceDetails extends PayPalApiStruct
         $this->note = $note;
     }
 
-    public function getSubReasons(): SubReasonCollection
+    /**
+     * @return SubReason[]
+     */
+    public function getSubReasons(): array
     {
         return $this->subReasons;
     }
 
-    public function setSubReasons(SubReasonCollection $subReasons): void
+    /**
+     * @param SubReason[] $subReasons
+     */
+    public function setSubReasons(array $subReasons): void
     {
         $this->subReasons = $subReasons;
     }

@@ -7,29 +7,39 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Payment\Transaction;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList\Item;
-use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList\ItemCollection;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList\ShippingAddress;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList\ShippingOption;
-use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList\ShippingOptionCollection;
 
-#[OA\Schema(schema: 'swag_paypal_v1_payment_transaction_item_list')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_payment_transaction_item_list")
+ */
 class ItemList extends PayPalApiStruct
 {
-    #[OA\Property(ref: ShippingAddress::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_payment_transaction_shipping_address")
+     */
     protected ShippingAddress $shippingAddress;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Item::class))]
-    protected ItemCollection $items;
+    /**
+     * @var Item[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_payment_transaction_item"})
+     */
+    protected array $items;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: ShippingOption::class))]
-    protected ShippingOptionCollection $shippingOptions;
+    /**
+     * @var ShippingOption[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_payment_transaction_shipping_option"})
+     */
+    protected array $shippingOptions;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $shippingPhoneNumber;
 
     public function getShippingAddress(): ShippingAddress
@@ -42,22 +52,34 @@ class ItemList extends PayPalApiStruct
         $this->shippingAddress = $shippingAddress;
     }
 
-    public function getItems(): ItemCollection
+    /**
+     * @return Item[]
+     */
+    public function getItems(): array
     {
         return $this->items;
     }
 
-    public function setItems(ItemCollection $items): void
+    /**
+     * @param Item[] $items
+     */
+    public function setItems(array $items): void
     {
         $this->items = $items;
     }
 
-    public function getShippingOptions(): ShippingOptionCollection
+    /**
+     * @return ShippingOption[]
+     */
+    public function getShippingOptions(): array
     {
         return $this->shippingOptions;
     }
 
-    public function setShippingOptions(ShippingOptionCollection $shippingOptions): void
+    /**
+     * @param ShippingOption[] $shippingOptions
+     */
+    public function setShippingOptions(array $shippingOptions): void
     {
         $this->shippingOptions = $shippingOptions;
     }

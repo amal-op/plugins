@@ -1,0 +1,8 @@
+import template from './sw-cms-preview-cmsbundle-cta-slider.html.twig';
+import './sw-cms-preview-cmsbundle-cta-slider.scss';
+
+const { Component } = Shopware;
+
+Component.register('sw-cms-preview-cmsbundle-cta-slider', {
+    template,
+});

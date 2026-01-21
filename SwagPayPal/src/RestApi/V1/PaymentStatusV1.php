@@ -7,9 +7,6 @@
 
 namespace Swag\PayPal\RestApi\V1;
 
-use Shopware\Core\Framework\Log\Package;
-
-#[Package('checkout')]
 final class PaymentStatusV1
 {
     public const PAYMENT_COMPLETED = 'completed';

@@ -7,28 +7,38 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Item;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V1\Api\Common\Amount;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\MoneyMovement\Amount;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_item_money_movement')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_money_movement")
+ */
 class MoneyMovement extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $affectedParty;
 
-    #[OA\Property(ref: Amount::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_money")
+     */
     protected Amount $amount;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $initiatedTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $type;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $reason;
 
     public function getAffectedParty(): string

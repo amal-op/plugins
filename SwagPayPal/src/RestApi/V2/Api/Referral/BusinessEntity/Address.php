@@ -7,20 +7,24 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Referral\BusinessEntity;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(schema: 'swag_paypal_v2_referral_business_entity_address')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_referral_address")
+ */
 class Address extends PayPalApiStruct
 {
     public const TYPE_WORK = 'WORK';
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $countryCode;
 
-    #[OA\Property(type: 'string', default: self::TYPE_WORK)]
+    /**
+     * @OA\Property(type="string", default=Swag\PayPal\RestApi\V2\Api\Referral\BusinessEntity\Address::TYPE_WORK)
+     */
     protected string $type = self::TYPE_WORK;
 
     public function getType(): string

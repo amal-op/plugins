@@ -8,11 +8,14 @@
 namespace Swag\PayPal\Pos\MessageQueue\Message;
 
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\MessageQueue\AsyncMessageInterface;
 use Shopware\Core\Framework\Struct\JsonSerializableTrait;
 
-#[Package('checkout')]
+// remove with end of 6.4 compatibility
+if (!\interface_exists(AsyncMessageInterface::class)) {
+    require_once __DIR__ . '/../../../Util/Compatibility/AsyncMessageInterface.php';
+}
+
 class InventoryUpdateMessage implements AsyncMessageInterface, \JsonSerializable
 {
     use JsonSerializableTrait {

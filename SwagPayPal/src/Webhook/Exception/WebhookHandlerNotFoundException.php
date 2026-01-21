@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Webhook\Exception;
 
-use Shopware\Core\Framework\Log\Package;
 use Symfony\Component\HttpFoundation\Response;
 
-#[Package('checkout')]
 class WebhookHandlerNotFoundException extends WebhookException
 {
     public function __construct(

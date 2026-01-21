@@ -8,12 +8,10 @@
 namespace Swag\PayPal\PaymentsApi\Patch;
 
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Swag\PayPal\PaymentsApi\Builder\OrderPaymentBuilderInterface;
 use Swag\PayPal\RestApi\V1\Api\Patch;
 
-#[Package('checkout')]
 class TransactionPatchBuilder
 {
     private OrderPaymentBuilderInterface $orderPaymentBuilder;
@@ -34,7 +32,7 @@ class TransactionPatchBuilder
         SalesChannelContext $salesChannelContext
     ): array {
         $patches = [];
-        $transaction = $this->orderPaymentBuilder->getPayment($paymentTransaction, $salesChannelContext)->getTransactions()->first();
+        $transaction = $this->orderPaymentBuilder->getPayment($paymentTransaction, $salesChannelContext)->getTransactions()[0] ?? null;
         if (!$transaction) {
             return $patches;
         }

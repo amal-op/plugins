@@ -11,15 +11,9 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData;
 use Swag\PayPal\Util\Lifecycle\Method\PaymentMethodDataRegistry;
 
-/**
- * @internal
- */
-#[Package('checkout')]
 class PaymentMethodStateService
 {
     private PaymentMethodDataRegistry $methodDataRegistry;
@@ -44,25 +38,17 @@ class PaymentMethodStateService
     {
         $method = $this->methodDataRegistry->getPaymentMethod($methodDataClass);
 
-        $this->setPaymentMethodStateByHandler($method->getHandler(), $active, $context);
+        $this->setPaymentMethodStateByMethod($method, $active, $context);
     }
 
-    public function setPaymentMethodStateByHandler(string $handler, bool $active, Context $context): void
+    public function setPaymentMethodStateByMethod(AbstractMethodData $method, bool $active, Context $context): void
     {
-        $criteria = new Criteria();
-        $criteria->addFilter(new EqualsFilter('handlerIdentifier', $handler));
+        $id = $this->methodDataRegistry->getEntityIdFromData($method, $context);
 
-        /** @var string|null $id */
-        $id = $this->paymentMethodRepository->searchIds($criteria, $context)->firstId();
         if ($id === null) {
             return;
         }
 
-        $this->setPaymentMethodStateById($id, $active, $context);
-    }
-
-    public function setPaymentMethodStateById(string $id, bool $active, Context $context): void
-    {
         $this->paymentMethodRepository->update([[
             'id' => $id,
             'active' => $active,

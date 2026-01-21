@@ -8,12 +8,10 @@
 namespace Swag\PayPal\Pos\MessageQueue\Manager;
 
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Swag\PayPal\Pos\MessageQueue\Message\AbstractSyncMessage;
 use Swag\PayPal\Pos\MessageQueue\MessageDispatcher;
 
-#[Package('checkout')]
 abstract class AbstractSyncManager
 {
     protected MessageDispatcher $messageBus;

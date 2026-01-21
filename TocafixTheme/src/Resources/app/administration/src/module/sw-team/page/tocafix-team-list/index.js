@@ -13,11 +13,13 @@ Component.register('tocafix-team-list', {
     data() {
         return {
             isLoading: false,
-            repository: null,
+            // Initialize as null or empty array
             teams: null
         };
     },
 
+    // Shopware 6.6 still supports metaInfo, but moving toward 
+    // a more standard Vue 3 approach in the future.
     metaInfo() {
         return {
             title: this.$createTitle()
@@ -25,10 +27,14 @@ Component.register('tocafix-team-list', {
     },
 
     computed: {
+        // Use the repository factory to create the repository
+        teamRepository() {
+            return this.repositoryFactory.create('tocafix_team');
+        },
+
         columns() {
             return [{
                 property: 'name',
-                dataIndex: 'name',
                 label: this.$t('tocafix-team.list.columnName'),
                 routerLink: 'tocafix.team.detail',
                 inlineEdit: 'string',
@@ -36,22 +42,18 @@ Component.register('tocafix-team-list', {
                 primary: true
             }, {
                 property: 'position',
-                dataIndex: 'position',
                 label: this.$t('tocafix-team.list.columnPosition'),
                 allowResize: true
             }, {
                 property: 'email',
-                dataIndex: 'email',
                 label: this.$t('tocafix-team.list.columnEmail'),
                 allowResize: true
             }, {
                 property: 'phoneNumber',
-                dataIndex: 'phoneNumber',
                 label: this.$t('tocafix-team.list.columnPhoneNumber'),
                 allowResize: true
             }, {
                 property: 'sortOrder',
-                dataIndex: 'sortOrder',
                 label: this.$t('tocafix-team.list.columnSortOrder'),
                 allowResize: true
             }];
@@ -59,22 +61,28 @@ Component.register('tocafix-team-list', {
     },
 
     created() {
-        this.loadList();
+        this.createdComponent();
     },
 
     methods: {
-        loadList() {
+        createdComponent() {
+            this.loadList();
+        },
+
+        async loadList() {
             this.isLoading = true;
-            this.repository = this.repositoryFactory.create('tocafix_team');
+            
             const teamCriteria = new Criteria();
             teamCriteria.addSorting(Criteria.sort('sortOrder', 'ASC'));
 
-            this.repository
-                .search(teamCriteria, Shopware.Context.api)
-                .then((result) => {
-                    this.teams = result;
-                    this.isLoading = false;
-                });
+            try {
+                const result = await this.teamRepository.search(teamCriteria, Shopware.Context.api);
+                this.teams = result;
+            } catch (error) {
+                console.error(error);
+            } finally {
+                this.isLoading = false;
+            }
         },
 
         onChangeLanguage() {

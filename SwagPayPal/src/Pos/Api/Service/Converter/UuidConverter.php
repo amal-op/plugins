@@ -7,11 +7,9 @@
 
 namespace Swag\PayPal\Pos\Api\Service\Converter;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Uuid\Exception\InvalidUuidException;
 use Shopware\Core\Framework\Uuid\Uuid;
 
-#[Package('checkout')]
 class UuidConverter
 {
     public function convertUuidToV1(string $uuid): string
@@ -30,19 +28,6 @@ class UuidConverter
         $uuid = \str_replace('-', '', $uuid);
 
         $uuid = \substr_replace($uuid, '4', 12, 1);
-
-        if (!Uuid::isValid($uuid)) {
-            throw new InvalidUuidException($uuid);
-        }
-
-        return $uuid;
-    }
-
-    public function convertUuidToV7(string $uuid): string
-    {
-        $uuid = \str_replace('-', '', $uuid);
-
-        $uuid = \substr_replace($uuid, '7', 12, 1);
 
         if (!Uuid::isValid($uuid)) {
             throw new InvalidUuidException($uuid);

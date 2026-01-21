@@ -8,13 +8,11 @@
 namespace Swag\PayPal\Checkout\Payment\Method;
 
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Checkout\Cart\CartException;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Payment\Cart\PaymentHandler\SynchronousPaymentHandlerInterface;
 use Shopware\Core\Checkout\Payment\Cart\SyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Exception\SyncPaymentProcessException;
-use Shopware\Core\Checkout\Payment\PaymentException;
-use Shopware\Core\Framework\Log\Package;
+use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Storefront\Controller\StorefrontController;
@@ -25,19 +23,15 @@ use Swag\PayPal\RestApi\Exception\PayPalApiException;
 use Swag\PayPal\RestApi\PartnerAttributionId;
 use Swag\PayPal\RestApi\V2\Resource\OrderResource;
 use Swag\PayPal\Setting\Service\SettingsValidationServiceInterface;
+use Swag\PayPal\Util\Compatibility\Exception;
 use Symfony\Component\HttpFoundation\Exception\SessionNotFoundException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-#[Package('checkout')]
 class PUIHandler extends AbstractPaymentMethodHandler implements SynchronousPaymentHandlerInterface
 {
     public const PUI_FRAUD_NET_SESSION_ID = 'payPalPuiFraudnetSessionId';
-
-    /**
-     * @deprecated tag:v10.0.0 - Will be removed, also delete corresponding snippets
-     */
     private const ERROR_KEYS = [
         'PAYMENT_SOURCE_INFO_CANNOT_BE_VERIFIED' => 'unverifiedInfo',
         'PAYMENT_SOURCE_DECLINED_BY_PROCESSOR' => 'declined',
@@ -97,7 +91,7 @@ class PUIHandler extends AbstractPaymentMethodHandler implements SynchronousPaym
 
         $customer = $salesChannelContext->getCustomer();
         if ($customer === null) {
-            throw CartException::customerNotLoggedIn();
+            throw Exception::customerNotLoggedIn();
         }
 
         try {
@@ -108,42 +102,37 @@ class PUIHandler extends AbstractPaymentMethodHandler implements SynchronousPaym
             $order = $this->puiOrderBuilder->getOrder(
                 $transaction,
                 $salesChannelContext,
-                $dataBag,
+                $customer
             );
 
-            $updateTime = $transaction->getOrderTransaction()->getUpdatedAt();
+            try {
+                $paypalOrderResponse = $this->orderResource->create(
+                    $order,
+                    $salesChannelContext->getSalesChannelId(),
+                    PartnerAttributionId::PAYPAL_PPCP,
+                    true,
+                    Uuid::randomHex(),
+                    $fraudnetSessionId
+                );
+            } catch (PayPalApiException $exception) {
+                $this->handleError($exception);
 
-            $paypalOrderResponse = $this->orderResource->create(
-                $order,
-                $salesChannelContext->getSalesChannelId(),
-                PartnerAttributionId::PAYPAL_PPCP,
-                true,
-                $transactionId . ($updateTime ? $updateTime->getTimestamp() : ''),
-                $fraudnetSessionId
-            );
+                throw $exception;
+            }
 
             $this->transactionDataService->setOrderId(
                 $transactionId,
                 $paypalOrderResponse->getId(),
                 PartnerAttributionId::PAYPAL_PPCP,
-                $salesChannelContext
+                $salesChannelContext->getContext()
             );
-        } catch (PaymentException $e) {
-            if ($e->getOrderTransactionId() === null && \method_exists($e, 'setOrderTransactionId')) {
-                $e->setOrderTransactionId($transactionId);
-            }
-
-            throw $e;
         } catch (\Exception $e) {
-            $this->logger->error($e->getMessage(), ['error' => $e]);
+            $this->logger->error($e->getMessage());
 
             throw new SyncPaymentProcessException($transactionId, $e->getMessage());
         }
     }
 
-    /**
-     * @deprecated tag:v10.0.0 - Will be removed. Use PayPalController::handleError instead
-     */
     public function handleError(PayPalApiException $exception): void
     {
         if ($exception->getStatusCode() !== Response::HTTP_UNPROCESSABLE_ENTITY) {

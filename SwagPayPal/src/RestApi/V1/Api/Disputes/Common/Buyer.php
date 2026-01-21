@@ -7,15 +7,17 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Common;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_common_buyer')]
-#[Package('checkout')]
-class Buyer extends PayPalApiStruct
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_common_buyer")
+ */
+abstract class Buyer extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $name;
 
     public function getName(): string

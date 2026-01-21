@@ -24,7 +24,7 @@
     &__content{
         display: flex;
 
-        .cms-element-hatslogic-cta .cta-wrapper__inner{
+        .cms-element-cmsbundle-cta .cta-wrapper__inner{
             padding: rem(40);
             max-width: 100%;
 
@@ -75,8 +75,8 @@
     }
 }
 
-.cms-element-hatslogic-title{
-    & + .cms-element-hatslogic-section-block{
+.cms-element-cmsbundle-title{
+    & + .cms-element-cmsbundle-section-block{
         margin-top: rem(100);
 
         max-width: rem(1420);

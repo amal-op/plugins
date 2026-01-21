@@ -7,16 +7,18 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\V2\Api\Common\Money;
 use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown;
 
-#[OA\Schema(schema: 'swag_paypal_v2_order_purchase_unit_amount')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_order_amount")
+ */
 class Amount extends Money
 {
-    #[OA\Property(ref: Breakdown::class, nullable: true)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_order_breakdown", nullable=true)
+     */
     protected ?Breakdown $breakdown = null;
 
     public function getBreakdown(): ?Breakdown

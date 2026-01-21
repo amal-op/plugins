@@ -8,88 +8,71 @@
 namespace Swag\PayPal\OrdersApi\Builder\Util;
 
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Checkout\Cart\Cart;
-use Shopware\Core\Checkout\Cart\LineItem\LineItem;
 use Shopware\Core\Checkout\Cart\Price\Struct\CalculatedPrice;
 use Shopware\Core\Checkout\Cart\Price\Struct\CartPrice;
 use Shopware\Core\Checkout\Order\Aggregate\OrderLineItem\OrderLineItemEntity;
 use Shopware\Core\Checkout\Order\OrderEntity;
-use Shopware\Core\Content\Product\State;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\Currency\CurrencyEntity;
-use Swag\PayPal\OrdersApi\Builder\Event\PayPalV2ItemFromCartEvent;
 use Swag\PayPal\OrdersApi\Builder\Event\PayPalV2ItemFromOrderEvent;
-use Swag\PayPal\RestApi\V2\Api\Common\Money;
-use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount;
 use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Item;
-use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\ItemCollection;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Item\Tax;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Item\UnitAmount;
 use Swag\PayPal\Util\PriceFormatter;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-#[Package('checkout')]
 class ItemListProvider
 {
+    private PriceFormatter $priceFormatter;
+
+    private EventDispatcherInterface $eventDispatcher;
+
+    private LoggerInterface $logger;
+
     /**
      * @internal
      */
     public function __construct(
-        private readonly PriceFormatter $priceFormatter,
-        private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly LoggerInterface $logger
+        PriceFormatter $priceFormatter,
+        EventDispatcherInterface $eventDispatcher,
+        LoggerInterface $logger
     ) {
+        $this->priceFormatter = $priceFormatter;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->logger = $logger;
     }
 
-    public function getItemList(CurrencyEntity $currency, OrderEntity $order): ItemCollection
+    /**
+     * @return Item[]
+     */
+    public function getItemList(CurrencyEntity $currency, OrderEntity $order): array
     {
-        $items = new ItemCollection();
+        $items = [];
         $currencyCode = $currency->getIsoCode();
         $isNet = $order->getTaxStatus() !== CartPrice::TAX_STATE_GROSS;
         $lineItems = $order->getNestedLineItems();
         if ($lineItems === null) {
-            return new ItemCollection();
+            return [];
         }
 
         foreach ($lineItems as $lineItem) {
             $item = new Item();
             $this->setName($lineItem, $item);
             $this->setSku($lineItem, $item);
-            $item->setCategory(\in_array(State::IS_DOWNLOAD, $lineItem->getStates(), true) ? Item::CATEGORY_DIGITAL_GOODS : Item::CATEGORY_PHYSICAL_GOODS);
+            $item->setCategory(Item::CATEGORY_PHYSICAL_GOODS);
             $this->buildPriceData($lineItem, $item, $currencyCode, $isNet);
 
             $event = new PayPalV2ItemFromOrderEvent($item, $lineItem);
             $this->eventDispatcher->dispatch($event);
 
-            $items->add($event->getPayPalLineItem());
+            $items[] = $event->getPayPalLineItem();
         }
 
         return $items;
     }
 
-    public function getItemListFromCart(CurrencyEntity $currency, Cart $cart): ItemCollection
+    private function setName(OrderLineItemEntity $lineItem, Item $item): void
     {
-        $items = new ItemCollection();
-        $currencyCode = $currency->getIsoCode();
-        $isNet = $cart->getPrice()->getTaxStatus() !== CartPrice::TAX_STATE_GROSS;
-
-        foreach ($cart->getLineItems() as $lineItem) {
-            $item = new Item();
-            $this->setName($lineItem, $item);
-            $this->setSku($lineItem, $item);
-            $item->setCategory(\in_array(State::IS_DOWNLOAD, $lineItem->getStates(), true) ? Item::CATEGORY_DIGITAL_GOODS : Item::CATEGORY_PHYSICAL_GOODS);
-            $this->buildPriceData($lineItem, $item, $currencyCode, $isNet);
-
-            $event = new PayPalV2ItemFromCartEvent($item, $lineItem);
-            $this->eventDispatcher->dispatch($event);
-
-            $items->add($event->getPayPalLineItem());
-        }
-
-        return $items;
-    }
-
-    private function setName(OrderLineItemEntity|LineItem $lineItem, Item $item): void
-    {
-        $label = $lineItem->getLabel() ?? '';
+        $label = $lineItem->getLabel();
 
         try {
             $item->setName($label);
@@ -99,7 +82,7 @@ class ItemListProvider
         }
     }
 
-    private function setSku(OrderLineItemEntity|LineItem $lineItem, Item $item): void
+    private function setSku(OrderLineItemEntity $lineItem, Item $item): void
     {
         $payload = $lineItem->getPayload();
         if ($payload === null || !\array_key_exists('productNumber', $payload)) {
@@ -116,40 +99,40 @@ class ItemListProvider
         }
     }
 
-    private function buildPriceData(OrderLineItemEntity|LineItem $lineItem, Item $item, string $currencyCode, bool $isNet): void
+    private function buildPriceData(OrderLineItemEntity $lineItem, Item $item, string $currencyCode, bool $isNet): void
     {
-        $unitPrice = $this->priceFormatter->formatPrice($lineItem->getPrice()?->getUnitPrice() ?? 0.0, $currencyCode);
+        $unitPrice = $this->priceFormatter->formatPrice($lineItem->getUnitPrice());
 
-        $unitAmount = new Amount();
+        $unitAmount = new UnitAmount();
         $unitAmount->setCurrencyCode($currencyCode);
         $unitAmount->setValue($unitPrice);
         $item->setUnitAmount($unitAmount);
         $item->setQuantity($lineItem->getQuantity());
 
-        $tax = new Money();
+        $tax = new Tax();
         $tax->setCurrencyCode($currencyCode);
-        $tax->setValue($this->getTax($lineItem, $isNet, true, $currencyCode));
+        $tax->setValue($this->getTax($lineItem, $isNet, true));
         $item->setTax($tax);
         $item->setTaxRate($this->getTaxRate($isNet, $lineItem->getPrice()));
 
-        if (!$this->hasMismatchingPrice($lineItem, $item, $isNet, $currencyCode)) {
+        if (!$this->hasMismatchingPrice($lineItem, $item, $isNet)) {
             return;
         }
 
-        $unitAmount->setValue($this->priceFormatter->formatPrice($lineItem->getPrice()?->getTotalPrice() ?? 0.0, $currencyCode));
-        $tax->setValue($this->getTax($lineItem, $isNet, false, $currencyCode));
+        $unitAmount->setValue($this->priceFormatter->formatPrice($lineItem->getTotalPrice()));
+        $tax->setValue($this->getTax($lineItem, $isNet, false));
         $item->setQuantity(1);
-        $item->setName(\mb_substr(\sprintf('%s x %s', $lineItem->getQuantity(), $item->getName()), 0, Item::MAX_LENGTH_NAME));
+        $item->setName(\sprintf('%s x %s', $lineItem->getQuantity(), $item->getName()));
     }
 
-    private function getTax(OrderLineItemEntity|LineItem $lineItem, bool $isNet, bool $perUnit, string $currencyCode): string
+    private function getTax(OrderLineItemEntity $lineItem, bool $isNet, bool $perUnit): string
     {
         $price = $lineItem->getPrice();
         if (!$isNet || $price === null) {
             return '0.00';
         }
 
-        return $this->priceFormatter->formatPrice($price->getCalculatedTaxes()->getAmount() / ($perUnit ? $lineItem->getQuantity() : 1.0), $currencyCode);
+        return $this->priceFormatter->formatPrice($price->getCalculatedTaxes()->getAmount() / ($perUnit ? $lineItem->getQuantity() : 1.0));
     }
 
     private function getTaxRate(bool $isNet, ?CalculatedPrice $price): float
@@ -163,18 +146,18 @@ class ItemListProvider
             return 0.0;
         }
 
-        return \round($calculatedTax->getTaxRate(), 4);
+        return $calculatedTax->getTaxRate();
     }
 
-    private function hasMismatchingPrice(OrderLineItemEntity|LineItem $lineItem, Item $item, bool $isNet, string $currencyCode): bool
+    private function hasMismatchingPrice(OrderLineItemEntity $lineItem, Item $item, bool $isNet): bool
     {
-        $totalTaxes = $this->getTax($lineItem, $isNet, false, $currencyCode);
-        if ($totalTaxes !== $this->priceFormatter->formatPrice((float) $item->getTax()->getValue() * $lineItem->getQuantity(), $currencyCode)) {
+        $totalTaxes = $this->getTax($lineItem, $isNet, false);
+        if ($totalTaxes !== $this->priceFormatter->formatPrice((float) $item->getTax()->getValue() * $lineItem->getQuantity())) {
             return true;
         }
 
-        $totalPrice = $this->priceFormatter->formatPrice($lineItem->getPrice()?->getTotalPrice() ?? 0.0, $currencyCode);
-        if ($totalPrice !== $this->priceFormatter->formatPrice((float) $item->getUnitAmount()->getValue() * $lineItem->getQuantity(), $currencyCode)) {
+        $totalPrice = $this->priceFormatter->formatPrice($lineItem->getTotalPrice());
+        if ($totalPrice !== $this->priceFormatter->formatPrice((float) $item->getUnitAmount()->getValue() * $lineItem->getQuantity())) {
             return true;
         }
 

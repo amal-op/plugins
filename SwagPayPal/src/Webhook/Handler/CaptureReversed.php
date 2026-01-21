@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Webhook\Handler;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Webhook\WebhookEventTypes;
 
-#[Package('checkout')]
 class CaptureReversed extends CaptureRefunded
 {
     public function getEventType(): string

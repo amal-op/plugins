@@ -9,13 +9,11 @@ namespace Swag\PayPal\RestApi\Client;
 
 use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\RestApi\PartnerAttributionId;
 use Swag\PayPal\RestApi\V1\Api\OAuthCredentials;
 use Swag\PayPal\RestApi\V1\RequestUriV1;
 
-#[Package('checkout')]
-class TokenClient extends AbstractClient implements TokenClientInterface
+class TokenClient extends AbstractClient
 {
     public function __construct(
         OAuthCredentials $credentials,
@@ -24,24 +22,19 @@ class TokenClient extends AbstractClient implements TokenClientInterface
         $client = new Client([
             'base_uri' => $credentials->getUrl(),
             'headers' => [
-                'PayPal-Partner-Attribution-Id' => PartnerAttributionId::PAYPAL_PPCP,
+                'PayPal-Partner-Attribution-Id' => PartnerAttributionId::PAYPAL_CLASSIC,
                 'Authorization' => (string) $credentials,
             ],
-            'timeout' => 30,
         ]);
 
         parent::__construct($client, $logger);
     }
 
-    /**
-     * @param array<string, string> $additionalData
-     */
-    public function getToken(array $additionalData = []): array
+    public function getToken(): array
     {
         $data = [
             'form_params' => [
                 'grant_type' => 'client_credentials',
-                ...$additionalData,
             ],
         ];
 

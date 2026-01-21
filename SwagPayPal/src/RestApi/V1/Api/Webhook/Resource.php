@@ -7,67 +7,102 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Webhook;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V1\Api\Common\Amount;
-use Swag\PayPal\RestApi\V1\Api\Common\Link;
-use Swag\PayPal\RestApi\V1\Api\Common\LinkCollection;
-use Swag\PayPal\RestApi\V1\Api\Common\Value;
+use Swag\PayPal\RestApi\V1\Api\Webhook\Resource\Amount;
+use Swag\PayPal\RestApi\V1\Api\Webhook\Resource\Link;
+use Swag\PayPal\RestApi\V1\Api\Webhook\Resource\TransactionFee;
 
-#[OA\Schema(schema: 'swag_paypal_v1_webhook_resource')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_webhook_resource")
+ */
 class Resource extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $id;
 
-    #[OA\Property(type: 'string', nullable: true)]
+    /**
+     * @OA\Property(type="string", nullable=true)
+     */
     protected ?string $parentPayment = null;
 
-    #[OA\Property(type: 'string', nullable: true)]
+    /**
+     * @OA\Property(type="string", nullable=true)
+     */
     protected ?string $billingAgreementId = null;
 
-    #[OA\Property(type: 'string', nullable: true)]
+    /**
+     * @OA\Property(type="string", nullable=true)
+     */
     protected ?string $saleId = null;
 
-    #[OA\Property(type: 'string', nullable: true)]
+    /**
+     * @OA\Property(type="string", nullable=true)
+     */
     protected ?string $refundReasonCode = null;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $updateTime;
 
-    #[OA\Property(ref: Amount::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_amount")
+     */
     protected Amount $amount;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $paymentMode;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $createTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $clearingTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $protectionEligibilityType;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $protectionEligibility;
 
-    #[OA\Property(ref: Value::class)]
-    protected Value $transactionFee;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_value")
+     */
+    protected TransactionFee $transactionFee;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $invoiceNumber;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Link::class))]
-    protected LinkCollection $links;
+    /**
+     * @var Link[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_common_link"})
+     */
+    protected array $links;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $state;
 
-    #[OA\Property(type: 'string', nullable: true)]
+    /**
+     * @OA\Property(type="string", nullable=true)
+     */
     protected ?string $merchantId = null;
 
     public function getId(): string
@@ -190,12 +225,12 @@ class Resource extends PayPalApiStruct
         $this->protectionEligibility = $protectionEligibility;
     }
 
-    public function getTransactionFee(): Value
+    public function getTransactionFee(): TransactionFee
     {
         return $this->transactionFee;
     }
 
-    public function setTransactionFee(Value $transactionFee): void
+    public function setTransactionFee(TransactionFee $transactionFee): void
     {
         $this->transactionFee = $transactionFee;
     }
@@ -210,12 +245,18 @@ class Resource extends PayPalApiStruct
         $this->invoiceNumber = $invoiceNumber;
     }
 
-    public function getLinks(): LinkCollection
+    /**
+     * @return Link[]
+     */
+    public function getLinks(): array
     {
         return $this->links;
     }
 
-    public function setLinks(LinkCollection $links): void
+    /**
+     * @param Link[] $links
+     */
+    public function setLinks(array $links): void
     {
         $this->links = $links;
     }

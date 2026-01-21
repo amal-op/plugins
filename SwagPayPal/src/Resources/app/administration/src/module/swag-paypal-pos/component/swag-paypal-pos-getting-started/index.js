@@ -5,10 +5,4 @@ const { Component } = Shopware;
 
 Component.register('swag-paypal-pos-getting-started', {
     template,
-
-    computed: {
-        assetFilter() {
-            return Shopware.Filter.getByName('asset');
-        },
-    },
 });

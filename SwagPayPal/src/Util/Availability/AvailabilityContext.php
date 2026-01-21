@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Util\Availability;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Struct\Struct;
 
-#[Package('checkout')]
 class AvailabilityContext extends Struct
 {
     protected string $billingCountryCode;
@@ -18,12 +16,6 @@ class AvailabilityContext extends Struct
     protected string $currencyCode;
 
     protected float $totalAmount;
-
-    protected bool $subscription;
-
-    protected string $salesChannelId;
-
-    protected bool $hasDigitalProducts;
 
     public function getBillingCountryCode(): string
     {
@@ -38,20 +30,5 @@ class AvailabilityContext extends Struct
     public function getTotalAmount(): float
     {
         return $this->totalAmount;
-    }
-
-    public function isSubscription(): bool
-    {
-        return $this->subscription;
-    }
-
-    public function getSalesChannelId(): string
-    {
-        return $this->salesChannelId;
-    }
-
-    public function hasDigitalProducts(): bool
-    {
-        return $this->hasDigitalProducts;
     }
 }

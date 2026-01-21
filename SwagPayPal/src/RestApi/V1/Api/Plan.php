@@ -7,15 +7,15 @@
 
 namespace Swag\PayPal\RestApi\V1\Api;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\Plan\BillingCycle;
-use Swag\PayPal\RestApi\V1\Api\Plan\BillingCycleCollection;
 use Swag\PayPal\RestApi\V1\Api\Plan\PaymentPreferences;
 use Swag\PayPal\RestApi\V1\Api\Plan\Taxes;
 
 /**
+ * @OA\Schema(schema="swag_paypal_v1_plan")
+ *
  * @codeCoverageIgnore
  *
  * @experimental
@@ -23,29 +23,43 @@ use Swag\PayPal\RestApi\V1\Api\Plan\Taxes;
  * This class is experimental and not officially supported.
  * It is currently not used within the plugin itself. Use with caution.
  */
-#[OA\Schema(schema: 'swag_paypal_v1_plan')]
-#[Package('checkout')]
 class Plan extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $productId;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $name;
 
-    #[OA\Property(type: 'string', nullable: true)]
+    /**
+     * @OA\Property(type="string", nullable=true)
+     */
     protected ?string $description = null;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $status;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: BillingCycle::class))]
-    protected BillingCycleCollection $billingCycles;
+    /**
+     * @var BillingCycle[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_plan_billing_cycle"})
+     */
+    protected array $billingCycles = [];
 
-    #[OA\Property(ref: PaymentPreferences::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_plan_payment_preferences")
+     */
     protected PaymentPreferences $paymentPreferences;
 
-    #[OA\Property(ref: Taxes::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_plan_taxes")
+     */
     protected Taxes $taxes;
 
     public function getProductId(): string
@@ -88,12 +102,18 @@ class Plan extends PayPalApiStruct
         $this->status = $status;
     }
 
-    public function getBillingCycles(): BillingCycleCollection
+    /**
+     * @return BillingCycle[]
+     */
+    public function getBillingCycles(): array
     {
         return $this->billingCycles;
     }
 
-    public function setBillingCycles(BillingCycleCollection $billingCycles): void
+    /**
+     * @param BillingCycle[] $billingCycles
+     */
+    public function setBillingCycles(array $billingCycles): void
     {
         $this->billingCycles = $billingCycles;
     }

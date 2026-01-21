@@ -157,3 +157,17 @@ main{
 strong{
     font-weight: 600;
 }
+.scroll-up-button{
+    .btn svg{
+        color: $white-color;
+        top: rem(3);
+    }
+}
+
+.js-quantity-selector{
+    border-color: $border-color!important;
+}
+
+.form-select{
+    border-color: rgba(0, 0, 0, 0.08);
+}

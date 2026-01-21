@@ -70,6 +70,7 @@ class UpdateVarientConfigService
             if (!empty($productUpdatedConfig)) {
                 $this->productRepository->update($productUpdatedConfig, $this->context);
             }
+          
         }
 
         $progressBar->finish();

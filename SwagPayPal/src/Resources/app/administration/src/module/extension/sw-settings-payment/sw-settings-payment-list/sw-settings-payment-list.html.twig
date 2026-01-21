@@ -7,7 +7,6 @@
     name="regular-lock"
     small
 />
-
 <template v-else>
     {% parent %}
 </template>
@@ -22,7 +21,6 @@
     name="regular-lock"
     small
 />
-
 <template v-else>
     {% parent %}
 </template>
@@ -30,7 +28,7 @@
 
 {% block sw_settings_payment_list_content_inner %}
     <swag-paypal-created-component-helper
-        @on-created-component="fetchMerchantCapabilities"
+        @on-created-component="fetchMerchantIntegrations"
     />
 
     {% parent %}

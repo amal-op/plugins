@@ -7,7 +7,6 @@
 
 namespace Swag\PayPal\Pos\Resource;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\PosBaseURL;
 use Swag\PayPal\Pos\Api\PosRequestUri;
 use Swag\PayPal\Pos\Api\Product;
@@ -15,7 +14,6 @@ use Swag\PayPal\Pos\Api\Product\ProductCountResponse;
 use Swag\PayPal\Pos\Client\PosClientFactory;
 use Swag\PayPal\Pos\DataAbstractionLayer\Entity\PosSalesChannelEntity;
 
-#[Package('checkout')]
 class ProductResource
 {
     public const DELETION_CHUNK_SIZE = 100;

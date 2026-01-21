@@ -18,7 +18,6 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\AggregationResult\Metric
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\RangeFilter;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\Entity\SalesChannelRepository;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
@@ -32,7 +31,6 @@ use Swag\PayPal\Pos\Sync\ImageSyncer;
 use Swag\PayPal\Pos\Sync\ProductSelection;
 use Swag\PayPal\SwagPayPal;
 
-#[Package('checkout')]
 class ProductSyncManager extends AbstractSyncManager
 {
     public const CHUNK_SIZE = 50;

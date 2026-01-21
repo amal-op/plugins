@@ -7,18 +7,15 @@
 
 namespace Swag\PayPal\OrdersApi\Administration;
 
-use OpenApi\Attributes as OA;
+use OpenApi\Annotations as OA;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
 use Shopware\Core\Checkout\Payment\Exception\InvalidTransactionException;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\Framework\Log\Package;
-use Swag\PayPal\OrdersApi\Administration\Exception\OrderNotFoundException;
+use Shopware\Core\Framework\Routing\Annotation\Since;
 use Swag\PayPal\OrdersApi\Administration\Service\CaptureRefundCreator;
-use Swag\PayPal\RestApi\Exception\PayPalApiException;
 use Swag\PayPal\RestApi\PartnerAttributionId;
-use Swag\PayPal\RestApi\V2\Api\Order;
 use Swag\PayPal\RestApi\V2\Resource\AuthorizationResource;
 use Swag\PayPal\RestApi\V2\Resource\CaptureResource;
 use Swag\PayPal\RestApi\V2\Resource\OrderResource;
@@ -30,8 +27,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Package('checkout')]
-#[Route(defaults: ['_routeScope' => ['api']])]
+/**
+ * @Route(defaults={"_routeScope"={"api"}})
+ */
 class PayPalOrdersController extends AbstractController
 {
     public const REQUEST_PARAMETER_CURRENCY = 'currency';
@@ -41,98 +39,139 @@ class PayPalOrdersController extends AbstractController
     public const REQUEST_PARAMETER_PARTNER_ATTRIBUTION_ID = 'partnerAttributionId';
     public const REQUEST_PARAMETER_IS_FINAL = 'isFinal';
 
+    private OrderResource $orderResource;
+
+    private AuthorizationResource $authorizationResource;
+
+    private CaptureResource $captureResource;
+
+    private EntityRepository $orderTransactionRepository;
+
+    private RefundResource $refundResource;
+
+    private PaymentStatusUtilV2 $paymentStatusUtil;
+
+    private CaptureRefundCreator $captureRefundCreator;
+
     /**
      * @internal
      */
     public function __construct(
-        private readonly OrderResource $orderResource,
-        private readonly AuthorizationResource $authorizationResource,
-        private readonly CaptureResource $captureResource,
-        private readonly RefundResource $refundResource,
-        private readonly EntityRepository $orderTransactionRepository,
-        private readonly PaymentStatusUtilV2 $paymentStatusUtil,
-        private readonly CaptureRefundCreator $captureRefundCreator
+        OrderResource $orderResource,
+        AuthorizationResource $authorizationResource,
+        CaptureResource $captureResource,
+        RefundResource $refundResource,
+        EntityRepository $orderTransactionRepository,
+        PaymentStatusUtilV2 $paymentStatusUtil,
+        CaptureRefundCreator $captureRefundCreator
     ) {
+        $this->orderResource = $orderResource;
+        $this->authorizationResource = $authorizationResource;
+        $this->captureResource = $captureResource;
+        $this->refundResource = $refundResource;
+        $this->orderTransactionRepository = $orderTransactionRepository;
+        $this->paymentStatusUtil = $paymentStatusUtil;
+        $this->captureRefundCreator = $captureRefundCreator;
     }
 
-    #[OA\Get(
-        path: '/paypal-v2/order/{orderTransactionId}/{paypalOrderId}',
-        operationId: 'orderDetails',
-        description: 'Loads the order details of the given PayPal order ID',
-        tags: ['Admin API', 'PayPal'],
-        parameters: [
-            new OA\Parameter(
-                parameter: 'orderTransactionId',
-                name: 'orderTransactionId',
-                description: 'ID of the order transaction which contains the PayPal payment',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string', pattern: '^[0-9a-f]{32}$')
-            ),
-            new OA\Parameter(
-                parameter: 'paypalOrderId',
-                name: 'paypalOrderId',
-                description: 'ID of the PayPal order',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string')
-            ),
-        ],
-        responses: [new OA\Response(
-            response: Response::HTTP_OK,
-            description: 'Details of the PayPal order',
-            content: new OA\JsonContent(ref: Order::class)
-        )]
-    )]
-    #[Route(path: '/api/paypal-v2/order/{orderTransactionId}/{paypalOrderId}', name: 'api.paypal_v2.order_details', defaults: ['_acl' => ['order.viewer']], methods: ['GET'])]
+    /**
+     * @Since("2.0.0")
+     *
+     * @OA\Get(
+     *     path="/paypal-v2/order/{orderTransactionId}/{paypalOrderId}",
+     *     description="Loads the order details of the given PayPal order ID",
+     *     operationId="orderDetails",
+     *     tags={"Admin API", "PayPal"},
+     *
+     *     @OA\Parameter(
+     *         parameter="orderTransactionId",
+     *         name="orderTransactionId",
+     *         in="path",
+     *         description="ID of the order transaction which contains the PayPal payment",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         parameter="paypalOrderId",
+     *         name="paypalOrderId",
+     *         in="path",
+     *         description="ID of the PayPal order",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\Response(
+     *         response="200",
+     *         description="Details of the PayPal order",
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/swag_paypal_v2_order")
+     *     )
+     * )
+     *
+     * @Route(
+     *     "/api/paypal-v2/order/{orderTransactionId}/{paypalOrderId}",
+     *      name="api.paypal_v2.order_details",
+     *      methods={"GET"},
+     *      defaults={"_acl": {"order.viewer"}}
+     * )
+     */
     public function orderDetails(string $orderTransactionId, string $paypalOrderId, Context $context): JsonResponse
     {
-        try {
-            $paypalOrder = $this->orderResource->get(
-                $paypalOrderId,
-                $this->getSalesChannelId($orderTransactionId, $context)
-            );
-        } catch (PayPalApiException $e) {
-            if ($e->getStatusCode() === Response::HTTP_NOT_FOUND) {
-                throw new OrderNotFoundException($paypalOrderId);
-            }
-
-            throw $e;
-        }
+        $paypalOrder = $this->orderResource->get(
+            $paypalOrderId,
+            $this->getSalesChannelId($orderTransactionId, $context)
+        );
 
         return new JsonResponse($paypalOrder);
     }
 
-    #[OA\Get(
-        path: '/paypal-v2/authorization/{orderTransactionId}/{authorizationId}',
-        operationId: 'authorizationDetails',
-        description: 'Loads the authorization details of the given PayPal authorization ID',
-        tags: ['Admin API', 'PayPal'],
-        parameters: [
-            new OA\Parameter(
-                parameter: 'orderTransactionId',
-                name: 'orderTransactionId',
-                description: 'ID of the order transaction which contains the PayPal payment',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string', pattern: '^[0-9a-f]{32}$')
-            ),
-            new OA\Parameter(
-                parameter: 'authorizationId',
-                name: 'authorizationId',
-                description: 'ID of the PayPal authorization',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string', pattern: '^[0-9a-f]{32}$')
-            ),
-        ],
-        responses: [new OA\Response(
-            response: Response::HTTP_OK,
-            description: 'Details of the PayPal authorization',
-            content: new OA\JsonContent(ref: Order\PurchaseUnit\Payments\Authorization::class)
-        )]
-    )]
-    #[Route(path: '/api/paypal-v2/authorization/{orderTransactionId}/{authorizationId}', name: 'api.paypal_v2.authorization_details', defaults: ['_acl' => ['order.viewer']], methods: ['GET'])]
+    /**
+     * @Since("2.0.0")
+     *
+     * @OA\Get(
+     *     path="/paypal-v2/authorization/{orderTransactionId}/{authorizationId}",
+     *     description="Loads the authorization details of the given PayPal authorization ID",
+     *     operationId="authorizationDetails",
+     *     tags={"Admin API", "PayPal"},
+     *
+     *     @OA\Parameter(
+     *         parameter="orderTransactionId",
+     *         name="orderTransactionId",
+     *         in="path",
+     *         description="ID of the order transaction which contains the PayPal payment",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         parameter="authorizationId",
+     *         name="authorizationId",
+     *         in="path",
+     *         description="ID of the PayPal authorization",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\Response(
+     *         response="200",
+     *         description="Details of the PayPal authorization",
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/swag_paypal_v2_order_authorization")
+     *     )
+     * )
+     *
+     * @Route(
+     *     "/api/paypal-v2/authorization/{orderTransactionId}/{authorizationId}",
+     *      name="api.paypal_v2.authorization_details",
+     *      methods={"GET"},
+     *      defaults={"_acl": {"order.viewer"}}
+     * )
+     */
     public function authorizationDetails(string $orderTransactionId, string $authorizationId, Context $context): JsonResponse
     {
         $authorization = $this->authorizationResource->get(
@@ -143,36 +182,50 @@ class PayPalOrdersController extends AbstractController
         return new JsonResponse($authorization);
     }
 
-    #[OA\Get(
-        path: '/paypal-v2/capture/{orderTransactionId}/{captureId}',
-        operationId: 'captureDetails',
-        description: 'Loads the capture details of the given PayPal capture ID',
-        tags: ['Admin API', 'PayPal'],
-        parameters: [
-            new OA\Parameter(
-                parameter: 'orderTransactionId',
-                name: 'orderTransactionId',
-                description: 'ID of the order transaction which contains the PayPal payment',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string', pattern: '^[0-9a-f]{32}$')
-            ),
-            new OA\Parameter(
-                parameter: 'captureId',
-                name: 'captureId',
-                description: 'ID of the PayPal capture',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string')
-            ),
-        ],
-        responses: [new OA\Response(
-            response: Response::HTTP_OK,
-            description: 'Details of the PayPal capture',
-            content: new OA\JsonContent(ref: Order\PurchaseUnit\Payments\Capture::class)
-        )]
-    )]
-    #[Route(path: '/api/paypal-v2/capture/{orderTransactionId}/{captureId}', name: 'api.paypal_v2.capture_details', defaults: ['_acl' => ['order.viewer']], methods: ['GET'])]
+    /**
+     * @Since("2.0.0")
+     *
+     * @OA\Get(
+     *     path="/paypal-v2/capture/{orderTransactionId}/{captureId}",
+     *     description="Loads the capture details of the given PayPal capture ID",
+     *     operationId="captureDetails",
+     *     tags={"Admin API", "PayPal"},
+     *
+     *     @OA\Parameter(
+     *         parameter="orderTransactionId",
+     *         name="orderTransactionId",
+     *         in="path",
+     *         description="ID of the order transaction which contains the PayPal payment",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         parameter="captureId",
+     *         name="captureId",
+     *         in="path",
+     *         description="ID of the PayPal capture",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\Response(
+     *         response="200",
+     *         description="Details of the PayPal capture",
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/swag_paypal_v2_order_capture")
+     *     )
+     * )
+     *
+     * @Route(
+     *     "/api/paypal-v2/capture/{orderTransactionId}/{captureId}",
+     *      name="api.paypal_v2.capture_details",
+     *      methods={"GET"},
+     *      defaults={"_acl": {"order.viewer"}}
+     * )
+     */
     public function captureDetails(string $orderTransactionId, string $captureId, Context $context): JsonResponse
     {
         $capture = $this->captureResource->get(
@@ -183,36 +236,50 @@ class PayPalOrdersController extends AbstractController
         return new JsonResponse($capture);
     }
 
-    #[OA\Get(
-        path: '/paypal-v2/refund/{orderTransactionId}/{refundId}',
-        operationId: 'refundDetails',
-        description: 'Loads the refund details of the given PayPal refund ID',
-        tags: ['Admin API', 'PayPal'],
-        parameters: [
-            new OA\Parameter(
-                parameter: 'orderTransactionId',
-                name: 'orderTransactionId',
-                description: 'ID of the order transaction which contains the PayPal payment',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string', pattern: '^[0-9a-f]{32}$')
-            ),
-            new OA\Parameter(
-                parameter: 'refundId',
-                name: 'refundId',
-                description: 'ID of the PayPal refund',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string')
-            ),
-        ],
-        responses: [new OA\Response(
-            response: Response::HTTP_OK,
-            description: 'Details of the PayPal refund',
-            content: new OA\JsonContent(ref: Order\PurchaseUnit\Payments\Refund::class)
-        )]
-    )]
-    #[Route(path: '/api/paypal-v2/refund/{orderTransactionId}/{refundId}', name: 'api.paypal_v2.refund_details', defaults: ['_acl' => ['order.viewer']], methods: ['GET'])]
+    /**
+     * @Since("2.0.0")
+     *
+     * @OA\Get(
+     *     path="/paypal-v2/refund/{orderTransactionId}/{refundId}",
+     *     description="Loads the refund details of the given PayPal refund ID",
+     *     operationId="refundDetails",
+     *     tags={"Admin API", "PayPal"},
+     *
+     *     @OA\Parameter(
+     *         parameter="orderTransactionId",
+     *         name="orderTransactionId",
+     *         in="path",
+     *         description="ID of the order transaction which contains the PayPal payment",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         parameter="refundId",
+     *         name="refundId",
+     *         in="path",
+     *         description="ID of the PayPal refund",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\Response(
+     *         response="200",
+     *         description="Details of the PayPal refund",
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/swag_paypal_v2_order_refund")
+     *     )
+     * )
+     *
+     * @Route(
+     *     "/api/paypal-v2/refund/{orderTransactionId}/{refundId}",
+     *      name="api.paypal_v2.refund_details",
+     *      methods={"GET"},
+     *      defaults={"_acl": {"order.viewer"}}
+     * )
+     */
     public function refundDetails(string $orderTransactionId, string $refundId, Context $context): JsonResponse
     {
         $refund = $this->refundResource->get(
@@ -223,51 +290,72 @@ class PayPalOrdersController extends AbstractController
         return new JsonResponse($refund);
     }
 
-    #[OA\Post(
-        path: '/_action/paypal-v2/refund-capture/{orderTransactionId}/{captureId}/{paypalOrderId}',
-        operationId: 'refundCapture',
-        description: 'Refunds the PayPal capture and sets the state of the Shopware order transaction accordingly',
-        requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [
-            new OA\Property(property: 'partnerAttributionId', description: "Partner Attribution ID. See Swag\PayPal\RestApi\PartnerAttributionId", type: 'string'),
-            new OA\Property(property: 'amount', description: 'Amount which should be refunded', type: 'string'),
-            new OA\Property(property: 'currency', description: 'Currency of the refund', type: 'string'),
-            new OA\Property(property: 'invoiceNumber', description: 'Invoice number of the refund', type: 'string'),
-            new OA\Property(property: 'noteToPayer', description: 'A note to the payer sent with the refund', type: 'string'),
-        ])),
-        tags: ['Admin API', 'PayPal'],
-        parameters: [
-            new OA\Parameter(
-                parameter: 'orderTransactionId',
-                name: 'orderTransactionId',
-                description: 'ID of the order transaction which contains the PayPal payment',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string', pattern: '^[0-9a-f]{32}$')
-            ),
-            new OA\Parameter(
-                parameter: 'captureId',
-                name: 'captureId',
-                description: 'ID of the PayPal capture',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string')
-            ),
-            new OA\Parameter(
-                parameter: 'paypalOrderId',
-                name: 'paypalOrderId',
-                description: 'ID of the PayPal order',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string')
-            ),
-        ],
-        responses: [new OA\Response(
-            response: Response::HTTP_OK,
-            description: 'Details of the PayPal refund',
-            content: new OA\JsonContent(ref: Order\PurchaseUnit\Payments\Refund::class)
-        )]
-    )]
-    #[Route(path: '/api/_action/paypal-v2/refund-capture/{orderTransactionId}/{captureId}/{paypalOrderId}', name: 'api.action.paypal_v2.refund_capture', defaults: ['_acl' => ['order.editor']], methods: ['POST'])]
+    /**
+     * @Since("2.0.0")
+     *
+     * @OA\Post(
+     *     path="/_action/paypal-v2/refund-capture/{orderTransactionId}/{captureId}/{paypalOrderId}",
+     *     description="Refunds the PayPal capture and sets the state of the Shopware order transaction accordingly",
+     *     operationId="refundCapture",
+     *     tags={"Admin API", "PayPal"},
+     *
+     *     @OA\Parameter(
+     *         parameter="orderTransactionId",
+     *         name="orderTransactionId",
+     *         in="path",
+     *         description="ID of the order transaction which contains the PayPal payment",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         parameter="captureId",
+     *         name="captureId",
+     *         in="path",
+     *         description="ID of the PayPal capture",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         parameter="paypalOrderId",
+     *         name="paypalOrderId",
+     *         in="path",
+     *         description="ID of the PayPal order",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="partnerAttributionId", description="Partner Attribution ID. See Swag\PayPal\RestApi\PartnerAttributionId", type="string"),
+     *             @OA\Property(property="amount", description="Amount which should be refunded", type="string"),
+     *             @OA\Property(property="currency", description="Currency of the refund", type="string"),
+     *             @OA\Property(property="invoiceNumber", description="Invoice number of the refund", type="string"),
+     *             @OA\Property(property="noteToPayer", description="A note to the payer sent with the refund", type="string")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response="200",
+     *         description="Details of the PayPal refund",
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/swag_paypal_v2_order_refund")
+     *     )
+     * )
+     *
+     * @Route(
+     *     "/api/_action/paypal-v2/refund-capture/{orderTransactionId}/{captureId}/{paypalOrderId}",
+     *     name="api.action.paypal_v2.refund_capture",
+     *     methods={"POST"},
+     *     defaults={"_acl": {"order.editor"}}
+     * )
+     */
     public function refundCapture(
         string $orderTransactionId,
         string $captureId,
@@ -293,44 +381,63 @@ class PayPalOrdersController extends AbstractController
         return new JsonResponse($refundResponse);
     }
 
-    #[OA\Post(
-        path: '/_action/paypal-v2/capture-authorization/{orderTransactionId}/{authorizationId}',
-        operationId: 'captureAuthorization',
-        description: 'Captures the PayPal authorization and sets the state of the Shopware order transaction accordingly',
-        requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [
-            new OA\Property(property: 'partnerAttributionId', description: "Partner Attribution ID. See Swag\PayPal\RestApi\PartnerAttributionId", type: 'string'),
-            new OA\Property(property: 'amount', description: 'Amount which should be captured', type: 'string'),
-            new OA\Property(property: 'currency', description: 'Currency of the capture', type: 'string'),
-            new OA\Property(property: 'invoiceNumber', description: 'Invoice number of the capture', type: 'string'),
-            new OA\Property(property: 'noteToPayer', description: 'A note to the payer sent with the capture', type: 'string'),
-            new OA\Property(property: 'isFinal', description: 'Define if this is the final capture', type: 'boolean'),
-        ])),
-        tags: ['Admin API', 'PayPal'],
-        parameters: [
-            new OA\Parameter(
-                parameter: 'orderTransactionId',
-                name: 'orderTransactionId',
-                description: 'ID of the order transaction which contains the PayPal payment',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string', pattern: '^[0-9a-f]{32}$')
-            ),
-            new OA\Parameter(
-                parameter: 'authorizationId',
-                name: 'authorizationId',
-                description: 'ID of the PayPal authorization',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string')
-            ),
-        ],
-        responses: [new OA\Response(
-            response: Response::HTTP_OK,
-            description: 'Details of the PayPal capture',
-            content: new OA\JsonContent(ref: Order\PurchaseUnit\Payments\Capture::class)
-        )]
-    )]
-    #[Route(path: '/api/_action/paypal-v2/capture-authorization/{orderTransactionId}/{authorizationId}', name: 'api.action.paypal_v2.capture_authorization', defaults: ['_acl' => ['order.editor']], methods: ['POST'])]
+    /**
+     * @Since("2.0.0")
+     *
+     * @OA\Post(
+     *     path="/_action/paypal-v2/capture-authorization/{orderTransactionId}/{authorizationId}",
+     *     description="Captures the PayPal authorization and sets the state of the Shopware order transaction accordingly",
+     *     operationId="captureAuthorization",
+     *     tags={"Admin API", "PayPal"},
+     *
+     *     @OA\Parameter(
+     *         parameter="orderTransactionId",
+     *         name="orderTransactionId",
+     *         in="path",
+     *         description="ID of the order transaction which contains the PayPal payment",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         parameter="authorizationId",
+     *         name="authorizationId",
+     *         in="path",
+     *         description="ID of the PayPal authorization",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="partnerAttributionId", description="Partner Attribution ID. See Swag\PayPal\RestApi\PartnerAttributionId", type="string"),
+     *             @OA\Property(property="amount", description="Amount which should be captured", type="string"),
+     *             @OA\Property(property="currency", description="Currency of the capture", type="string"),
+     *             @OA\Property(property="invoiceNumber", description="Invoice number of the capture", type="string"),
+     *             @OA\Property(property="noteToPayer", description="A note to the payer sent with the capture", type="string"),
+     *             @OA\Property(property="isFinal", description="Define if this is the final capture", type="boolean")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response="200",
+     *         description="Details of the PayPal capture",
+     *
+     *         @OA\JsonContent(ref="#/components/schemas/swag_paypal_v2_order_capture")
+     *     )
+     * )
+     *
+     * @Route(
+     *     "/api/_action/paypal-v2/capture-authorization/{orderTransactionId}/{authorizationId}",
+     *     name="api.action.paypal_v2.capture_authorization",
+     *     methods={"POST"},
+     *     defaults={"_acl": {"order.editor"}}
+     * )
+     */
     public function captureAuthorization(
         string $orderTransactionId,
         string $authorizationId,
@@ -352,38 +459,56 @@ class PayPalOrdersController extends AbstractController
         return new JsonResponse($captureResponse);
     }
 
-    #[OA\Post(
-        path: '/_action/paypal-v2/void-authorization/{orderTransactionId}/{authorizationId}',
-        operationId: 'voidAuthorization',
-        description: 'Voids the PayPal authorization and sets the state of the Shopware order transaction accordingly',
-        requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [
-            new OA\Property(property: 'partnerAttributionId', description: "Partner Attribution ID. See Swag\PayPal\RestApi\PartnerAttributionId", type: 'string'),
-        ])),
-        tags: ['Admin API', 'PayPal'],
-        parameters: [
-            new OA\Parameter(
-                parameter: 'orderTransactionId',
-                name: 'orderTransactionId',
-                description: 'ID of the order transaction which contains the PayPal payment',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string', pattern: '^[0-9a-f]{32}$')
-            ),
-            new OA\Parameter(
-                parameter: 'authorizationId',
-                name: 'authorizationId',
-                description: 'ID of the PayPal authorization',
-                in: 'path',
-                required: true,
-                schema: new OA\Schema(type: 'string')
-            ),
-        ],
-        responses: [new OA\Response(
-            response: Response::HTTP_NO_CONTENT,
-            description: 'Avoidance was successful',
-        )]
-    )]
-    #[Route(path: '/api/_action/paypal-v2/void-authorization/{orderTransactionId}/{authorizationId}', name: 'api.action.paypal_v2.void_authorization', defaults: ['_acl' => ['order.editor']], methods: ['POST'])]
+    /**
+     * @Since("2.0.0")
+     *
+     * @OA\Post(
+     *     path="/_action/paypal-v2/void-authorization/{orderTransactionId}/{authorizationId}",
+     *     description="Voids the PayPal authorization and sets the state of the Shopware order transaction accordingly",
+     *     operationId="voidAuthorization",
+     *     tags={"Admin API", "PayPal"},
+     *
+     *     @OA\Parameter(
+     *         parameter="orderTransactionId",
+     *         name="orderTransactionId",
+     *         in="path",
+     *         description="ID of the order transaction which contains the PayPal payment",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\Parameter(
+     *         parameter="authorizationId",
+     *         name="authorizationId",
+     *         in="path",
+     *         description="ID of the PayPal authorization",
+     *
+     *         @OA\Schema(type="string"),
+     *         required=true
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(property="partnerAttributionId", description="Partner Attribution ID. See Swag\PayPal\RestApi\PartnerAttributionId", type="string")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response="204",
+     *         description="Returns status 204 if the voidance was succesful",
+     *     )
+     * )
+     *
+     * @Route(
+     *     "/api/_action/paypal-v2/void-authorization/{orderTransactionId}/{authorizationId}",
+     *     name="api.action.paypal_v2.void_authorization",
+     *     methods={"POST"},
+     *     defaults={"_acl": {"order.editor"}}
+     * )
+     */
     public function voidAuthorization(
         string $orderTransactionId,
         string $authorizationId,
@@ -415,7 +540,7 @@ class PayPalOrdersController extends AbstractController
         $order = $orderTransaction->getOrder();
 
         if ($order === null) {
-            throw new OrderNotFoundException($orderTransactionId);
+            throw new InvalidTransactionException($orderTransactionId);
         }
 
         return $order->getSalesChannelId();

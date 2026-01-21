@@ -7,12 +7,13 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Subscription\BillingInfo;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V1\Api\Common\Money;
+use Swag\PayPal\RestApi\V1\Api\Subscription\BillingInfo\LastPayment\Amount;
 
 /**
+ * @OA\Schema(schema="swag_paypal_v1_subscription_last_payment")
+ *
  * @codeCoverageIgnore
  *
  * @experimental
@@ -20,22 +21,24 @@ use Swag\PayPal\RestApi\V1\Api\Common\Money;
  * This class is experimental and not officially supported.
  * It is currently not used within the plugin itself. Use with caution.
  */
-#[OA\Schema(schema: 'swag_paypal_v1_subscription_billing_info_last_payment')]
-#[Package('checkout')]
 class LastPayment extends PayPalApiStruct
 {
-    #[OA\Property(ref: Money::class)]
-    protected Money $amount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_money")
+     */
+    protected Amount $amount;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $time;
 
-    public function getAmount(): Money
+    public function getAmount(): Amount
     {
         return $this->amount;
     }
 
-    public function setAmount(Money $amount): void
+    public function setAmount(Amount $amount): void
     {
         $this->amount = $amount;
     }

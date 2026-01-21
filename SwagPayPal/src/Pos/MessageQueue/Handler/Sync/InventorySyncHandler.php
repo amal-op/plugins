@@ -11,7 +11,6 @@ use Psr\Log\LoggerInterface;
 use Shopware\Core\Content\Product\ProductCollection;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\MessageQueue\Message\AbstractSyncMessage;
 use Swag\PayPal\Pos\MessageQueue\Message\Sync\InventorySyncMessage;
 use Swag\PayPal\Pos\MessageQueue\MessageDispatcher;
@@ -23,7 +22,6 @@ use Swag\PayPal\Pos\Sync\InventorySyncer;
 /**
  * @internal
  */
-#[Package('checkout')]
 class InventorySyncHandler extends AbstractSyncHandler
 {
     private EntityRepository $productRepository;

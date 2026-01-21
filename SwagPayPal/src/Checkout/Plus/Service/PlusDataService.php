@@ -13,7 +13,6 @@ use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Exception\InvalidOrderException;
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Swag\PayPal\Checkout\Payment\PayPalPaymentHandler;
@@ -31,9 +30,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
 /**
- * @deprecated tag:v9.0.0 - Will be removed without replacement.
+ * @deprecated tag:v7.0.0 - Will be removed without replacement.
  */
-#[Package('checkout')]
 class PlusDataService
 {
     private RouterInterface $router;
@@ -149,7 +147,7 @@ class PlusDataService
         $context = $salesChannelContext->getContext();
         $payPalData = new PlusData();
         $payPalData->assign([
-            'approvalUrl' => $response->getLinks()->getAt(1)?->getHref(),
+            'approvalUrl' => $response->getLinks()[1]->getHref(),
             'mode' => $this->systemConfigService->getBool(Settings::SANDBOX, $salesChannelContext->getSalesChannelId()) ? 'sandbox' : 'live',
             'customerSelectedLanguage' => $this->getPaymentWallLanguage($context),
             'paymentMethodId' => $this->paymentMethodUtil->getPayPalPaymentMethodId($context),

@@ -7,37 +7,50 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Payment;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V1\Api\Common\Link;
-use Swag\PayPal\RestApi\V1\Api\Common\LinkCollection;
-use Swag\PayPal\RestApi\V1\Api\Common\Value;
+use Swag\PayPal\RestApi\V1\Api\Payment\PaymentInstruction\Amount;
+use Swag\PayPal\RestApi\V1\Api\Payment\PaymentInstruction\Link;
 use Swag\PayPal\RestApi\V1\Api\Payment\PaymentInstruction\RecipientBankingInstruction;
 
-#[OA\Schema(schema: 'swag_paypal_v1_payment_payment_instruction')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_payment_payment_instruction")
+ */
 class PaymentInstruction extends PayPalApiStruct
 {
     public const TYPE_INVOICE = 'PAY_UPON_INVOICE';
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $referenceNumber;
 
-    #[OA\Property(ref: RecipientBankingInstruction::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_payment_recipient_banking_instruction")
+     */
     protected RecipientBankingInstruction $recipientBankingInstruction;
 
-    #[OA\Property(ref: Value::class)]
-    protected Value $amount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_value")
+     */
+    protected Amount $amount;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $paymentDueDate;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $instructionType;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Link::class))]
-    protected LinkCollection $links;
+    /**
+     * @var Link[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_common_link"})
+     */
+    protected array $links;
 
     public function getReferenceNumber(): string
     {
@@ -59,12 +72,12 @@ class PaymentInstruction extends PayPalApiStruct
         $this->recipientBankingInstruction = $recipientBankingInstruction;
     }
 
-    public function getAmount(): Value
+    public function getAmount(): Amount
     {
         return $this->amount;
     }
 
-    public function setAmount(Value $amount): void
+    public function setAmount(Amount $amount): void
     {
         $this->amount = $amount;
     }
@@ -89,12 +102,18 @@ class PaymentInstruction extends PayPalApiStruct
         $this->instructionType = $instructionType;
     }
 
-    public function getLinks(): LinkCollection
+    /**
+     * @return Link[]
+     */
+    public function getLinks(): array
     {
         return $this->links;
     }
 
-    public function setLinks(LinkCollection $links): void
+    /**
+     * @param Link[] $links
+     */
+    public function setLinks(array $links): void
     {
         $this->links = $links;
     }

@@ -8,8 +8,7 @@
 namespace Swag\PayPal\Installment\Banner;
 
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Framework\Log\Package;
-use Shopware\Core\System\SalesChannel\SalesChannelContext;
+use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Shopware\Storefront\Page\Checkout\Cart\CheckoutCartPage;
 use Shopware\Storefront\Page\Checkout\Cart\CheckoutCartPageLoadedEvent;
 use Shopware\Storefront\Page\Checkout\Confirm\CheckoutConfirmPage;
@@ -30,20 +29,21 @@ use Swag\PayPal\Checkout\Cart\Service\ExcludedProductValidator;
 use Swag\PayPal\Installment\Banner\Service\BannerDataServiceInterface;
 use Swag\PayPal\Setting\Exception\PayPalSettingsInvalidException;
 use Swag\PayPal\Setting\Service\SettingsValidationServiceInterface;
-use Swag\PayPal\Util\Lifecycle\Method\PayPalMethodData;
+use Swag\PayPal\Setting\Settings;
 use Swag\PayPal\Util\PaymentMethodUtil;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * @internal
  */
-#[Package('checkout')]
 class InstallmentBannerSubscriber implements EventSubscriberInterface
 {
     public const PAYPAL_INSTALLMENT_BANNER_DATA_EXTENSION_ID = 'payPalInstallmentBannerData';
     public const PAYPAL_INSTALLMENT_BANNER_DATA_CART_PAGE_EXTENSION_ID = 'payPalInstallmentBannerDataCheckoutCart';
 
     private SettingsValidationServiceInterface $settingsValidationService;
+
+    private SystemConfigService $systemConfigService;
 
     private PaymentMethodUtil $paymentMethodUtil;
 
@@ -55,12 +55,14 @@ class InstallmentBannerSubscriber implements EventSubscriberInterface
 
     public function __construct(
         SettingsValidationServiceInterface $settingsValidationService,
+        SystemConfigService $systemConfigService,
         PaymentMethodUtil $paymentMethodUtil,
         BannerDataServiceInterface $bannerDataService,
         ExcludedProductValidator $excludedProductValidator,
         LoggerInterface $logger
     ) {
         $this->settingsValidationService = $settingsValidationService;
+        $this->systemConfigService = $systemConfigService;
         $this->paymentMethodUtil = $paymentMethodUtil;
         $this->bannerDataService = $bannerDataService;
         $this->excludedProductValidator = $excludedProductValidator;
@@ -84,7 +86,17 @@ class InstallmentBannerSubscriber implements EventSubscriberInterface
     public function addInstallmentBanner(PageLoadedEvent $pageLoadedEvent): void
     {
         $salesChannelContext = $pageLoadedEvent->getSalesChannelContext();
-        if (!$this->checkSettings($salesChannelContext)) {
+        if ($this->paymentMethodUtil->isPaypalPaymentMethodInSalesChannel($salesChannelContext) === false) {
+            return;
+        }
+
+        try {
+            $this->settingsValidationService->validate($salesChannelContext->getSalesChannel()->getId());
+        } catch (PayPalSettingsInvalidException $e) {
+            return;
+        }
+
+        if (!$this->systemConfigService->getBool(Settings::INSTALLMENT_BANNER_ENABLED)) {
             return;
         }
 
@@ -104,10 +116,15 @@ class InstallmentBannerSubscriber implements EventSubscriberInterface
         $bannerData = $this->bannerDataService->getInstallmentBannerData($page, $salesChannelContext);
 
         if ($page instanceof CheckoutCartPage) {
-            $productTableBannerData = clone $bannerData;
-            $productTableBannerData->setLayout('flex');
-            $productTableBannerData->setColor('grey');
-            $productTableBannerData->setRatio('20x1');
+            $productTableBannerData = new BannerData(
+                $bannerData->getPaymentMethodId(),
+                $bannerData->getClientId(),
+                $bannerData->getAmount(),
+                $bannerData->getCurrency(),
+                'flex',
+                'grey',
+                '20x1'
+            );
 
             $page->addExtension(self::PAYPAL_INSTALLMENT_BANNER_DATA_CART_PAGE_EXTENSION_ID, $productTableBannerData);
         }
@@ -117,13 +134,23 @@ class InstallmentBannerSubscriber implements EventSubscriberInterface
             $bannerData
         );
 
-        $this->logger->debug('Added data to {page}', ['page' => $pageLoadedEvent::class]);
+        $this->logger->debug('Added data to {page}', ['page' => \get_class($pageLoadedEvent)]);
     }
 
     public function addInstallmentBannerPagelet(PageletLoadedEvent $pageletLoadedEvent): void
     {
         $salesChannelContext = $pageletLoadedEvent->getSalesChannelContext();
-        if (!$this->checkSettings($salesChannelContext)) {
+        if ($this->paymentMethodUtil->isPaypalPaymentMethodInSalesChannel($salesChannelContext) === false) {
+            return;
+        }
+
+        try {
+            $this->settingsValidationService->validate($salesChannelContext->getSalesChannelId());
+        } catch (PayPalSettingsInvalidException $e) {
+            return;
+        }
+
+        if (!$this->systemConfigService->getBool(Settings::INSTALLMENT_BANNER_ENABLED, $salesChannelContext->getSalesChannelId())) {
             return;
         }
 
@@ -141,20 +168,5 @@ class InstallmentBannerSubscriber implements EventSubscriberInterface
             self::PAYPAL_INSTALLMENT_BANNER_DATA_EXTENSION_ID,
             $bannerData
         );
-    }
-
-    private function checkSettings(SalesChannelContext $salesChannelContext): bool
-    {
-        if (!$this->paymentMethodUtil->isPaymentMethodActive($salesChannelContext, [PayPalMethodData::class])) {
-            return false;
-        }
-
-        try {
-            $this->settingsValidationService->validate($salesChannelContext->getSalesChannelId());
-        } catch (PayPalSettingsInvalidException) {
-            return false;
-        }
-
-        return true;
     }
 }

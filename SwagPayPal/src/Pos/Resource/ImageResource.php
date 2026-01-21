@@ -7,7 +7,6 @@
 
 namespace Swag\PayPal\Pos\Resource;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Image\BulkImageUpload;
 use Swag\PayPal\Pos\Api\Image\BulkImageUploadResponse;
 use Swag\PayPal\Pos\Api\PosBaseURL;
@@ -15,7 +14,6 @@ use Swag\PayPal\Pos\Api\PosRequestUri;
 use Swag\PayPal\Pos\Client\PosClientFactory;
 use Swag\PayPal\Pos\DataAbstractionLayer\Entity\PosSalesChannelEntity;
 
-#[Package('checkout')]
 class ImageResource
 {
     private PosClientFactory $posClientFactory;

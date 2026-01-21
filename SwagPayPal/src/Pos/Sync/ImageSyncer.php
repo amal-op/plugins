@@ -16,7 +16,6 @@ use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\MultiFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\NotFilter;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Swag\PayPal\Pos\Api\Image\BulkImageUpload;
 use Swag\PayPal\Pos\Api\Image\BulkImageUploadResponse\Uploaded;
@@ -28,7 +27,6 @@ use Swag\PayPal\Pos\Exception\MediaDomainNotSetException;
 use Swag\PayPal\Pos\Resource\ImageResource;
 use Swag\PayPal\Pos\Util\PosSalesChannelTrait;
 
-#[Package('checkout')]
 class ImageSyncer
 {
     use PosSalesChannelTrait;
@@ -103,7 +101,6 @@ class ImageSyncer
         }
 
         $updates = [];
-
         foreach ($response->getUploaded() as $uploaded) {
             $update = $this->prepareMediaUpdate($entityCollection, $uploaded, $posSalesChannel->getSalesChannelId());
             if ($update !== null) {
@@ -150,7 +147,13 @@ class ImageSyncer
 
         $ids = $this->posMediaRepository->searchIds($criteria, $context)->getIds();
         if (!empty($ids)) {
-            $ids = \array_filter($ids, static fn ($id) => \is_array($id));
+            $ids = \array_map(static function ($id) {
+                if (!\is_array($id)) {
+                    return null;
+                }
+
+                return ['salesChannelId' => $id['sales_channel_id'], 'mediaId' => $id['media_id']];
+            }, $ids);
             $this->posMediaRepository->delete(\array_filter($ids), $context);
         }
     }
@@ -163,7 +166,6 @@ class ImageSyncer
         $urlPath = \parse_url($uploaded->getSource(), \PHP_URL_PATH);
 
         if (\is_string($urlPath)) {
-            $urlPath = \rawurldecode($urlPath);
             $posMedia = $posMediaCollection->filter(
                 static function (PosSalesChannelMediaEntity $entity) use ($urlPath) {
                     $media = $entity->getMedia();
@@ -172,8 +174,8 @@ class ImageSyncer
                         throw new MediaNotFoundException($entity->getMediaId());
                     }
 
-                    return \str_contains($urlPath, $media->getUrl())
-                        || \str_contains($media->getUrl(), $urlPath);
+                    return \mb_strpos($urlPath, $media->getUrl()) !== false
+                        || \mb_strpos($media->getUrl(), $urlPath) !== false;
                 }
             )->first();
         } else {

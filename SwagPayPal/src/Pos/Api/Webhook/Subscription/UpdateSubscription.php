@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Pos\Api\Webhook\Subscription;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Common\PosStruct;
 
-#[Package('checkout')]
 class UpdateSubscription extends PosStruct
 {
     /**

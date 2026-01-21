@@ -1,5 +1,9 @@
 import template from './swag-paypal-payment-action-refund.html.twig';
-import { CAPTURE_RESOURCE_TYPE, REFUNDED_STATE, SALE_RESOURCE_TYPE } from '../../swag-paypal-payment-consts';
+import {
+    REFUNDED_STATE,
+    SALE_RESOURCE_TYPE,
+    CAPTURE_RESOURCE_TYPE,
+} from '../../swag-paypal-payment-consts';
 
 const { Component, Filter } = Shopware;
 const utils = Shopware.Utils;
@@ -10,7 +14,7 @@ Component.register('swag-paypal-payment-action-refund', {
     inject: ['SwagPayPalPaymentService'],
 
     mixins: [
-        Shopware.Mixin.getByName('notification'),
+        'notification',
     ],
 
     props: {

@@ -7,7 +7,6 @@
 
 namespace Swag\PayPal\Pos\Resource;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Inventory\BulkChanges;
 use Swag\PayPal\Pos\Api\Inventory\Location;
 use Swag\PayPal\Pos\Api\Inventory\Status;
@@ -16,7 +15,6 @@ use Swag\PayPal\Pos\Api\PosRequestUri;
 use Swag\PayPal\Pos\Client\PosClientFactory;
 use Swag\PayPal\Pos\DataAbstractionLayer\Entity\PosSalesChannelEntity;
 
-#[Package('checkout')]
 class InventoryResource
 {
     private PosClientFactory $posClientFactory;

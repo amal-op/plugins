@@ -9,12 +9,11 @@ namespace Swag\PayPal\Storefront\Data\Service;
 
 use Shopware\Core\Checkout\Cart\Cart;
 use Shopware\Core\Checkout\Order\OrderEntity;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Swag\PayPal\Checkout\ExpressCheckout\SalesChannel\ExpressPrepareCheckoutRoute;
-use Swag\PayPal\Checkout\SalesChannel\CustomerVaultTokenRoute;
 use Swag\PayPal\Checkout\SPBCheckout\SPBCheckoutButtonData;
+use Swag\PayPal\RestApi\V1\Resource\IdentityResource;
 use Swag\PayPal\Setting\Service\CredentialsUtilInterface;
 use Swag\PayPal\Setting\Settings;
 use Swag\PayPal\Util\Lifecycle\Method\PaymentMethodDataRegistry;
@@ -22,25 +21,30 @@ use Swag\PayPal\Util\Lifecycle\Method\PayPalMethodData;
 use Swag\PayPal\Util\LocaleCodeProvider;
 use Symfony\Component\Routing\RouterInterface;
 
-#[Package('checkout')]
 class SPBCheckoutDataService extends AbstractCheckoutDataService
 {
     private const APM_BLIK = 'blik';
     private const APM_EPS = 'eps';
+    private const APM_GIROPAY = 'giropay';
     private const APM_P24 = 'p24';
+    private const APM_SOFORT = 'sofort';
+
+    private SystemConfigService $systemConfigService;
 
     /**
      * @internal
      */
     public function __construct(
         PaymentMethodDataRegistry $paymentMethodDataRegistry,
+        IdentityResource $identityResource,
         LocaleCodeProvider $localeCodeProvider,
         RouterInterface $router,
         SystemConfigService $systemConfigService,
-        CredentialsUtilInterface $credentialsUtil,
-        private readonly CustomerVaultTokenRoute $customerVaultTokenRoute,
+        CredentialsUtilInterface $credentialsUtil
     ) {
-        parent::__construct($paymentMethodDataRegistry, $localeCodeProvider, $router, $systemConfigService, $credentialsUtil);
+        parent::__construct($paymentMethodDataRegistry, $identityResource, $localeCodeProvider, $router, $systemConfigService, $credentialsUtil);
+
+        $this->systemConfigService = $systemConfigService;
     }
 
     public function buildCheckoutData(
@@ -49,14 +53,14 @@ class SPBCheckoutDataService extends AbstractCheckoutDataService
         ?OrderEntity $order = null
     ): ?SPBCheckoutButtonData {
         $salesChannelId = $context->getSalesChannelId();
-        $currency = $order?->getCurrency() ?? $context->getCurrency();
+        $currency = $order ? $order->getCurrency() ?? $context->getCurrency() : $context->getCurrency();
 
         if ($cart && $cart->getExtension(ExpressPrepareCheckoutRoute::PAYPAL_EXPRESS_CHECKOUT_CART_EXTENSION_ID) !== null) {
             return null;
         }
 
         if ($this->systemConfigService->getString(Settings::MERCHANT_LOCATION, $salesChannelId) === Settings::MERCHANT_LOCATION_GERMANY
-            || !$this->systemConfigService->getBool(Settings::SPB_CHECKOUT_ENABLED, $salesChannelId)
+            || !($this->systemConfigService->getBool(Settings::SPB_CHECKOUT_ENABLED, $salesChannelId))
         ) {
             return null;
         }
@@ -71,18 +75,14 @@ class SPBCheckoutDataService extends AbstractCheckoutDataService
 
         $data = $this->getBaseData($context, $order);
 
-        $userIdToken = null;
-        if ($this->methodData->isVaultable($context)) {
-            $userIdToken = $this->customerVaultTokenRoute->getVaultToken($context)->getToken();
-        }
-
-        return (new SPBCheckoutButtonData())->assign(\array_merge($data, [
+        $spbCheckoutButtonData = (new SPBCheckoutButtonData())->assign(\array_merge($data, [
             'buttonColor' => $this->systemConfigService->getString(Settings::SPB_BUTTON_COLOR, $salesChannelId),
             'useAlternativePaymentMethods' => $this->systemConfigService->getBool(Settings::SPB_ALTERNATIVE_PAYMENT_METHODS_ENABLED, $salesChannelId),
             'disabledAlternativePaymentMethods' => $this->getDisabledAlternativePaymentMethods($price, $currency->getIsoCode()),
             'showPayLater' => $this->systemConfigService->getBool(Settings::SPB_SHOW_PAY_LATER, $salesChannelId),
-            'userIdToken' => $userIdToken,
         ]));
+
+        return $spbCheckoutButtonData;
     }
 
     public function getMethodDataClass(): string
@@ -99,6 +99,8 @@ class SPBCheckoutDataService extends AbstractCheckoutDataService
 
         if ($totalPrice < 1.0 && $currencyIsoCode === 'EUR') {
             $disabled[] = self::APM_EPS;
+            $disabled[] = self::APM_GIROPAY;
+            $disabled[] = self::APM_SOFORT;
         }
 
         if ($totalPrice < 1.0 && $currencyIsoCode === 'PLN') {

@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Pos\Run\Task;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\MessageQueue\Handler\SyncManagerHandler;
 
-#[Package('checkout')]
 class InventoryTask extends AbstractTask
 {
     public const TASK_NAME_INVENTORY = 'inventory';

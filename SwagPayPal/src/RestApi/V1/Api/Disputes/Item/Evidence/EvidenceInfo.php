@@ -7,40 +7,58 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Item\Evidence;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Evidence\EvidenceInfo\RefundId;
-use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Evidence\EvidenceInfo\RefundIdCollection;
 use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Evidence\EvidenceInfo\TrackingInfo;
-use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Evidence\EvidenceInfo\TrackingInfoCollection;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_item_evidence_evidence_info')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_evidence_info")
+ */
 class EvidenceInfo extends PayPalApiStruct
 {
-    #[OA\Property(type: 'array', items: new OA\Items(ref: TrackingInfo::class))]
-    protected TrackingInfoCollection $trackingInfo;
+    /**
+     * @var TrackingInfo[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_disputes_evidence_tracking_info"})
+     */
+    protected array $trackingInfo;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: RefundId::class))]
-    protected RefundIdCollection $refundIds;
+    /**
+     * @var RefundId[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_disputes_evidence_refund_id"})
+     */
+    protected array $refundIds;
 
-    public function getTrackingInfo(): TrackingInfoCollection
+    /**
+     * @return TrackingInfo[]
+     */
+    public function getTrackingInfo(): array
     {
         return $this->trackingInfo;
     }
 
-    public function setTrackingInfo(TrackingInfoCollection $trackingInfo): void
+    /**
+     * @param TrackingInfo[] $trackingInfo
+     */
+    public function setTrackingInfo(array $trackingInfo): void
     {
         $this->trackingInfo = $trackingInfo;
     }
 
-    public function getRefundIds(): RefundIdCollection
+    /**
+     * @return RefundId[]
+     */
+    public function getRefundIds(): array
     {
         return $this->refundIds;
     }
 
-    public function setRefundIds(RefundIdCollection $refundIds): void
+    /**
+     * @param RefundId[] $refundIds
+     */
+    public function setRefundIds(array $refundIds): void
     {
         $this->refundIds = $refundIds;
     }

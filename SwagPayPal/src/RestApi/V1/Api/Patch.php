@@ -7,25 +7,33 @@
 
 namespace Swag\PayPal\RestApi\V1\Api;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(schema: 'swag_paypal_v1_patch')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_patch")
+ */
 class Patch extends PayPalApiStruct
 {
     public const OPERATION_ADD = 'add';
     public const OPERATION_REPLACE = 'replace';
 
-    #[OA\Property(type: 'string', enum: [self::OPERATION_ADD, self::OPERATION_REPLACE])]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $op;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $path;
 
-    #[OA\Property(oneOf: [new OA\Schema(type: 'string'), new OA\Schema(type: 'array', items: new OA\Items(type: 'mixed'))])]
-    protected array|string $value;
+    /**
+     * @var array|string
+     *
+     * @OA\Property(oneOf={"string", "array"})
+     */
+    protected $value;
 
     public function getOp(): string
     {
@@ -47,12 +55,18 @@ class Patch extends PayPalApiStruct
         $this->path = $path;
     }
 
-    public function getValue(): array|string
+    /**
+     * @return array|string
+     */
+    public function getValue()
     {
         return $this->value;
     }
 
-    public function setValue(array|string $value): void
+    /**
+     * @param array|string $value
+     */
+    public function setValue($value): void
     {
         $this->value = $value;
     }

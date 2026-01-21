@@ -12,8 +12,6 @@ Component.register('swag-paypal-pos-boolean-radio', {
         event: 'change',
     },
 
-    inject: ['feature'],
-
     props: {
         value: {
             type: Boolean,
@@ -25,7 +23,7 @@ Component.register('swag-paypal-pos-boolean-radio', {
             type: Object,
             required: true,
             validator(value) {
-                return Object.hasOwn(value, 'name');
+                return value.hasOwnProperty('name');
             },
         },
 
@@ -33,7 +31,7 @@ Component.register('swag-paypal-pos-boolean-radio', {
             type: Object,
             required: true,
             validator(value) {
-                return Object.hasOwn(value, 'name');
+                return value.hasOwnProperty('name');
             },
         },
     },
@@ -64,12 +62,6 @@ Component.register('swag-paypal-pos-boolean-radio', {
             },
 
             set(val) {
-                if (this.feature.isActive('VUE3')) {
-                    this.$emit('update:value', val);
-
-                    return;
-                }
-
                 this.$emit('change', val);
             },
         },

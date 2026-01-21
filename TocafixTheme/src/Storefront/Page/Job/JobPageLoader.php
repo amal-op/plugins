@@ -4,7 +4,7 @@ declare (strict_types=1);
 namespace TocafixTheme\Storefront\Page\Job;
 
 use Shopware\Core\Framework\Routing\Exception\MissingRequestParameterException;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\Request;
  * 
  * @param GenericPageLoaderInterface $genericLoader The generic page loader instance.
  * @param EventDispatcherInterface $eventDispatcher The event dispatcher instance.
- * @param EntityRepositoryInterface $jobRepository The job repository instance.
+ * @param EntityRepository $jobRepository The job repository instance.
  */
 class JobPageLoader
 {
@@ -45,9 +45,9 @@ class JobPageLoader
     /**
      * Repository for handling job entities.
      *
-     * @var EntityRepositoryInterface
+     * @var EntityRepository
      */
-    private EntityRepositoryInterface $jobRepository;
+    private EntityRepository $jobRepository;
     
     /**
      * Constructor for initializing the necessary dependencies for the class.
@@ -57,9 +57,9 @@ class JobPageLoader
      *
      * @param GenericPageLoaderInterface $genericLoader The generic page loader instance.
      * @param EventDispatcherInterface $eventDispatcher The event dispatcher instance.
-     * @param EntityRepositoryInterface $jobRepository The job repository instance.
+     * @param EntityRepository $jobRepository The job repository instance.
      */
-    public function __construct(GenericPageLoaderInterface $genericLoader, EventDispatcherInterface $eventDispatcher, EntityRepositoryInterface $jobRepository)
+    public function __construct(GenericPageLoaderInterface $genericLoader, EventDispatcherInterface $eventDispatcher, EntityRepository $jobRepository)
     {
         $this->genericLoader = $genericLoader;
         $this->eventDispatcher = $eventDispatcher;

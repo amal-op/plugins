@@ -7,27 +7,29 @@
 
 namespace Swag\PayPal\Storefront\Data\Struct;
 
-use Shopware\Core\Framework\Log\Package;
+use Shopware\Core\Framework\Struct\Struct;
 
-#[Package('checkout')]
-class AbstractCheckoutData extends AbstractScriptData
+class AbstractCheckoutData extends Struct
 {
+    protected string $clientId;
+
+    protected string $merchantPayerId;
+
+    protected string $languageIso;
+
+    protected string $currency;
+
+    protected string $intent;
+
     protected string $buttonShape;
 
-    protected string $buttonColor;
-
-    protected ?string $userIdToken = null;
+    protected ?string $clientToken = null;
 
     protected string $paymentMethodId;
 
     protected string $createOrderUrl;
 
-    /**
-     * @deprecated tag:v10.0.0 - Will be removed, use {@link handleErrorUrl} instead
-     */
     protected string $addErrorUrl;
-
-    protected string $handleErrorUrl;
 
     protected bool $preventErrorReload;
 
@@ -37,16 +39,64 @@ class AbstractCheckoutData extends AbstractScriptData
 
     protected ?string $accountOrderEditFailedUrl = null;
 
-    protected string $brandName;
-
-    public function getUserIdToken(): ?string
+    public function getClientId(): string
     {
-        return $this->userIdToken;
+        return $this->clientId;
     }
 
-    public function setUserIdToken(?string $userIdToken): void
+    public function setClientId(string $clientId): void
     {
-        $this->userIdToken = $userIdToken;
+        $this->clientId = $clientId;
+    }
+
+    public function getMerchantPayerId(): string
+    {
+        return $this->merchantPayerId;
+    }
+
+    public function setMerchantPayerId(string $merchantPayerId): void
+    {
+        $this->merchantPayerId = $merchantPayerId;
+    }
+
+    public function getLanguageIso(): string
+    {
+        return $this->languageIso;
+    }
+
+    public function setLanguageIso(string $languageIso): void
+    {
+        $this->languageIso = $languageIso;
+    }
+
+    public function getCurrency(): string
+    {
+        return $this->currency;
+    }
+
+    public function setCurrency(string $currency): void
+    {
+        $this->currency = $currency;
+    }
+
+    public function getIntent(): string
+    {
+        return $this->intent;
+    }
+
+    public function setIntent(string $intent): void
+    {
+        $this->intent = $intent;
+    }
+
+    public function getClientToken(): ?string
+    {
+        return $this->clientToken;
+    }
+
+    public function setClientToken(?string $clientToken): void
+    {
+        $this->clientToken = $clientToken;
     }
 
     public function getPaymentMethodId(): string
@@ -69,30 +119,14 @@ class AbstractCheckoutData extends AbstractScriptData
         $this->createOrderUrl = $createOrderUrl;
     }
 
-    /**
-     * @deprecated tag:v10.0.0 - Will be removed, use {@link handleErrorUrl} instead
-     */
     public function getAddErrorUrl(): string
     {
         return $this->addErrorUrl;
     }
 
-    /**
-     * @deprecated tag:v10.0.0 - Will be removed, use {@link handleErrorUrl} instead
-     */
     public function setAddErrorUrl(string $addErrorUrl): void
     {
         $this->addErrorUrl = $addErrorUrl;
-    }
-
-    public function getHandleErrorUrl(): string
-    {
-        return $this->handleErrorUrl;
-    }
-
-    public function setHandleErrorUrl(string $handleErrorUrl): void
-    {
-        $this->handleErrorUrl = $handleErrorUrl;
     }
 
     public function getPreventErrorReload(): bool
@@ -143,25 +177,5 @@ class AbstractCheckoutData extends AbstractScriptData
     public function setButtonShape(string $buttonShape): void
     {
         $this->buttonShape = $buttonShape;
-    }
-
-    public function getButtonColor(): string
-    {
-        return $this->buttonColor;
-    }
-
-    public function setButtonColor(string $buttonColor): void
-    {
-        $this->buttonColor = $buttonColor;
-    }
-
-    public function getBrandName(): string
-    {
-        return $this->brandName;
-    }
-
-    public function setBrandName(string $brandName): void
-    {
-        $this->brandName = $brandName;
     }
 }

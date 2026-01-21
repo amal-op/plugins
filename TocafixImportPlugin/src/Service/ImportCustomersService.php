@@ -217,7 +217,6 @@ class ImportCustomersService
                 ],
                 'tags' => $this->getTags(new Criteria(), $context, $data, $customerId)
             ];
-
             try {
                 $this->customerRepository->create([$customer], $context);
             } catch (Exception $e) {
@@ -304,10 +303,9 @@ class ImportCustomersService
      * @return mixed
      */
     public function fetchCountryId(?CountryCollection $countries, string $name)
-    {
+    {   
         $country = $countries->filterByProperty('name', $name)->first();
-
-        return $country->id;
+        return $country->id ?? '';
     }
 
     /**

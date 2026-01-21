@@ -7,23 +7,29 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V1\Api\Disputes\Common\ProductDetails;
-use Swag\PayPal\RestApi\V1\Api\Disputes\Common\ServiceDetails;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\MerchandizeDisputeProperties\ProductDetails;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\MerchandizeDisputeProperties\ServiceDetails;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_item_extensions_merchandize_dispute_properties')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_extensions_merchandize_dispute_properties")
+ */
 class MerchandizeDisputeProperties extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $issueType;
 
-    #[OA\Property(ref: ProductDetails::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_disputes_common_product_details")
+     */
     protected ProductDetails $productDetails;
 
-    #[OA\Property(ref: ServiceDetails::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_disputes_common_service_details")
+     */
     protected ServiceDetails $serviceDetails;
 
     public function getIssueType(): string

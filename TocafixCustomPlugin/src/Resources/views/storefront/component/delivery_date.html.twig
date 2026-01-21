@@ -4,10 +4,6 @@
             data-form-csrf-handler="true"
             method="post">
 
-        {% block page_checkout_cart_add_promotion_csrf %}
-            {{ sw_csrf('frontend.checkout.delivery-date.add') }}
-        {% endblock %}
-
         {% block page_checkout_cart_add_delivery_date_input_title %}
             <div class="checkout-aside-add-delivery_date">
                 <strong>{{ "tocafix-custom.detailInformation.preferred-delivery-date"|trans|sw_sanitize }}</strong>

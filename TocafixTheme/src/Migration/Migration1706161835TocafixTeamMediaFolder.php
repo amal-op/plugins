@@ -34,8 +34,8 @@ class Migration1706161835TocafixTeamMediaFolder extends MigrationStep
     private function addMediaDefaultFolder(Connection $connection, string $defaultFolderId): void
     {
         $sql = <<<SQL
-            INSERT IGNORE INTO `media_default_folder` (`id`, `association_fields`, `entity`, `created_at`)
-            VALUES (:id, '["tocafixTeam"]', 'tocafix_team', :createdAt);
+            INSERT IGNORE INTO `media_default_folder` (`id`,  `entity`, `created_at`)
+            VALUES (:id,  'tocafix_team', :createdAt);
             SQL;
 
         $connection->executeStatement($sql, [

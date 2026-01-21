@@ -10,11 +10,9 @@ namespace Swag\PayPal\Pos\DataAbstractionLayer\Entity;
 use Shopware\Core\Content\ProductStream\ProductStreamEntity;
 use Shopware\Core\Framework\DataAbstractionLayer\Entity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityIdTrait;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Symfony\Component\Validator\Exception\ConstraintDefinitionException;
 
-#[Package('checkout')]
 class PosSalesChannelEntity extends Entity
 {
     use EntityIdTrait;

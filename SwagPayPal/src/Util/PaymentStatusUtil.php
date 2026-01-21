@@ -11,21 +11,19 @@ use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEnti
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler;
 use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStates;
 use Shopware\Core\Checkout\Order\OrderEntity;
-use Shopware\Core\Checkout\Order\OrderException;
 use Shopware\Core\Checkout\Payment\Exception\InvalidOrderException;
 use Shopware\Core\Checkout\Payment\Exception\InvalidTransactionException;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\ShopwareHttpException;
 use Shopware\Core\System\StateMachine\Aggregation\StateMachineState\StateMachineStateEntity;
 use Swag\PayPal\RestApi\V1\Api\Capture;
 use Swag\PayPal\RestApi\V1\Api\Payment;
 use Swag\PayPal\RestApi\V1\Api\Refund;
+use Swag\PayPal\Util\Compatibility\Exception;
 
-#[Package('checkout')]
 class PaymentStatusUtil
 {
     private EntityRepository $orderRepository;
@@ -63,12 +61,10 @@ class PaymentStatusUtil
             throw new InvalidTransactionException($transactionId);
         }
 
-        if ($captureResponse->isIsFinalCapture()) {
+        if ($captureResponse->isFinalCapture()) {
             $this->reopenTransaction($stateMachineState, $transactionId, $context);
             // If the previous state is "paid_partially", "paid" is currently not allowed as direct transition
-            if ($stateMachineState->getTechnicalName() === OrderTransactionStates::STATE_PARTIALLY_PAID) {
-                $this->orderTransactionStateHandler->process($transactionId, $context);
-            }
+            $this->orderTransactionStateHandler->process($transactionId, $context);
             $this->orderTransactionStateHandler->paid($transactionId, $context);
 
             return;
@@ -119,11 +115,7 @@ class PaymentStatusUtil
         }
 
         $capturedAmount = 0.0;
-        $paymentTransaction = $paymentResponse->getTransactions()->first();
-        if ($paymentTransaction === null) {
-            return;
-        }
-        $relatedResources = $paymentTransaction->getRelatedResources();
+        $relatedResources = $paymentResponse->getTransactions()[0]->getRelatedResources();
         foreach ($relatedResources as $relatedResource) {
             $capture = $relatedResource->getCapture();
             if ($capture === null) {
@@ -180,7 +172,7 @@ class PaymentStatusUtil
         $order = $this->orderRepository->search($criteria, $context)->first();
 
         if ($order === null) {
-            throw OrderException::orderNotFound($orderId);
+            throw Exception::orderNotFound($orderId);
         }
 
         $transactionCollection = $order->getTransactions();

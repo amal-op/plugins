@@ -8,16 +8,18 @@
 namespace Swag\PayPal\OrdersApi\Builder\Util;
 
 use Shopware\Core\Checkout\Cart\Price\Struct\CalculatedPrice;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\Currency\CurrencyEntity;
-use Swag\PayPal\RestApi\V2\Api\Common\Money;
 use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit;
 use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount;
 use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown;
-use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\ItemCollection;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown\Discount;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown\Handling;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown\ItemTotal;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown\Shipping as BreakdownShipping;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown\TaxTotal;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Item;
 use Swag\PayPal\Util\PriceFormatter;
 
-#[Package('checkout')]
 class AmountProvider
 {
     private PriceFormatter $priceFormatter;
@@ -41,7 +43,7 @@ class AmountProvider
 
         $amount = new Amount();
         $amount->setCurrencyCode($currencyCode);
-        $amount->setValue($this->priceFormatter->formatPrice($totalAmount->getTotalPrice(), $currencyCode));
+        $amount->setValue($this->priceFormatter->formatPrice($totalAmount->getTotalPrice()));
 
         $items = $purchaseUnit->getItems();
         if ($items !== null) {
@@ -61,8 +63,11 @@ class AmountProvider
         return $amount;
     }
 
+    /**
+     * @param Item[] $items
+     */
     private function createBreakdown(
-        ItemCollection $items,
+        array $items,
         PurchaseUnit $purchaseUnit,
         string $currencyCode,
         CalculatedPrice $shippingCosts,
@@ -71,44 +76,44 @@ class AmountProvider
     ): Breakdown {
         $accumulatedAmountValue = 0.0;
         $accumulatedTaxValue = 0.0;
-        $newItems = new ItemCollection();
+        $newItems = [];
 
         foreach ($items as $item) {
             $itemUnitAmount = (float) $item->getUnitAmount()->getValue();
             if ($itemUnitAmount >= 0.0) {
                 $accumulatedAmountValue += $item->getQuantity() * $itemUnitAmount;
-                $newItems->add($item);
+                $newItems[] = $item;
                 $accumulatedTaxValue += $item->getQuantity() * (float) $item->getTax()->getValue();
             }
         }
         $purchaseUnit->setItems($newItems);
 
-        $itemTotal = new Money();
+        $itemTotal = new ItemTotal();
         $itemTotal->setCurrencyCode($currencyCode);
-        $itemTotal->setValue($this->priceFormatter->formatPrice($accumulatedAmountValue, $currencyCode));
+        $itemTotal->setValue($this->priceFormatter->formatPrice($accumulatedAmountValue));
 
-        $shipping = new Money();
+        $shipping = new BreakdownShipping();
         $shipping->setCurrencyCode($currencyCode);
-        $shipping->setValue($this->priceFormatter->formatPrice($shippingCosts->getTotalPrice() + ($isNet ? $shippingCosts->getCalculatedTaxes()->getAmount() : 0.0), $currencyCode));
+        $shipping->setValue($this->priceFormatter->formatPrice($shippingCosts->getTotalPrice() + ($isNet ? $shippingCosts->getCalculatedTaxes()->getAmount() : 0.0)));
         $accumulatedAmountValue += (float) $shipping->getValue();
 
-        $taxTotal = new Money();
+        $taxTotal = new TaxTotal();
         $taxTotal->setCurrencyCode($currencyCode);
-        $taxTotal->setValue($this->priceFormatter->formatPrice($accumulatedTaxValue, $currencyCode));
+        $taxTotal->setValue($this->priceFormatter->formatPrice($accumulatedTaxValue));
         $accumulatedAmountValue += (float) $taxTotal->getValue();
 
-        $discount = new Money();
+        $discount = new Discount();
         $discount->setCurrencyCode($currencyCode);
-        $discount->setValue($this->priceFormatter->formatPrice($accumulatedAmountValue - $amountValue, $currencyCode));
+        $discount->setValue($this->priceFormatter->formatPrice($accumulatedAmountValue - $amountValue));
 
-        $handling = new Money();
+        $handling = new Handling();
         $handling->setCurrencyCode($currencyCode);
         // if due to rounding the order is more than the items, we add a fake handling fee
         if ((float) $discount->getValue() < 0.0) {
-            $discount->setValue($this->priceFormatter->formatPrice(0.0, $currencyCode));
-            $handling->setValue($this->priceFormatter->formatPrice($amountValue - $accumulatedAmountValue, $currencyCode));
+            $discount->setValue($this->priceFormatter->formatPrice(0.0));
+            $handling->setValue($this->priceFormatter->formatPrice($amountValue - $accumulatedAmountValue));
         } else {
-            $handling->setValue($this->priceFormatter->formatPrice(0.0, $currencyCode));
+            $handling->setValue($this->priceFormatter->formatPrice(0.0));
         }
 
         $breakdown = new Breakdown();

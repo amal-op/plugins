@@ -1,13 +1,8 @@
 @import "~scss/variables";
+@import "../../.././../app/assets/scss/variables";
 
 .swag-paypal-checkout {
     padding: 30px;
-
-    &__avatar {
-        border-radius: 4px;
-        width: 100%;
-        height: 100%;
-    }
 
     &__banner {
         margin-top: 24px;

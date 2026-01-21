@@ -7,9 +7,6 @@
 
 namespace Swag\PayPal\Storefront\Data\Struct;
 
-use Shopware\Core\Framework\Log\Package;
-
-#[Package('checkout')]
 class SEPACheckoutData extends AbstractCheckoutData
 {
 }

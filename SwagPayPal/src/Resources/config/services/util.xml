@@ -8,9 +8,6 @@
         <service id="Swag\PayPal\Util\PaymentMethodUtil">
             <argument type="service" id="Doctrine\DBAL\Connection"/>
             <argument type="service" id="sales_channel.repository"/>
-            <argument type="service" id="Swag\PayPal\Util\Lifecycle\Method\PaymentMethodDataRegistry"/>
-
-            <tag name="kernel.reset" method="reset"/>
         </service>
 
         <service id="Swag\PayPal\Util\PaymentStatusUtil">
@@ -29,22 +26,20 @@
 
         <service id="Swag\PayPal\Util\LocaleCodeProvider">
             <argument type="service" id="language.repository"/>
-            <argument type="service" id="monolog.logger.paypal"/>
-
-            <tag name="kernel.reset" method="reset"/>
         </service>
 
-        <service id="monolog.processor.paypal.introspection" class="Swag\PayPal\Util\IntrospectionProcessor">
-            <tag name="monolog.processor" channel="paypal" />
+        <service id="Swag\PayPal\Util\Log\LoggerFactory">
+            <argument type="string">%kernel.logs_dir%/%%s_%kernel.environment%.log</argument>
+            <argument>%shopware.logger.file_rotation_count%</argument>
+
+            <call method="setLogLevel">
+                <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
+            </call>
         </service>
 
-        <service id="monolog.processor.paypal.web" class="Symfony\Bridge\Monolog\Processor\WebProcessor">
-            <argument type="collection">
-                <argument key="url">REQUEST_URI</argument>
-                <argument key="http_method">REQUEST_METHOD</argument>
-                <argument key="server">SERVER_NAME</argument>
-            </argument>
-            <tag name="monolog.processor" channel="paypal" />
+        <service id="Swag\PayPal\Util\Logger" class="Monolog\Logger">
+            <factory service="Swag\PayPal\Util\Log\LoggerFactory" method="createRotating"/>
+            <argument type="string">swag_paypal</argument>
         </service>
 
         <service id="Swag\PayPal\Util\Lifecycle\ActivateDeactivate">
@@ -126,6 +121,10 @@
                  parent="Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData">
             <tag name="swag.paypal.payment.method.data"/>
         </service>
+        <service id="Swag\PayPal\Util\Lifecycle\Method\GiropayMethodData"
+                 parent="Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData">
+            <tag name="swag.paypal.payment.method.data"/>
+        </service>
         <service id="Swag\PayPal\Util\Lifecycle\Method\IdealMethodData"
                  parent="Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData">
             <tag name="swag.paypal.payment.method.data"/>
@@ -146,6 +145,10 @@
                  parent="Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData">
             <tag name="swag.paypal.payment.method.data"/>
         </service>
+        <service id="Swag\PayPal\Util\Lifecycle\Method\SofortMethodData"
+                 parent="Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData">
+            <tag name="swag.paypal.payment.method.data"/>
+        </service>
         <service id="Swag\PayPal\Util\Lifecycle\Method\TrustlyMethodData"
                  parent="Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData">
             <tag name="swag.paypal.payment.method.data"/>
@@ -156,16 +159,6 @@
             <tag name="swag.paypal.payment.storefront.checkout.data"/>
         </service>
         <service id="Swag\PayPal\Util\Lifecycle\Method\PayLaterMethodData"
-                 parent="Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData">
-            <tag name="swag.paypal.payment.method.data"/>
-            <tag name="swag.paypal.payment.storefront.checkout.data"/>
-        </service>
-        <service id="Swag\PayPal\Util\Lifecycle\Method\ApplePayMethodData"
-                 parent="Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData">
-            <tag name="swag.paypal.payment.method.data"/>
-            <tag name="swag.paypal.payment.storefront.checkout.data"/>
-        </service>
-        <service id="Swag\PayPal\Util\Lifecycle\Method\GooglePayMethodData"
                  parent="Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData">
             <tag name="swag.paypal.payment.method.data"/>
             <tag name="swag.paypal.payment.storefront.checkout.data"/>

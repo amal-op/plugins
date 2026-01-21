@@ -1,13 +1,10 @@
 import template from './tocafix-team-category-list.html.twig';
 
-const { Component } = Shopware;
-const { Criteria } = Shopware.Data;
-
-Component.register('tocafix-team-category-list', {
+Shopware.Component.register('tocafix-team-category-list', {
     template,
 
     inject: [
-        'repositoryFactory'
+        'repositoryFactory',
     ],
 
     data() {
@@ -35,29 +32,40 @@ Component.register('tocafix-team-category-list', {
                 allowResize: true,
                 primary: true
             }];
+        },
+
+        teamCategoryRepository() {
+            return this.repositoryFactory.create('tocafix_team_category');
         }
     },
 
     created() {
+        this.repository = this.teamCategoryRepository;
         this.loadList();
     },
     
     methods: {
         loadList() {
             this.isLoading = true;
-            this.repository = this.repositoryFactory.create('tocafix_team_category');
-            const teamCategoryCriteria = new Criteria();
+            const teamCategoryCriteria = new Shopware.Data.Criteria();
 
             this.repository
                 .search(teamCategoryCriteria, Shopware.Context.api)
                 .then((result) => {
                     this.teamCategories = result;
+                })
+                .catch(() => {
+                    this.teamCategories = null;
+                })
+                .finally(() => {
                     this.isLoading = false;
                 });
         },
 
-        onChangeLanguage() {
+        onChangeLanguage(languageId) {
+            Shopware.State.commit('context/setApiLanguageId', languageId);
             this.loadList();
         }
+            
     }
 });

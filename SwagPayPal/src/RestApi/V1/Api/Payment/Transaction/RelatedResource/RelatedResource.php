@@ -7,48 +7,72 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Payment\Transaction\RelatedResource;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\Common\Amount;
 use Swag\PayPal\RestApi\V1\Api\Common\Link;
-use Swag\PayPal\RestApi\V1\Api\Common\LinkCollection;
 
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_payment_transaction_abstract_related_resource")
+ */
 abstract class RelatedResource extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $id;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $state;
 
-    #[OA\Property(ref: Amount::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_amount")
+     */
     protected Amount $amount;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $paymentMode;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $createTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $updateTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")*
+     */
     protected string $protectionEligibility;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $protectionEligibilityType;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $receiptId;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $parentPayment;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Link::class))]
-    protected LinkCollection $links;
+    /**
+     * @var Link[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_common_link"})
+     */
+    protected array $links;
 
     public function getId(): string
     {
@@ -150,12 +174,18 @@ abstract class RelatedResource extends PayPalApiStruct
         $this->parentPayment = $parentPayment;
     }
 
-    public function getLinks(): LinkCollection
+    /**
+     * @return Link[]
+     */
+    public function getLinks(): array
     {
         return $this->links;
     }
 
-    public function setLinks(LinkCollection $links): void
+    /**
+     * @param Link[] $links
+     */
+    public function setLinks(array $links): void
     {
         $this->links = $links;
     }

@@ -7,9 +7,6 @@
 
 namespace Swag\PayPal\RestApi;
 
-use Shopware\Core\Framework\Log\Package;
-
-#[Package('checkout')]
 final class BaseURL
 {
     public const SANDBOX = 'https://api-m.sandbox.paypal.com/';

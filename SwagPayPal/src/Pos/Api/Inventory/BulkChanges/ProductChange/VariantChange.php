@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Pos\Api\Inventory\BulkChanges\ProductChange;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Common\PosStruct;
 
-#[Package('checkout')]
 class VariantChange extends PosStruct
 {
     protected string $productUuid;

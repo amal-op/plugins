@@ -1,0 +1,83 @@
+{% block element_product_slider %}
+	{% if not sliderConfig %}
+		{% set sliderConfig = element.fieldConfig.elements %}
+	{% endif %}
+	<div class="cms-element-{{ element.type }}{% if sliderConfig.displayMode.value == " standard" and sliderconfig.verticalalign.value %} has-vertical-alignment{% endif %}">
+		{% block element_product_slider_alignment %}
+			{% if config.verticalAlign.value %}
+				<div class="cms-element-alignment{% if sliderConfig.verticalAlign.value == " center" %} align-self-center{% elseif sliderConfig.verticalAlign.value == " flex-end" %} align-self-end{% else %} align-self-start{% endif %}">
+				{% endif %}
+
+				{% set productSliderOptions = {
+							items: sliderConfig.countDesktop.value,
+							slider: {
+								gutter: 30,
+								autoplayButtonOutput: false,
+								nav: sliderConfig.dots.value,
+								slideBy: 2,
+								items: sliderConfig.countDesktop.value,
+								mouseDrag: true,
+								controls: sliderConfig.navigation.value,
+								autoplay: sliderConfig.autoPlay.value,
+								speed: sliderConfig.speed.value,
+								loop: sliderConfig.loop.value,
+								prevButton: '.product-slider__controls_prev',
+								nextButton: '.product-slider__controls_next',
+								navPosition: 'bottom',
+								responsive: {
+									md: {
+										items: sliderConfig.countTablet.value
+									},
+									xs: {
+										items: sliderConfig.countMobile.value
+									}
+								}
+							}
+						} 
+					%}
+
+				{% block element_product_slider_slider %}
+					<div class="base-slider product-slider{% if sliderConfig.border.value %} has-border{% endif %}{% if sliderConfig.navigation.value %} has-nav{% endif %}" data-base-slider="true" data-base-slider-options="{{ productSliderOptions|json_encode }}">
+
+						{% block element_product_slider_inner %}
+							{% block element_product_slider_element %}
+								<div class="product-slider-container js-recently-viewed-product-slider" data-base-slider-container="true">
+									{% set recentlyViewedProductSliderOptions = {
+	                                    replaceSelectors:".js-recently-viewed-product-slider",
+	                                	route: path('frontend.recently-viewed-product.slider'),
+	                                    boxLayout: sliderConfig.boxLayout.value,
+	                                    displayMode: sliderConfig.displayMode.value,
+                                    } %}
+									<div data-cmsbundle-recently-viewed-product="true" data-cmsbundle-recently-viewed-product-options="{{ recentlyViewedProductSliderOptions|json_encode }}"></div>
+								</div>
+							{% endblock %}
+
+							{% block element_product_slider_controls %}
+								<div class="product-slider-controls-container">
+									{% if sliderConfig.navigation.value %}
+										<div class="base-slider-controls" data-base-slider-controls="true">
+											{% block element_product_slider_controls_items %}
+												<button class="base-slider-controls-prev product-slider__controls_prev{% if sliderConfig.border.value %} has-border{% endif %}">
+													{% block element_product_slider_controls_items_prev_icon %}
+														{% sw_icon 'arrow-head-left' %}
+													{% endblock %}
+												</button>
+												<button class="base-slider-controls-next product-slider__controls_next{% if sliderConfig.border.value %} has-border{% endif %}">
+													{% block element_product_slider_controls_items_next_icon %}
+														{% sw_icon 'arrow-head-right' %}
+													{% endblock %}
+												</button>
+											{% endblock %}
+										</div>
+									{% endif %}
+								</div>
+							{% endblock %}
+						{% endblock %}
+					</div>
+				{% endblock %}
+				{% if config.verticalAlign.value %}
+				</div>
+			{% endif %}
+		{% endblock %}
+	</div>
+{% endblock %}

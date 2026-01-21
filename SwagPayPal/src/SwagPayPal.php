@@ -15,7 +15,7 @@ use Shopware\Core\Content\Media\File\FileSaver;
 use Shopware\Core\Content\Media\MediaDefinition;
 use Shopware\Core\Content\Rule\RuleDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
-use Shopware\Core\Framework\Log\Package;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
 use Shopware\Core\Framework\Plugin;
 use Shopware\Core\Framework\Plugin\Context\ActivateContext;
 use Shopware\Core\Framework\Plugin\Context\DeactivateContext;
@@ -30,6 +30,7 @@ use Shopware\Core\System\SystemConfig\SystemConfigDefinition;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Swag\PayPal\Pos\Setting\Service\InformationDefaultService;
 use Swag\PayPal\Pos\Webhook\WebhookService as PosWebhookService;
+use Swag\PayPal\Util\Compatibility\EntityRepositoryDecorator;
 use Swag\PayPal\Util\Lifecycle\ActivateDeactivate;
 use Swag\PayPal\Util\Lifecycle\Installer\MediaInstaller;
 use Swag\PayPal\Util\Lifecycle\Installer\PaymentMethodInstaller;
@@ -38,20 +39,11 @@ use Swag\PayPal\Util\Lifecycle\Installer\SettingsInstaller;
 use Swag\PayPal\Util\Lifecycle\InstallUninstall;
 use Swag\PayPal\Util\Lifecycle\Method\PaymentMethodDataRegistry;
 use Swag\PayPal\Util\Lifecycle\State\PaymentMethodStateService;
-use Swag\PayPal\Util\Lifecycle\State\PosStateService;
 use Swag\PayPal\Util\Lifecycle\Update;
 use Swag\PayPal\Webhook\WebhookService;
-use Symfony\Component\Config\FileLocator;
-use Symfony\Component\Config\Loader\DelegatingLoader;
-use Symfony\Component\Config\Loader\LoaderResolver;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
-use Symfony\Component\DependencyInjection\Loader\DirectoryLoader;
-use Symfony\Component\DependencyInjection\Loader\GlobFileLoader;
-use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
-#[Package('checkout')]
 class SwagPayPal extends Plugin
 {
     public const ORDER_TRANSACTION_CUSTOM_FIELDS_PAYPAL_TRANSACTION_ID = 'swag_paypal_transaction_id';
@@ -60,9 +52,7 @@ class SwagPayPal extends Plugin
     public const ORDER_TRANSACTION_CUSTOM_FIELDS_PAYPAL_ORDER_ID = 'swag_paypal_order_id';
     public const ORDER_TRANSACTION_CUSTOM_FIELDS_PAYPAL_PARTNER_ATTRIBUTION_ID = 'swag_paypal_partner_attribution_id';
     public const ORDER_TRANSACTION_CUSTOM_FIELDS_PAYPAL_RESOURCE_ID = 'swag_paypal_resource_id';
-    public const ORDER_TRANSACTION_CUSTOM_FIELDS_PAYPAL_IS_SANDBOX = 'swag_paypal_is_sandbox';
     public const SHIPPING_METHOD_CUSTOM_FIELDS_CARRIER = 'swag_paypal_carrier';
-    public const SHIPPING_METHOD_CUSTOM_FIELDS_CARRIER_OTHER_NAME = 'swag_paypal_carrier_other_name';
     public const SALES_CHANNEL_TYPE_POS = '1ce0868f406d47d98cfe4b281e62f099';
     public const SALES_CHANNEL_POS_EXTENSION = 'paypalPosSalesChannel';
     public const PRODUCT_LOG_POS_EXTENSION = 'paypalPosLog';
@@ -108,8 +98,6 @@ class SwagPayPal extends Plugin
 
     public function update(UpdateContext $updateContext): void
     {
-        \assert($this->container instanceof ContainerInterface, 'Container is not set yet, please call setContainer() before calling boot(), see `platform/Core/Kernel.php:186`.');
-
         /** @var WebhookService|null $webhookService */
         $webhookService = $this->container->get(WebhookService::class, ContainerInterface::NULL_ON_INVALID_REFERENCE);
         /** @var InformationDefaultService|null $informationDefaultService */
@@ -200,29 +188,8 @@ class SwagPayPal extends Plugin
         ];
     }
 
-    public function build(ContainerBuilder $container): void
-    {
-        parent::build($container);
-
-        $locator = new FileLocator('Resources/config');
-
-        $resolver = new LoaderResolver([
-            new YamlFileLoader($container, $locator),
-            new GlobFileLoader($container, $locator),
-            new DirectoryLoader($container, $locator),
-        ]);
-
-        $configLoader = new DelegatingLoader($resolver);
-
-        $confDir = \rtrim($this->getPath(), '/') . '/Resources/config';
-
-        $configLoader->load($confDir . '/{packages}/*.yaml', 'glob');
-    }
-
     private function getInstaller(): InstallUninstall
     {
-        \assert($this->container instanceof ContainerInterface, 'Container is not set yet, please call setContainer() before calling boot(), see `platform/Core/Kernel.php:186`.');
-
         return new InstallUninstall(
             new PaymentMethodInstaller(
                 $this->getRepository($this->container, PaymentMethodDefinition::ENTITY_NAME),
@@ -244,18 +211,16 @@ class SwagPayPal extends Plugin
                 $this->container->get(SystemConfigService::class)
             ),
             new PosInstaller($this->container->get(Connection::class)),
-            new PosStateService(
-                $this->getRepository($this->container, SalesChannelDefinition::ENTITY_NAME),
-                $this->getRepository($this->container, SalesChannelTypeDefinition::ENTITY_NAME),
-                $this->getRepository($this->container, ShippingMethodDefinition::ENTITY_NAME),
-                $this->getRepository($this->container, PaymentMethodDefinition::ENTITY_NAME),
-            )
         );
     }
 
     private function getRepository(ContainerInterface $container, string $entityName): EntityRepository
     {
         $repository = $container->get(\sprintf('%s.repository', $entityName), ContainerInterface::NULL_ON_INVALID_REFERENCE);
+
+        if (\interface_exists(EntityRepositoryInterface::class) && $repository instanceof EntityRepositoryInterface) {
+            return new EntityRepositoryDecorator($repository);
+        }
 
         if (!$repository instanceof EntityRepository) {
             throw new ServiceNotFoundException(\sprintf('%s.repository', $entityName));

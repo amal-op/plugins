@@ -7,16 +7,10 @@
 
 namespace Swag\PayPal\Util\Lifecycle\Method;
 
-use Shopware\Core\Framework\Log\Package;
-use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations;
 use Swag\PayPal\Util\Availability\AvailabilityContext;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-/**
- * @internal
- */
-#[Package('checkout')]
 abstract class AbstractMethodData
 {
     public const CAPABILITY_ACTIVE = 'active';
@@ -34,9 +28,6 @@ abstract class AbstractMethodData
         $this->container = $container;
     }
 
-    /**
-     * @return array<string, array<string, string>>
-     */
     abstract public function getTranslations(): array;
 
     abstract public function getPosition(): int;
@@ -50,9 +41,4 @@ abstract class AbstractMethodData
     abstract public function validateCapability(MerchantIntegrations $merchantIntegrations): string;
 
     abstract public function getMediaFileName(): ?string;
-
-    public function isVaultable(SalesChannelContext $context): bool
-    {
-        return false;
-    }
 }

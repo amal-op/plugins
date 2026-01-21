@@ -1,20 +1,24 @@
-import template from './sw-cms-el-tocafix-job-teaser.html.twig';
-import './sw-cms-el-tocafix-job-teaser.scss';
+import template from "./sw-cms-el-tocafix-job-teaser.html.twig";
+import "./sw-cms-el-tocafix-job-teaser.scss";
 
-Shopware.Component.register('sw-cms-el-tocafix-job-teaser', {
-    template,
+const { Component, Mixin } = Shopware;
 
-    mixins: [
-        Shopware.Mixin.getByName('cms-element')
-    ],
+Component.register("sw-cms-el-tocafix-job-teaser", {
+  template,
 
-    created() {
-        this.createdComponent();
+  mixins: [Mixin.getByName("cms-element")],
+
+  created() {
+    this.createdComponent();
+  },
+  computed: {
+    assetFilter() {
+      return Shopware.Filter.getByName("asset");
     },
-
-    methods: {
-        createdComponent() {
-            this.initElementConfig('tocafix-job-teaser');
-        }
-    }
+  },
+  methods: {
+    createdComponent() {
+      this.initElementConfig("tocafix-job-teaser");
+    },
+  },
 });

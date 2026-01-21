@@ -7,22 +7,28 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Payee\DisplayData;
 
-#[OA\Schema(schema: 'swag_paypal_v2_order_purchase_unit_payee')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_order_payee")
+ */
 class Payee extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $emailAddress;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $merchantId;
 
-    #[OA\Property(ref: DisplayData::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_order_display_data")
+     */
     protected DisplayData $displayData;
 
     public function getEmailAddress(): string

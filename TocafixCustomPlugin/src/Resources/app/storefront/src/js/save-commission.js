@@ -12,7 +12,8 @@ export default class TocafixCommissionPlugin extends Plugin {
     };
 
     init() {
-        this._client = new HttpClient(window.accessKey, window.contextToken);
+        // In 6.5, HttpClient doesn't require parameters in constructor
+        this._client = new HttpClient();
         this._form = this.el;
         this._saveButton = DomAccess.querySelector(this.el, this.options.saveButtonSelector);
         this._messageDisplay = document.querySelector('.commission-response');
@@ -36,6 +37,7 @@ export default class TocafixCommissionPlugin extends Plugin {
             return;
         }
 
+        // Changed from $emitter to this.$emitter
         this.$emitter.publish('beforeSubmit');
         this._fireRequest();
     }
@@ -44,7 +46,13 @@ export default class TocafixCommissionPlugin extends Plugin {
         this._createLoadingIndicators();
         const action = DomAccess.getAttribute(this._form, 'data-action');
         this.$emitter.publish('beforeFireRequest');
-        this._client.post(action, this._getFormData(), this._onAfterAjaxSubmit.bind(this));
+        
+        // Changed method - use fetch-based approach
+        this._client.post(
+            action, 
+            this._getFormData(),
+            (response) => this._onAfterAjaxSubmit(response)
+        );
     }
 
     _getFormData() {
@@ -52,11 +60,16 @@ export default class TocafixCommissionPlugin extends Plugin {
     }
 
     _onAfterAjaxSubmit(response) {
-        response = JSON.parse(response);
-        this._messageDisplay.innerHTML = response.alert;
-        this._messageDisplay.classList.remove('d-none');
+        // Response might already be parsed in 6.5
+        const data = typeof response === 'string' ? JSON.parse(response) : response;
         
-        this.$emitter.publish('onAfterAjaxSubmit', { response });
+        if (this._messageDisplay) {
+            this._messageDisplay.innerHTML = data.alert;
+            this._messageDisplay.classList.remove('d-none');
+        }
+        
+        this._removeLoadingIndicators();
+        this.$emitter.publish('onAfterAjaxSubmit', { response: data });
     }
 
     _createLoadingIndicators() {

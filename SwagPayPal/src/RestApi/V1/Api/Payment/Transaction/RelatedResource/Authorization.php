@@ -7,17 +7,21 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Payment\Transaction\RelatedResource;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 
-#[OA\Schema(schema: 'swag_paypal_v1_payment_transaction_related_resource_authorization')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_payment_transaction_authorization")
+ */
 class Authorization extends RelatedResource
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $reasonCode;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $validUntil;
 
     public function getReasonCode(): string

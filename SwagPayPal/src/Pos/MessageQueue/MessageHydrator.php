@@ -11,9 +11,8 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Routing\Exception\SalesChannelNotFoundException;
-use Shopware\Core\System\SalesChannel\Context\SalesChannelContextServiceInterface;
+use Shopware\Core\System\SalesChannel\Context\SalesChannelContextService;
 use Shopware\Core\System\SalesChannel\Context\SalesChannelContextServiceParameters;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
@@ -22,10 +21,9 @@ use Swag\PayPal\Pos\MessageQueue\Message\Sync\InventorySyncMessage;
 use Swag\PayPal\Pos\MessageQueue\Message\Sync\Traits\SalesChannelContextAwareMessageInterface;
 use Swag\PayPal\SwagPayPal;
 
-#[Package('checkout')]
 class MessageHydrator
 {
-    protected SalesChannelContextServiceInterface $salesChannelContextService;
+    protected SalesChannelContextService $salesChannelContextService;
 
     protected EntityRepository $salesChannelRepository;
 
@@ -33,7 +31,7 @@ class MessageHydrator
      * @internal
      */
     public function __construct(
-        SalesChannelContextServiceInterface $salesChannelContextService,
+        SalesChannelContextService $salesChannelContextService,
         EntityRepository $salesChannelRepository
     ) {
         $this->salesChannelContextService = $salesChannelContextService;
@@ -65,7 +63,6 @@ class MessageHydrator
         $criteria->addAssociation(SwagPayPal::SALES_CHANNEL_POS_EXTENSION);
         $criteria->addAssociation('currency');
 
-        /** @var SalesChannelEntity|null $salesChannel */
         $salesChannel = $this->salesChannelRepository->search($criteria, $context)->first();
         if ($salesChannel === null) {
             throw new SalesChannelNotFoundException();

@@ -15,6 +15,9 @@
             bottom: rem(80);
         }
     }
+    .tns-inner{
+        padding-bottom: 0;
+    }
 
     &-wrapper{
         .scroll-down{

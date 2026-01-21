@@ -7,14 +7,11 @@
 
 namespace Swag\PayPal\RestApi\V2\Resource;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\RestApi\Client\PayPalClientFactoryInterface;
 use Swag\PayPal\RestApi\V2\Api\Order;
-use Swag\PayPal\RestApi\V2\Api\Order\Tracker;
 use Swag\PayPal\RestApi\V2\Api\Patch;
 use Swag\PayPal\RestApi\V2\RequestUriV2;
 
-#[Package('checkout')]
 class OrderResource
 {
     private PayPalClientFactoryInterface $payPalClientFactory;
@@ -113,43 +110,5 @@ class OrderResource
         );
 
         return (new Order())->assign($response);
-    }
-
-    public function addTracker(
-        Tracker $tracker,
-        string $orderId,
-        string $salesChannelId,
-        string $partnerAttributionId,
-    ): Order {
-        $response = $this->payPalClientFactory->getPayPalClient($salesChannelId, $partnerAttributionId)->sendPostRequest(
-            \sprintf('%s/%s/track', RequestUriV2::ORDERS_RESOURCE, $orderId),
-            $tracker,
-        );
-
-        return (new Order())->assign($response);
-    }
-
-    public function removeTracker(
-        Tracker $tracker,
-        string $orderId,
-        string $salesChannelId,
-        string $partnerAttributionId,
-    ): void {
-        $this->payPalClientFactory->getPayPalClient($salesChannelId, $partnerAttributionId)->sendPatchRequest(
-            \sprintf(
-                '%s/%s/trackers/%s-%s',
-                RequestUriV2::ORDERS_RESOURCE,
-                $orderId,
-                $tracker->getCaptureId(),
-                $tracker->getTrackingNumber(),
-            ),
-            [
-                (new Patch())->assign([
-                    'op' => Patch::OPERATION_REPLACE,
-                    'path' => '/status',
-                    'value' => Order\PurchaseUnit\Shipping\Tracker::STATUS_CANCELLED,
-                ]),
-            ],
-        );
     }
 }

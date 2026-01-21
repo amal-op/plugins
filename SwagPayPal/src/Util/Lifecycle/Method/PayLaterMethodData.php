@@ -7,7 +7,6 @@
 
 namespace Swag\PayPal\Util\Lifecycle\Method;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Checkout\Payment\Method\PayLaterHandler;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations;
 use Swag\PayPal\Storefront\Data\CheckoutDataMethodInterface;
@@ -15,23 +14,16 @@ use Swag\PayPal\Storefront\Data\Service\AbstractCheckoutDataService;
 use Swag\PayPal\Storefront\Data\Service\PayLaterCheckoutDataService;
 use Swag\PayPal\Util\Availability\AvailabilityContext;
 
-/**
- * @internal
- */
-#[Package('checkout')]
 class PayLaterMethodData extends AbstractMethodData implements CheckoutDataMethodInterface
 {
     public const PAYPAL_PAY_LATER_FIELD_DATA_EXTENSION_ID = 'payPalPayLaterFieldData';
 
-    /**
-     * @return array<string, array<string, string>>
-     */
     public function getTranslations(): array
     {
         return [
             'de-DE' => [
                 'description' => 'Jetzt kaufen und später bezahlen - unterstützt von Paypal',
-                'name' => 'Später Bezahlen',
+                'name' => 'Später bezahlen',
             ],
             'en-GB' => [
                 'description' => 'Buy now and pay later - provided by Paypal',
@@ -67,7 +59,7 @@ class PayLaterMethodData extends AbstractMethodData implements CheckoutDataMetho
 
     public function getInitialState(): bool
     {
-        return true;
+        return false;
     }
 
     public function getMediaFileName(): ?string

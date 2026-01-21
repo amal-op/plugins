@@ -5,14 +5,9 @@ import SwagPaypalAbstractButtons from '../swag-paypal.abstract-buttons';
 import SwagPayPalScriptLoading from '../swag-paypal.script-loading';
 
 export default class SwagPayPalExpressCheckoutButton extends SwagPaypalAbstractButtons {
-    /**
-     * @deprecated tag:v10.0.0 - will be removed without replacement
-     */
     static scriptLoading = new SwagPayPalScriptLoading();
 
     static options = {
-        ...super.options,
-        buttonColor: 'gold',
 
         /**
          * This option defines the class name which will be added when the button gets disabled.
@@ -27,6 +22,69 @@ export default class SwagPayPalExpressCheckoutButton extends SwagPaypalAbstractB
          * @type string
          */
         buyButtonSelector: '.btn-buy',
+
+        /**
+         * This option specifies the PayPal button color
+         *
+         * @type string
+         */
+        buttonColor: 'gold',
+
+        /**
+         * This option specifies the PayPal button shape
+         *
+         * @type string
+         */
+        buttonShape: 'rect',
+
+        /**
+         * This option specifies the PayPal button size
+         *
+         * @type string
+         */
+        buttonSize: 'small',
+
+        /**
+         * This option specifies the language of the PayPal button
+         *
+         * @type string
+         */
+        languageIso: 'en_GB',
+
+        /**
+         * This option holds the client id specified in the settings
+         *
+         * @type string
+         */
+        clientId: '',
+
+        /**
+         * This option holds the merchant id specified in the settings
+         *
+         * @type string
+         */
+        merchantPayerId: '',
+
+        /**
+         * This options specifies the currency of the PayPal button
+         *
+         * @type string
+         */
+        currency: 'EUR',
+
+        /**
+         * This options defines the payment intent
+         *
+         * @type string
+         */
+        intent: 'capture',
+
+        /**
+         * This option toggles the PayNow/Login text at PayPal
+         *
+         * @type boolean
+         */
+        commit: false,
 
         /**
          * This option toggles the text below the PayPal Express button
@@ -55,6 +113,13 @@ export default class SwagPayPalExpressCheckoutButton extends SwagPaypalAbstractB
         payPalPaymentMethodId: '',
 
         /**
+         * URL to create a new PayPal order
+         *
+         * @type string
+         */
+        createOrderUrl: '',
+
+        /**
          * URL to delete an existing cart in Shopware
          *
          * @type string
@@ -76,6 +141,13 @@ export default class SwagPayPalExpressCheckoutButton extends SwagPaypalAbstractB
         checkoutConfirmUrl: '',
 
         /**
+         * URL for adding flash error message
+         *
+         * @type string
+         */
+        addErrorUrl: '',
+
+        /**
          * URL for redirecting to after user cancels
          *
          * @type string
@@ -83,31 +155,12 @@ export default class SwagPayPalExpressCheckoutButton extends SwagPaypalAbstractB
         cancelRedirectUrl: '',
 
         /**
-         * List of payment sources to be rendered
+         * Show additional pay later button
          *
-         * @type string[]
+         * @type boolean
          */
-        fundingSources: [],
-
-        /*
-         * Streamline options for listing pages, overriding the ones
-         * from swag-paypal.script-loading.js
-         */
-        useAlternativePaymentMethods: true,
-        commit: false,
-        scriptAwaitVisibility: true,
-        partOfDomContentLoading: false,
-
-        /**
-         * Indicates whether the PayPal button is rendered within a checkout context.
-         * 
-         * @type {boolean}
-         */
-        isCheckout: true,
+        disablePayLater: true,
     };
-
-    GENERIC_ERROR = 'SWAG_PAYPAL__EXPRESS_GENERIC_ERROR';
-    USER_CANCELLED = 'SWAG_PAYPAL__EXPRESS_USER_CANCELLED';
 
     init() {
         this._client = new HttpClient();
@@ -116,27 +169,12 @@ export default class SwagPayPalExpressCheckoutButton extends SwagPaypalAbstractB
 
     createButton() {
         this.createScript((paypal) => {
-            try {
-                this.renderButton(paypal);
-            } catch (error) {
-                this.handleError(this.SCRIPT_ERROR, true, error);
-            }
+            this.renderButton(paypal);
         });
     }
 
     renderButton(paypal) {
-        this.options.fundingSources.forEach((fundingSource) => {
-            try {
-                const button = paypal.Buttons(this.getButtonConfig(fundingSource));
-
-                if (button.isEligible()) {
-                    button.render(this.el);
-                }
-            } catch (e) {
-                this.handleError(this.SCRIPT_ERROR, true, `Error while rendering express button for "${fundingSource}": ${e}`);
-            }
-        });
-
+        return paypal.Buttons(this.getButtonConfig()).render(this.el);
     }
 
     getBuyButtonState() {
@@ -176,13 +214,11 @@ export default class SwagPayPalExpressCheckoutButton extends SwagPaypalAbstractB
         return observer;
     }
 
-    getButtonConfig(fundingSource = 'paypal') {
+    getButtonConfig() {
         const renderElement = this.el;
         const { element: buyButton, disabled: isBuyButtonDisabled } = this.getBuyButtonState();
 
         return {
-            fundingSource,
-
             onInit: (data, actions) => {
                 if (!this.options.addProductToCart) {
                     return;
@@ -218,9 +254,9 @@ export default class SwagPayPalExpressCheckoutButton extends SwagPaypalAbstractB
             style: {
                 size: this.options.buttonSize,
                 shape: this.options.buttonShape,
-                color: fundingSource === 'venmo' && this.options.buttonColor === 'gold' ? 'blue' : this.options.buttonColor,
+                color: this.options.buttonColor,
                 tagline: this.options.tagline,
-                layout: 'vertical',
+                layout: 'horizontal',
                 label: 'checkout',
                 height: 40,
             },
@@ -334,15 +370,16 @@ export default class SwagPayPalExpressCheckoutButton extends SwagPaypalAbstractB
                     return actions.redirect(this.options.checkoutConfirmUrl);
                 }
 
-                return this.onError();
+                return this.createError(response, false, this.options.cancelRedirectUrl);
             },
         );
     }
 
-    onErrorHandled(code) {
-        if (code === this.USER_CANCELLED) {
-            window.scrollTo(0, 0);
-            window.location = this.options.cancelRedirectUrl;
-        }
+    onError(error) {
+        this.createError(error);
+    }
+
+    onCancel(error) {
+        this.createError(error, true, this.options.cancelRedirectUrl);
     }
 }

@@ -7,30 +7,36 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\MerchantIntegrations;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\OauthIntegration\OauthThirdParty;
-use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\OauthIntegration\OauthThirdPartyCollection;
 
-#[OA\Schema(
-    schema: 'swag_paypal_v1_merchant_integrations_oauth_integration',
-    required: ['integrationMethod', 'integrationType', 'oauthThirdParty']
-)]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_merchant_integrations_oauth_integration")
+ */
 class OauthIntegration extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $integrationMethod;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $integrationType;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $status;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: OauthThirdParty::class))]
-    protected OauthThirdPartyCollection $oauthThirdParty;
+    /**
+     * @var OauthThirdParty[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_merchant_integrations_oauth_integration_third_party"})
+     */
+    protected array $oauthThirdParty;
 
     public function getIntegrationMethod(): string
     {
@@ -62,12 +68,12 @@ class OauthIntegration extends PayPalApiStruct
         $this->status = $status;
     }
 
-    public function getOauthThirdParty(): OauthThirdPartyCollection
+    public function getOauthThirdParty(): array
     {
         return $this->oauthThirdParty;
     }
 
-    public function setOauthThirdParty(OauthThirdPartyCollection $oauthThirdParty): void
+    public function setOauthThirdParty(array $oauthThirdParty): void
     {
         $this->oauthThirdParty = $oauthThirdParty;
     }

@@ -7,13 +7,11 @@
 
 namespace Swag\PayPal\Util\Lifecycle;
 
-use Shopware\Core\Checkout\Payment\PaymentException;
 use Shopware\Core\Content\Category\Exception\CategoryNotFoundException;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Plugin\Context\UpdateContext;
 use Shopware\Core\System\SalesChannel\SalesChannelCollection;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
@@ -30,14 +28,11 @@ use Swag\PayPal\RestApi\V1\Api\Payment\ApplicationContext as ApplicationContextV
 use Swag\PayPal\RestApi\V1\PaymentIntentV1;
 use Swag\PayPal\RestApi\V2\Api\Order\ApplicationContext;
 use Swag\PayPal\RestApi\V2\Api\Order\ApplicationContext as ApplicationContextV2;
-use Swag\PayPal\RestApi\V2\Api\Order\PaymentSource\Common\ExperienceContext;
 use Swag\PayPal\RestApi\V2\PaymentIntentV2;
 use Swag\PayPal\Setting\Exception\PayPalSettingsInvalidException;
 use Swag\PayPal\Setting\Settings;
 use Swag\PayPal\SwagPayPal;
 use Swag\PayPal\Util\Lifecycle\Installer\PaymentMethodInstaller;
-use Swag\PayPal\Util\Lifecycle\Method\ApplePayMethodData;
-use Swag\PayPal\Util\Lifecycle\Method\GooglePayMethodData;
 use Swag\PayPal\Util\Lifecycle\Method\OxxoMethodData;
 use Swag\PayPal\Util\Lifecycle\Method\PayLaterMethodData;
 use Swag\PayPal\Util\Lifecycle\Method\PUIMethodData;
@@ -45,12 +40,9 @@ use Swag\PayPal\Util\Lifecycle\Method\TrustlyMethodData;
 use Swag\PayPal\Util\Lifecycle\Method\VenmoMethodData;
 use Swag\PayPal\Util\Lifecycle\State\PaymentMethodStateService;
 use Swag\PayPal\Webhook\Exception\WebhookIdInvalidException;
+use Swag\PayPal\Webhook\WebhookService;
 use Swag\PayPal\Webhook\WebhookServiceInterface;
 
-/**
- * @internal
- */
-#[Package('checkout')]
 class Update
 {
     use PosSalesChannelTrait;
@@ -105,6 +97,10 @@ class Update
 
     public function update(UpdateContext $updateContext): void
     {
+        if (\version_compare($updateContext->getCurrentPluginVersion(), '1.1.0', '<')) {
+            $this->updateTo110();
+        }
+
         if (\version_compare($updateContext->getCurrentPluginVersion(), '1.3.0', '<')) {
             $this->updateTo130();
         }
@@ -148,38 +144,11 @@ class Update
         if (\version_compare($updateContext->getCurrentPluginVersion(), '6.0.0', '<')) {
             $this->updateTo600($updateContext->getContext());
         }
+    }
 
-        if (\version_compare($updateContext->getCurrentPluginVersion(), '6.2.0', '<')) {
-            $this->updateTo620();
-        }
-
-        if (\version_compare($updateContext->getCurrentPluginVersion(), '7.3.0', '<')) {
-            $this->updateTo730();
-        }
-
-        if (\version_compare($updateContext->getCurrentPluginVersion(), '8.0.2', '<')) {
-            $this->updateTo802($updateContext->getContext());
-        }
-
-        if (\version_compare($updateContext->getCurrentPluginVersion(), '8.1.0', '<')) {
-            $this->updateTo810($updateContext->getContext());
-        }
-
-        if (\version_compare($updateContext->getCurrentPluginVersion(), '8.2.0', '<')) {
-            $this->updateTo820($updateContext->getContext());
-        }
-
-        if (\version_compare($updateContext->getCurrentPluginVersion(), '9.3.1', '<')) {
-            $this->updateTo931($updateContext->getContext());
-        }
-
-        if (\version_compare($updateContext->getCurrentPluginVersion(), '9.6.1', '<')) {
-            $this->updateTo961($updateContext->getContext());
-        }
-
-        if (\version_compare($updateContext->getCurrentPluginVersion(), '8.9.0', '<')) {
-            $this->updateTo890($updateContext->getContext());
-        }
+    private function updateTo110(): void
+    {
+        $this->setSettingToDefaultValue(Settings::INSTALLMENT_BANNER_ENABLED);
     }
 
     private function updateTo130(): void
@@ -330,7 +299,7 @@ class Update
                 $this->webhookService->deregisterWebhook($salesChannelId);
                 $this->webhookService->registerWebhook($salesChannelId);
             }
-        } catch (PayPalSettingsInvalidException|WebhookIdInvalidException $exception) {
+        } catch (PayPalSettingsInvalidException | WebhookIdInvalidException $exception) {
             // do nothing, if the plugin is not correctly configured
         }
 
@@ -349,7 +318,7 @@ class Update
 
                 $this->posWebhookService->registerWebhook($salesChannel->getId(), $context);
             }
-        } catch (PosApiException|WebhookNotRegisteredException $exception) {
+        } catch (PosApiException | WebhookNotRegisteredException $exception) {
             // do nothing, if the Sales Channel is not correctly configured
         }
     }
@@ -495,69 +464,5 @@ class Update
                 'iconName' => 'regular-money-bill',
             ],
         ], $context);
-    }
-
-    private function updateTo620(): void
-    {
-        $this->setSettingToDefaultValue(Settings::ECS_SHOW_PAY_LATER);
-    }
-
-    private function updateTo730(): void
-    {
-        $installmentBannerEnabled = $this->systemConfig->getBool(Settings::SYSTEM_CONFIG_DOMAIN . 'installmentBannerEnabled');
-
-        $this->systemConfig->set(Settings::INSTALLMENT_BANNER_DETAIL_PAGE_ENABLED, $installmentBannerEnabled);
-        $this->systemConfig->set(Settings::INSTALLMENT_BANNER_CART_ENABLED, $installmentBannerEnabled);
-        $this->systemConfig->set(Settings::INSTALLMENT_BANNER_OFF_CANVAS_CART_ENABLED, $installmentBannerEnabled);
-        $this->systemConfig->set(Settings::INSTALLMENT_BANNER_LOGIN_PAGE_ENABLED, $installmentBannerEnabled);
-        $this->systemConfig->set(Settings::INSTALLMENT_BANNER_FOOTER_ENABLED, $installmentBannerEnabled);
-    }
-
-    private function updateTo802(Context $context): void
-    {
-        $salesChannelIds = $this->getSalesChannelIds($context);
-
-        foreach ($salesChannelIds as $salesChannelId) {
-            $landingPage = $this->systemConfig->getString(Settings::LANDING_PAGE, $salesChannelId);
-
-            if ($landingPage === ApplicationContextV2::LANDING_PAGE_TYPE_BILLING) {
-                $this->systemConfig->set(Settings::LANDING_PAGE, ExperienceContext::LANDING_PAGE_TYPE_GUEST, $salesChannelId);
-            }
-        }
-    }
-
-    private function updateTo810(Context $context): void
-    {
-        $this->paymentMethodInstaller->install(ApplePayMethodData::class, $context);
-        $this->paymentMethodInstaller->install(GooglePayMethodData::class, $context);
-    }
-
-    private function updateTo820(Context $context): void
-    {
-        try {
-            $this->paymentMethodStateService->setPaymentMethodStateByHandler('Swag\PayPal\Checkout\Payment\Method\SofortAPMHandler', false, $context);
-        } catch (PaymentException) {
-        }
-    }
-
-    private function updateTo931(Context $context): void
-    {
-        try {
-            $this->paymentMethodStateService->setPaymentMethodStateByHandler('Swag\PayPal\Checkout\Payment\Method\GiropayAPMHandler', false, $context);
-        } catch (PaymentException) {
-        }
-    }
-
-    private function updateTo961(Context $context): void
-    {
-        try {
-            $this->paymentMethodStateService->setPaymentMethodState(TrustlyMethodData::class, false, $context);
-        } catch (PaymentException) {
-        }
-    }
-
-    private function updateTo890(Context $context): void
-    {
-        $this->paymentMethodInstaller->updateAllMedia($context);
     }
 }

@@ -52,7 +52,7 @@ Component.override('sw-order-user-card', {
                     this.currentOrder.salesChannelId,
                 );
 
-                if (Object.hasOwn(salesChannelConfig, 'SwagPayPal.settings.sandbox')) {
+                if (salesChannelConfig.hasOwnProperty('SwagPayPal.settings.sandbox')) {
                     this.isPayPalSandbox = salesChannelConfig['SwagPayPal.settings.sandbox'];
                 }
 

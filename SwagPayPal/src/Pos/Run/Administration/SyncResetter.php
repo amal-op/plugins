@@ -11,10 +11,8 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 
-#[Package('checkout')]
 class SyncResetter
 {
     private EntityRepository $posProductRepository;
@@ -47,19 +45,37 @@ class SyncResetter
 
         $ids = $this->posProductRepository->searchIds($criteria, $context)->getIds();
         if (!empty($ids)) {
-            $ids = \array_filter($ids, static fn ($id) => \is_array($id));
+            $ids = \array_map(static function ($id) {
+                if (!\is_array($id)) {
+                    return null;
+                }
+
+                return ['salesChannelId' => $id['sales_channel_id'], 'productId' => $id['product_id']];
+            }, $ids);
             $this->posProductRepository->delete(\array_filter($ids), $context);
         }
 
         $ids = $this->posInventoryRepository->searchIds($criteria, $context)->getIds();
         if (!empty($ids)) {
-            $ids = \array_filter($ids, static fn ($id) => \is_array($id));
+            $ids = \array_map(static function ($id) {
+                if (!\is_array($id)) {
+                    return null;
+                }
+
+                return ['salesChannelId' => $id['sales_channel_id'], 'productId' => $id['product_id']];
+            }, $ids);
             $this->posInventoryRepository->delete(\array_filter($ids), $context);
         }
 
         $ids = $this->posMediaRepository->searchIds($criteria, $context)->getIds();
         if (!empty($ids)) {
-            $ids = \array_filter($ids, static fn ($id) => \is_array($id));
+            $ids = \array_map(static function ($id) {
+                if (!\is_array($id)) {
+                    return null;
+                }
+
+                return ['salesChannelId' => $id['sales_channel_id'], 'mediaId' => $id['media_id']];
+            }, $ids);
             $this->posMediaRepository->delete(\array_filter($ids), $context);
         }
 

@@ -7,15 +7,13 @@
 
 namespace Swag\PayPal\RestApi\V1\Service;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\RestApi\V1\Api\Token;
 
-#[Package('checkout')]
 class TokenValidator
 {
     public function isTokenValid(Token $token): bool
     {
-        $dateTimeNow = new \DateTime('now', new \DateTimeZone('UTC'));
+        $dateTimeNow = new \DateTime();
         $dateTimeExpire = $token->getExpireDateTime();
         // Decrease expire date by one hour just to make sure, it doesn't run into an unauthorized exception.
         $dateTimeExpire = $dateTimeExpire->sub(new \DateInterval('PT1H'));

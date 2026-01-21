@@ -8,7 +8,7 @@
 namespace Swag\PayPal\Checkout\Plus;
 
 use Shopware\Core\Checkout\Payment\SalesChannel\HandlePaymentMethodRouteResponse;
-use Shopware\Core\Framework\Log\Package;
+use Shopware\Core\Framework\Routing\Annotation\Since;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\Context\SalesChannelContextService;
 use Shopware\Core\System\SalesChannel\SalesChannel\AbstractContextSwitchRoute;
@@ -22,11 +22,10 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @deprecated tag:v9.0.0 - Will be removed without replacement.
+ * @deprecated tag:v7.0.0 - Will be removed without replacement.
  *
  * @internal
  */
-#[Package('checkout')]
 class PlusPaymentHandleController extends StorefrontController
 {
     private AbstractContextSwitchRoute $contextSwitchRoute;
@@ -52,7 +51,16 @@ class PlusPaymentHandleController extends StorefrontController
         $this->requestStack = $requestStack;
     }
 
-    #[Route(path: '/paypal/plus/payment/handle', name: 'frontend.paypal.plus.handle', methods: ['POST'], defaults: ['XmlHttpRequest' => true, '_routeScope' => ['storefront']])]
+    /**
+     * @Since("6.0.0")
+     *
+     * @Route(
+     *     "/paypal/plus/payment/handle",
+     *     name="frontend.paypal.plus.handle",
+     *     methods={"POST"},
+     *     defaults={"XmlHttpRequest"=true, "_routeScope"={"storefront"}}
+     * )
+     */
     public function handlePlusPayment(Request $request, SalesChannelContext $context): HandlePaymentMethodRouteResponse
     {
         $this->contextSwitchRoute->switchContext(
@@ -76,7 +84,7 @@ class PlusPaymentHandleController extends StorefrontController
             return new HandlePaymentMethodRouteResponse($this->redirectToRoute('frontend.checkout.confirm.page'));
         }
 
-        if ($orderId) {
+        if ($orderId = $request->attributes->getAlnum('orderId')) {
             return new HandlePaymentMethodRouteResponse($this->redirectToRoute('frontend.checkout.finish.page', ['orderId' => $orderId, 'changedPayment' => false, 'paymentFailed' => true]));
         }
 

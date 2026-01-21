@@ -7,62 +7,95 @@
 
 namespace Swag\PayPal\RestApi\V1\Api;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V1\Api\Common\Amount;
-use Swag\PayPal\RestApi\V1\Api\Common\Link;
-use Swag\PayPal\RestApi\V1\Api\Common\LinkCollection;
-use Swag\PayPal\RestApi\V1\Api\Common\Value;
+use Swag\PayPal\RestApi\V1\Api\Refund\Amount;
+use Swag\PayPal\RestApi\V1\Api\Refund\Link;
+use Swag\PayPal\RestApi\V1\Api\Refund\RefundFromReceivedAmount;
+use Swag\PayPal\RestApi\V1\Api\Refund\RefundFromTransactionFee;
+use Swag\PayPal\RestApi\V1\Api\Refund\TotalRefundedAmount;
 
-#[OA\Schema(schema: 'swag_paypal_v1_refund')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_refund")
+ */
 class Refund extends PayPalApiStruct
 {
-    #[OA\Property(ref: Amount::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_amount")
+     */
     protected Amount $amount;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $invoiceNumber;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $description;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $reason;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $id;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $createTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $updateTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $state;
 
-    #[OA\Property(ref: Value::class)]
-    protected Value $refundFromTransactionFee;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_value")
+     */
+    protected RefundFromTransactionFee $refundFromTransactionFee;
 
-    #[OA\Property(ref: Value::class)]
-    protected Value $totalRefundedAmount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_value")
+     */
+    protected TotalRefundedAmount $totalRefundedAmount;
 
-    #[OA\Property(ref: Value::class)]
-    protected Value $refundFromReceivedAmount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_value")
+     */
+    protected RefundFromReceivedAmount $refundFromReceivedAmount;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $saleId;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $captureId;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $parentPayment;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Link::class))]
-    protected LinkCollection $links;
+    /**
+     * @var Link[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_common_link"})
+     */
+    protected array $links;
 
     public function getAmount(): Amount
     {
@@ -144,32 +177,32 @@ class Refund extends PayPalApiStruct
         $this->state = $state;
     }
 
-    public function getRefundFromTransactionFee(): Value
+    public function getRefundFromTransactionFee(): RefundFromTransactionFee
     {
         return $this->refundFromTransactionFee;
     }
 
-    public function setRefundFromTransactionFee(Value $refundFromTransactionFee): void
+    public function setRefundFromTransactionFee(RefundFromTransactionFee $refundFromTransactionFee): void
     {
         $this->refundFromTransactionFee = $refundFromTransactionFee;
     }
 
-    public function getTotalRefundedAmount(): Value
+    public function getTotalRefundedAmount(): TotalRefundedAmount
     {
         return $this->totalRefundedAmount;
     }
 
-    public function setTotalRefundedAmount(Value $totalRefundedAmount): void
+    public function setTotalRefundedAmount(TotalRefundedAmount $totalRefundedAmount): void
     {
         $this->totalRefundedAmount = $totalRefundedAmount;
     }
 
-    public function getRefundFromReceivedAmount(): Value
+    public function getRefundFromReceivedAmount(): RefundFromReceivedAmount
     {
         return $this->refundFromReceivedAmount;
     }
 
-    public function setRefundFromReceivedAmount(Value $refundFromReceivedAmount): void
+    public function setRefundFromReceivedAmount(RefundFromReceivedAmount $refundFromReceivedAmount): void
     {
         $this->refundFromReceivedAmount = $refundFromReceivedAmount;
     }
@@ -204,12 +237,18 @@ class Refund extends PayPalApiStruct
         $this->parentPayment = $parentPayment;
     }
 
-    public function getLinks(): LinkCollection
+    /**
+     * @return Link[]
+     */
+    public function getLinks(): array
     {
         return $this->links;
     }
 
-    public function setLinks(LinkCollection $links): void
+    /**
+     * @param Link[] $links
+     */
+    public function setLinks(array $links): void
     {
         $this->links = $links;
     }

@@ -7,14 +7,12 @@
 
 namespace Swag\PayPal\RestApi\V1\Resource;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\RestApi\Client\CredentialsClientFactory;
 use Swag\PayPal\RestApi\Client\TokenClientFactory;
 use Swag\PayPal\RestApi\V1\Api\OAuthCredentials;
 use Swag\PayPal\RestApi\V1\Api\Token;
 use Swag\PayPal\RestApi\V1\Service\TokenValidator;
 
-#[Package('checkout')]
 class CredentialsResource
 {
     private TokenClientFactory $tokenClientFactory;
@@ -49,9 +47,6 @@ class CredentialsResource
         return $credentialsClient->getCredentials($accessToken, $partnerId);
     }
 
-    /**
-     * @deprecated tag:v10.0.0 - will be removed, as it is just a token fetcher. Use `ApiCredentialService::testApiCredentials` instead
-     */
     public function testApiCredentials(OAuthCredentials $credentials): bool
     {
         $tokenClient = $this->tokenClientFactory->createTokenClient($credentials);

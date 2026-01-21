@@ -7,20 +7,26 @@
 
 namespace Swag\PayPal\RestApi\V1\Api;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 
-#[OA\Schema(schema: 'swag_paypal_v1_oauth_credentials')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_oauth_credentials")
+ */
 class OAuthCredentials
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $restId;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $restSecret;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $url;
 
     public function __toString(): string
@@ -56,25 +62,5 @@ class OAuthCredentials
     public function setUrl(string $url): void
     {
         $this->url = $url;
-    }
-
-    public static function createFromRestCredentials(string $clientId, string $clientSecret, string $url): self
-    {
-        $credentials = new self();
-        $credentials->setRestId($clientId);
-        $credentials->setRestSecret($clientSecret);
-        $credentials->setUrl($url);
-
-        return $credentials;
-    }
-
-    public static function createEmpty(string $url): self
-    {
-        $credentials = new self();
-        $credentials->setRestId('');
-        $credentials->setRestSecret('');
-        $credentials->setUrl($url);
-
-        return $credentials;
     }
 }

@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Pos\Api\Product;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Common\PosStruct;
 
-#[Package('checkout')]
 class Category extends PosStruct
 {
     protected string $uuid;

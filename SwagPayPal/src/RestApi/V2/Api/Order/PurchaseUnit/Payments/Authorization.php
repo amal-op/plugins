@@ -7,18 +7,22 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Payments;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
-use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Payments\Common\SellerProtection;
+use OpenApi\Annotations as OA;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Payments\Authorization\SellerProtection;
 
-#[OA\Schema(schema: 'swag_paypal_v2_order_purchase_unit_payments_authorization')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_order_authorization")
+ */
 class Authorization extends Payment
 {
-    #[OA\Property(ref: SellerProtection::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_order_authorization_seller_protection")
+     */
     protected SellerProtection $sellerProtection;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $expirationTime;
 
     public function getSellerProtection(): SellerProtection

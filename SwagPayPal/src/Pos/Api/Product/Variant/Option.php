@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Pos\Api\Product\Variant;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Common\PosStruct;
 
-#[Package('checkout')]
 class Option extends PosStruct
 {
     protected string $name;

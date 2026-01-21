@@ -12,7 +12,6 @@ export default class DeliveryDatePlugin extends Plugin {
         this._picker = DomAccess.querySelector(this.el, this.options.deliverydateCls, false);
         this._client = new HttpClient(window.accessKey, window.contextToken);
         this._form = this.el;
-
         let me = this;
         let minDate = new Date().fp_incr(1);
         if (minDate.getDay() === 6) {
@@ -44,7 +43,6 @@ export default class DeliveryDatePlugin extends Plugin {
                 minDate: minDate
             })
         }
-        // $("#addDeliveryDateButton").flatpickr({mode:"single"})
     }
 
     _getFormData() {

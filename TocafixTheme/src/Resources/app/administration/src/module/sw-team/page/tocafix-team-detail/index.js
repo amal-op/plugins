@@ -1,80 +1,101 @@
-import template from './tocafix-team-detail.html.twig';
+// tocafix-team-detail.js
+import template from "./tocafix-team-detail.html.twig";
 
-const { Component, Mixin } = Shopware;
+const { Component } = Shopware;
 const { mapPropertyErrors } = Shopware.Component.getComponentHelper();
+const { Criteria } = Shopware.Data;
 
-Component.register('tocafix-team-detail', {
-    template,
+Component.register("tocafix-team-detail", {
+  template,
 
-    inject: [
-        'repositoryFactory'
-    ],
+  inject: ["repositoryFactory"],
 
-    mixins: [
-        Mixin.getByName('notification')
-    ],
+  mixins: ["notification"],
 
-    metaInfo() {
-        return {
-            title: this.$createTitle()
-        };
+  metaInfo() {
+    return {
+      title: this.$createTitle(),
+    };
+  },
+
+  data() {
+    return {
+      team: null,
+      isLoading: false,
+      processSuccess: false,
+      repository: null,
+    };
+  },
+
+  computed: {
+    ...mapPropertyErrors("team", ["name", "email", "position"]),
+
+    tooltipSave() {
+      const systemKey = this.$device.getSystemKey();
+
+      return {
+        message: `${systemKey} + S`,
+        appearance: "light",
+      };
     },
 
-    data() {
-        return {
-            team: null,
-            isLoading: false,
-            processSuccess: false,
-            repository: null
-        };
+    tooltipCancel() {
+      return {
+        message: "ESC",
+        appearance: "light",
+      };
+    },
+    isCreateMode() {
+      return this.$route.name === "tocafix.team.create";
+    },
+  },
+
+  created() {
+    this.createdComponent();
+  },
+
+  methods: {
+    createdComponent() {
+      this.repository = this.repositoryFactory.create("tocafix_team");
+      this.getTeam();
+    },
+    getTeam() {
+      const criteria = new Criteria();
+      criteria.addAssociation("teamCategories");
+      criteria.addAssociation("media");
+
+      this.repository
+        .get(this.$route.params.id, Shopware.Context.api, criteria)
+        .then((entity) => {
+          this.team = entity;
+        });
     },
 
-    computed: {
-        ...mapPropertyErrors('team', [
-            'name',
-            'email',
-            'position'
-        ])
+    onClickSave() {
+      this.isLoading = true;
+
+      this.repository
+        .save(this.team, Shopware.Context.api)
+        .then(() => {
+          this.getTeam();
+          this.isLoading = false;
+          this.processSuccess = true;
+        })
+        .catch((exception) => {
+          this.isLoading = false;
+          this.createNotificationError({
+            title: this.$t("tocafix-team.detail.errorTitle"),
+            message: exception,
+          });
+        });
     },
 
-    created() {
-        this.repository = this.repositoryFactory.create('tocafix_team');
-        this.getTeam();
+    saveFinish() {
+      this.processSuccess = false;
     },
 
-    methods: {
-        getTeam() {
-            this.repository
-                .get(this.$route.params.id, Shopware.Context.api)
-                .then((entity) => {
-                    this.team = entity;
-                });
-        },
-
-        onClickSave() {
-            this.isLoading = true;
-
-            this.repository
-                .save(this.team, Shopware.Context.api)
-                .then(() => {
-                    this.getTeam();
-                    this.isLoading = false;
-                    this.processSuccess = true;
-                }).catch((exception) => {
-                    this.isLoading = false;
-                    this.createNotificationError({
-                        title: this.$t('tocafix-team.detail.errorTitle'),
-                        message: exception
-                    });
-                });
-        },
-
-        saveFinish() {
-            this.processSuccess = false;
-        },
-
-        onChangeLanguage() {
-            this.getTeam();
-        }
-    }
+    onChangeLanguage() {
+      this.getTeam();
+    },
+  },
 });

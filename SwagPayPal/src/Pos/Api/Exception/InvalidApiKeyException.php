@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Pos\Api\Exception;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\ShopwareHttpException;
 
-#[Package('checkout')]
 class InvalidApiKeyException extends ShopwareHttpException
 {
     public function __construct(string $part)

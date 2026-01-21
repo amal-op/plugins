@@ -15,7 +15,6 @@ use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentFinalizeException;
 use Shopware\Core\Checkout\Payment\Exception\AsyncPaymentProcessException;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Swag\PayPal\PaymentsApi\Patch\OrderNumberPatchBuilder;
@@ -33,9 +32,8 @@ use Swag\PayPal\SwagPayPal;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
- * @deprecated tag:v9.0.0 - Will be removed without replacement.
+ * @deprecated tag:v7.0.0 - Will be removed without replacement.
  */
-#[Package('checkout')]
 class PlusPuiHandler
 {
     public const PAYPAL_PAYMENT_ID_INPUT_NAME = 'paypalPaymentId';
@@ -96,8 +94,8 @@ class PlusPuiHandler
             $salesChannelContext
         );
 
-        $patches[] = $this->shippingAddressPatchBuilder->createShippingAddressPatch($transaction->getOrder());
-        $patches[] = $this->payerInfoPatchBuilder->createPayerInfoPatch($transaction->getOrder());
+        $patches[] = $this->shippingAddressPatchBuilder->createShippingAddressPatch($customer);
+        $patches[] = $this->payerInfoPatchBuilder->createPayerInfoPatch($customer);
 
         $this->patchPayPalPayment(
             $patches,
@@ -229,12 +227,8 @@ class PlusPuiHandler
     private function getPaymentState(Payment $payment): string
     {
         $intent = $payment->getIntent();
-        $relatedResource = $payment->getTransactions()->first()?->getRelatedResources()->first();
+        $relatedResource = $payment->getTransactions()[0]->getRelatedResources()[0];
         $paymentState = '';
-
-        if ($relatedResource === null) {
-            return $paymentState;
-        }
 
         switch ($intent) {
             case PaymentIntentV1::SALE:
@@ -276,15 +270,15 @@ class PlusPuiHandler
 
         switch ($payment->getIntent()) {
             case PaymentIntentV1::ORDER:
-                $resource = $payment->getTransactions()->first()?->getRelatedResources()->first()?->getOrder();
+                $resource = $payment->getTransactions()[0]->getRelatedResources()[0]->getOrder();
 
                 break;
             case PaymentIntentV1::AUTHORIZE:
-                $resource = $payment->getTransactions()->first()?->getRelatedResources()->first()?->getAuthorization();
+                $resource = $payment->getTransactions()[0]->getRelatedResources()[0]->getAuthorization();
 
                 break;
             case PaymentIntentV1::SALE:
-                $resource = $payment->getTransactions()->first()?->getRelatedResources()->first()?->getSale();
+                $resource = $payment->getTransactions()[0]->getRelatedResources()[0]->getSale();
 
                 break;
             default:

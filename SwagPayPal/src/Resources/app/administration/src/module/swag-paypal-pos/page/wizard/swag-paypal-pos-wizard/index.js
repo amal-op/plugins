@@ -20,8 +20,8 @@ Component.extend('swag-paypal-pos-wizard', 'sw-first-run-wizard-modal', {
     ],
 
     mixins: [
-        Shopware.Mixin.getByName('swag-paypal-pos-catch-error'),
-        Shopware.Mixin.getByName('notification'),
+        'swag-paypal-pos-catch-error',
+        'notification',
     ],
 
     data() {
@@ -105,7 +105,9 @@ Component.extend('swag-paypal-pos-wizard', 'sw-first-run-wizard-modal', {
 
     watch: {
         '$route'(to) {
-            this.handleRouteUpdate(to);
+            const toName = to.name.replace('swag.paypal.pos.wizard.', '');
+
+            this.currentStep = this.stepper[toName];
         },
     },
 
@@ -114,12 +116,6 @@ Component.extend('swag-paypal-pos-wizard', 'sw-first-run-wizard-modal', {
     },
 
     methods: {
-        handleRouteUpdate(to) {
-            const toName = to.name.replace('swag.paypal.pos.wizard.', '');
-
-            this.currentStep = this.stepper[toName];
-        },
-
         createdComponent() {
             this.generateStepper();
 

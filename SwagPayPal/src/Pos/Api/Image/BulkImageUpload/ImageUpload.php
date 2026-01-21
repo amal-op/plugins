@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Pos\Api\Image\BulkImageUpload;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Common\PosStruct;
 
-#[Package('checkout')]
 class ImageUpload extends PosStruct
 {
     protected string $imageFormat;

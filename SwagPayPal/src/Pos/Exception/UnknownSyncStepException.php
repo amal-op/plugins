@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Pos\Exception;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\ShopwareHttpException;
 
-#[Package('checkout')]
 class UnknownSyncStepException extends ShopwareHttpException
 {
     public function __construct(string $syncStep)

@@ -7,6 +7,7 @@
 
 namespace Swag\PayPal\Checkout\SalesChannel;
 
+use OpenApi\Annotations as OA;
 use Shopware\Core\Checkout\Cart\SalesChannel\CartService;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Checkout\Payment\PaymentMethodCollection;
@@ -15,7 +16,8 @@ use Shopware\Core\Checkout\Payment\SalesChannel\PaymentMethodRouteResponse;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\Framework\Log\Package;
+use Shopware\Core\Framework\Routing\Annotation\Entity;
+use Shopware\Core\Framework\Routing\Annotation\Since;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Swag\PayPal\Checkout\Cart\Service\CartPriceService;
 use Swag\PayPal\Checkout\Cart\Service\ExcludedProductValidator;
@@ -28,8 +30,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Package('checkout')]
-#[Route(defaults: ['_routeScope' => ['store-api']])]
+/**
+ * @Route(defaults={"_routeScope"={"store-api"}})
+ */
 class FilteredPaymentMethodRoute extends AbstractPaymentMethodRoute
 {
     private AbstractPaymentMethodRoute $decorated;
@@ -80,7 +83,56 @@ class FilteredPaymentMethodRoute extends AbstractPaymentMethodRoute
         return $this->decorated;
     }
 
-    #[Route(path: '/store-api/payment-method', name: 'store-api.payment.method', defaults: ['_entity' => 'payment_method'], methods: ['GET', 'POST'])]
+    /**
+     * @Since("6.2.0.0")
+     *
+     * @Entity("payment_method")
+     *
+     * @OA\Post (
+     *      path="/payment-method",
+     *      summary="Loads all available payment methods",
+     *      operationId="readPaymentMethod",
+     *      tags={"Store API", "Payment Method"},
+     *
+     *      @OA\Parameter(name="Api-Basic-Parameters"),
+     *
+     *      @OA\RequestBody(
+     *          required=true,
+     *
+     *          @OA\JsonContent(
+     *
+     *              @OA\Property(property="onlyAvailable", description="List only available", type="boolean")
+     *          )
+     *      ),
+     *
+     *      @OA\Response(
+     *          response="200",
+     *          description="",
+     *
+     *          @OA\JsonContent(type="object",
+     *
+     *              @OA\Property(
+     *                  property="total",
+     *                  type="integer",
+     *                  description="Total amount"
+     *              ),
+     *              @OA\Property(
+     *                  property="aggregations",
+     *                  type="object",
+     *                  description="aggregation result"
+     *              ),
+     *              @OA\Property(
+     *                  property="elements",
+     *                  type="array",
+     *
+     *                  @OA\Items(ref="#/components/schemas/PaymentMethod")
+     *              )
+     *       )
+     *    )
+     * )
+     *
+     * @Route("/store-api/payment-method", name="store-api.payment.method", methods={"GET", "POST"}, defaults={"_entity"="payment_method"})
+     */
     public function load(Request $request, SalesChannelContext $context, Criteria $criteria): PaymentMethodRouteResponse
     {
         $response = $this->getDecorated()->load($request, $context, $criteria);
@@ -96,6 +148,7 @@ class FilteredPaymentMethodRoute extends AbstractPaymentMethodRoute
 
             return $response;
         }
+
         $cart = $this->cartService->getCart($context->getToken(), $context);
         if ($this->cartPriceService->isZeroValueCart($cart)) {
             $this->removeAllPaymentMethods($response->getPaymentMethods());
@@ -118,11 +171,18 @@ class FilteredPaymentMethodRoute extends AbstractPaymentMethodRoute
         }
 
         $order = $this->checkOrder($request, $context->getContext());
+        if ($order !== null) {
+            $this->removePaymentMethods(
+                $response->getPaymentMethods(),
+                $this->availabilityService->filterPaymentMethodsByOrder($response->getPaymentMethods(), $cart, $order, $context)
+            );
+
+            return $response;
+        }
+
         $this->removePaymentMethods(
             $response->getPaymentMethods(),
-            $order
-                ? $this->availabilityService->filterPaymentMethodsByOrder($response->getPaymentMethods(), $cart, $order, $context)
-                : $this->availabilityService->filterPaymentMethods($response->getPaymentMethods(), $cart, $context)
+            $this->availabilityService->filterPaymentMethods($response->getPaymentMethods(), $cart, $context)
         );
 
         return $response;
@@ -151,16 +211,21 @@ class FilteredPaymentMethodRoute extends AbstractPaymentMethodRoute
 
     private function checkOrder(Request $request, Context $context): ?OrderEntity
     {
-        $orderId = $request->attributes->getAlnum('orderId') ?: $this->requestStack->getCurrentRequest()?->attributes->getAlnum('orderId');
+        $orderId = $request->attributes->getAlnum('orderId');
+        if ($orderId) {
+            return $this->orderRepository->search(new Criteria([$orderId]), $context)->first();
+        }
+
+        $actualRequest = $this->requestStack->getCurrentRequest();
+        if (!$actualRequest) {
+            return null;
+        }
+
+        $orderId = $actualRequest->attributes->getAlnum('orderId');
         if (!$orderId) {
             return null;
         }
 
-        $criteria = new Criteria([$orderId]);
-        $criteria->addAssociation('lineItems');
-        /** @var OrderEntity|null $order */
-        $order = $this->orderRepository->search($criteria, $context)->first();
-
-        return $order;
+        return $this->orderRepository->search(new Criteria([$orderId]), $context)->first();
     }
 }

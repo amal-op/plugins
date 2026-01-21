@@ -7,38 +7,54 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Item;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties;
 use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\MerchandizeDisputeProperties;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_item_extensions')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_extensions")
+ */
 class Extensions extends PayPalApiStruct
 {
-    #[OA\Property(type: 'boolean')]
+    /**
+     * @OA\Property(type="boolean")
+     */
     protected bool $merchantContacted;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $merchantContactedOutcome;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $merchantContactedTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $merchantContactedMode;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $buyerContactedTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $buyerContactedChannel;
 
-    #[OA\Property(ref: BillingDisputeProperties::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_disputes_extensions_billing_dispute_properties")
+     */
     protected BillingDisputeProperties $billingDisputeProperties;
 
-    #[OA\Property(ref: MerchandizeDisputeProperties::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_disputes_extensions_merchandize_dispute_properties")
+     */
     protected MerchandizeDisputeProperties $merchandizeDisputeProperties;
 
     public function isMerchantContacted(): bool

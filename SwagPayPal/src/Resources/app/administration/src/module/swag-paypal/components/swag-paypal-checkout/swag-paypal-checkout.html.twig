@@ -8,8 +8,7 @@
     <template #avatar>
         {% block swag_paypal_content_card_channel_config_checkout_avatar %}
         <img
-            class="swag-paypal-checkout__avatar"
-            :src="assetFilter('swagpaypal/static/img/paypal-logo-avatar.svg')"
+            :src="'swagpaypal/static/img/paypal-logo-avatar.svg' | asset"
             :alt="$tc('swag-paypal.settingForm.checkout.appImageAlt')"
         >
         {% endblock %}
@@ -17,7 +16,10 @@
 
     <template #header-right>
         {% block swag_paypal_content_card_channel_config_checkout_settings_link %}
-        <sw-internal-link :routerLink="{ name: 'swag.paypal.index' }">
+        <sw-internal-link
+            v-if="showSettingsLink"
+            :routerLink="{ name: 'swag.paypal.index' }"
+        >
             {{ $tc('swag-paypal.settingForm.checkout.settingsLink') }}
         </sw-internal-link>
         {% endblock %}
@@ -30,28 +32,26 @@
         <div :class="{'swag-paypal-checkout__box': showMerchantInformation }">
 
             {% block swag_paypal_content_card_channel_config_checkout_container_sandbox_switch %}
-            <swag-paypal-inherit-wrapper
-                v-if="showSandboxToggle"
-                v-bind="{ actualConfigData, allConfigs, selectedSalesChannelId }"
-                path="SwagPayPal.settings.sandbox"
-                class="swag-paypal-checkout__sandbox-toggle"
-            >
+            <sw-inherit-wrapper v-if="showSandboxToggle"
+                                v-model="actualConfigData['SwagPayPal.settings.sandbox']"
+                                class="swag-paypal-checkout__sandbox-toggle"
+                                :inheritedValue="selectedSalesChannelId === null ? null : allConfigs['null']['SwagPayPal.settings.sandbox']"
+                                :customInheritationCheckFunction="checkBoolFieldInheritance">
                 <template #content="props">
-                    <sw-switch-field
-                        v-tooltip.left="{
-                            message: isSandbox ? $tc('swag-paypal.settingForm.checkout.sandbox.onlySandboxTooltip') : $tc('swag-paypal.settingForm.checkout.sandbox.onlyLiveTooltip'),
-                            disabled: !sandboxToggleDisabled,
-                        }"
-                        name="SwagPayPal.settings.sandbox"
-                        :mapInheritance="props"
-                        :label="$tc('swag-paypal.settingForm.checkout.sandbox.label')"
-                        :helpText="$tc('swag-paypal.settingForm.checkout.sandbox.helpText')"
-                        :disabled="sandboxToggleDisabled || props.isInherited || !acl.can('swag_paypal.editor')"
-                        :value="props.currentValue"
-                        @change="props.updateCurrentValue"
-                    />
+                    <sw-switch-field v-tooltip.left="{
+                                         message: isSandbox ? $tc('swag-paypal.settingForm.checkout.sandbox.onlySandboxTooltip') : $tc('swag-paypal.settingForm.checkout.sandbox.onlyLiveTooltip'),
+                                         disabled: !sandboxToggleDisabled,
+                                     }"
+                                     name="SwagPayPal.settings.sandbox"
+                                     :mapInheritance="props"
+                                     :label="$tc('swag-paypal.settingForm.checkout.sandbox.label')"
+                                     :helpText="$tc('swag-paypal.settingForm.checkout.sandbox.helpText')"
+                                     :disabled="sandboxToggleDisabled || props.isInherited || !acl.can('swag_paypal.editor')"
+                                     :value="props.currentValue"
+                                     @change="props.updateCurrentValue">
+                    </sw-switch-field>
                 </template>
-            </swag-paypal-inherit-wrapper>
+            </sw-inherit-wrapper>
             {% endblock %}
 
             {% block swag_paypal_content_card_channel_config_checkout_container_header %}
@@ -135,7 +135,6 @@
                 :key="paymentMethod.id"
                 :payment-method="paymentMethod"
                 :onboarding-status="onboardingStatus(paymentMethod)"
-                :actual-config-data="actualConfigData"
             />
             {% endblock %}
 
@@ -143,6 +142,13 @@
         {% endblock %}
 
         {% block swag_paypal_content_card_channel_config_checkout_container_switch_show_credentials %}
+        <sw-switch-field
+            v-if="allowShowCredentials"
+            v-model="showCredentials"
+            :label="$tc('swag-paypal.settingForm.checkout.showCredentials')"
+            :disabled="!acl.can('swag_paypal.editor')"
+            @change="updateShowCredentials"
+        />
         {% endblock %}
 
         {% block swag_paypal_content_card_channel_config_checkout_container_credentials_slot %}
@@ -196,5 +202,6 @@
         {% endblock %}
     </sw-modal>
     {% endblock %}
+
 </sw-card>
 {% endblock %}

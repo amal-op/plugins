@@ -7,30 +7,41 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Item;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Evidence\Document;
-use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Evidence\DocumentCollection;
 use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Evidence\EvidenceInfo;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_item_evidence')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_evidence")
+ */
 class Evidence extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $evidenceType;
 
-    #[OA\Property(ref: EvidenceInfo::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_disputes_evidence_info")
+     */
     protected EvidenceInfo $evidenceInfo;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Document::class))]
-    protected DocumentCollection $documents;
+    /**
+     * @var Document[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_disputes_evidence_document"})
+     */
+    protected array $documents;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $notes;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $itemId;
 
     public function getEvidenceType(): string
@@ -53,12 +64,18 @@ class Evidence extends PayPalApiStruct
         $this->evidenceInfo = $evidenceInfo;
     }
 
-    public function getDocuments(): DocumentCollection
+    /**
+     * @return Document[]
+     */
+    public function getDocuments(): array
     {
         return $this->documents;
     }
 
-    public function setDocuments(DocumentCollection $documents): void
+    /**
+     * @param Document[] $documents
+     */
+    public function setDocuments(array $documents): void
     {
         $this->documents = $documents;
     }

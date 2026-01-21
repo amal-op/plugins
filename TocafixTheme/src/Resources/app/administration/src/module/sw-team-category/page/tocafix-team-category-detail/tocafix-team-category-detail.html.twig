@@ -1,35 +1,49 @@
 {% block tocafix_team_category_detail %}
-    <sw-page class="tocafix-team-category-detail">
-        <template slot="smart-bar-actions">
-            <sw-button :routerLink="{ name: 'tocafix.team.category.list' }">
-                {{ $t('tocafix-team-category.detail.cancelButtonText') }}
-            </sw-button>
+	<sw-page class="tocafix-team-category-detail">
 
-            <sw-button-process
-                :isLoading="isLoading"
-                :processSuccess="processSuccess"
-                variant="primary"
-                @process-finish="saveFinish"
-                @click="onClickSave">
-                {{ $t('tocafix-team-category.detail.saveButtonText') }}
-            </sw-button-process>
-        </template>
+		{% block tocafix_team_category_detail_header %}
+			<template #smart-bar-header>
+				<h2>{{ placeholder(teamCategory, 'name', $tc('tocafix-team-category.detail.textHeadline')) }}</h2>
+			</template>
+		{% endblock %}
 
-        <template #language-switch>
-            <sw-language-switch slot="language-switch" @on-change="onChangeLanguage"></sw-language-switch>
-        </template>
+		{% block tocafix_team_category_detail_language_switch %}
+			<template #language-switch>
+				<sw-language-switch @on-change="onChangeLanguage" :save-changes-function="saveOnLanguageChange" :abort-change-function="abortOnLanguageChange" :disabled="!teamCategory || isCreateMode"></sw-language-switch>
+			</template>
+		{% endblock %}
 
-        <template slot="content">
-            <sw-card-view>
-                <sw-card v-if="teamCategory" :isLoading="isLoading">
-                    <sw-field
-                        :label="$t('tocafix-team-category.detail.nameLabel')"
-                        v-model="teamCategory.name"
-                        required
-                        :error="teamCategoryNameError">
-                    </sw-field>
-                </sw-card>
-            </sw-card-view>
-        </template>
-    </sw-page>
+		{% block tocafix_team_category_detail_actions %}
+			<template #smart-bar-actions>
+				{% block tocafix_team_category_detail_actions_cancel %}
+					<sw-button v-tooltip="tooltipCancel" @click="$router.push({ name: 'tocafix.team.category.list' })">
+						{{ $tc('tocafix-team-category.detail.cancelButtonText') }}
+					</sw-button>
+				{% endblock %}
+
+				{% block tocafix_team_category_detail_actions_save %}
+					<sw-button-process v-tooltip="tooltipSave" class="sw-team-category-detail__save-action" :is-loading="isLoading" :process-success="processSuccess" :disabled="isLoading" variant="primary" @process-finish="saveFinish" @click="onClickSave">
+						{{ $tc('tocafix-team-category.detail.saveButtonText') }}
+					</sw-button-process>
+				{% endblock %}
+			</template>
+		{% endblock %}
+
+		{% block tocafix_team_category_detail_content %}
+			<template #content>
+				<sw-card-view>
+					{% block tocafix_team_category_detail_content_card %}
+						<sw-card v-if="teamCategory" :is-loading="isLoading">
+
+							{% block tocafix_team_category_detail_content_field_name %}
+								<sw-text-field :label="$tc('tocafix-team-category.detail.nameLabel')" :placeholder="placeholder(teamCategory, 'name', $tc('tocafix-team-category.detail.namePlaceholder'))" v-model:value="teamCategory.name" :error="teamCategoryNameError" required></sw-text-field>
+							{% endblock %}
+
+						</sw-card>
+					{% endblock %}
+
+				</sw-card-view>
+			</template>
+		{% endblock %}
+	</sw-page>
 {% endblock %}

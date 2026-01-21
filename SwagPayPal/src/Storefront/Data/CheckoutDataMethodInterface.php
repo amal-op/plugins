@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Storefront\Data;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Storefront\Data\Service\AbstractCheckoutDataService;
 
-#[Package('checkout')]
 interface CheckoutDataMethodInterface
 {
     public function getCheckoutDataService(): AbstractCheckoutDataService;

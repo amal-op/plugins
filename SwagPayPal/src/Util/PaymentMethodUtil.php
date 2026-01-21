@@ -9,104 +9,56 @@ namespace Swag\PayPal\Util;
 
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Checkout\Payment\PaymentMethodCollection;
-use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
 use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityCollection;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsAnyFilter;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Uuid\Uuid;
-use Shopware\Core\System\SalesChannel\SalesChannelCollection;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
-use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Swag\PayPal\Checkout\Payment\PayPalPaymentHandler;
-use Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData;
-use Swag\PayPal\Util\Lifecycle\Method\PaymentMethodDataRegistry;
-use Swag\PayPal\Util\Lifecycle\Method\PayPalMethodData;
 use Symfony\Contracts\Service\ResetInterface;
 
-#[Package('checkout')]
 class PaymentMethodUtil implements ResetInterface
 {
-    private Connection $connection;
-
     private EntityRepository $salesChannelRepository;
 
-    private PaymentMethodDataRegistry $paymentMethodDataRegistry;
+    private Connection $connection;
 
     /**
-     * @var array<class-string, string> - array<handlerIdentifier, paymentMethodId>
+     * @var array<class-string, string>
      */
     private ?array $paymentMethodIds = null;
 
     /**
-     * @var array<string, array<string, string>> - array<salesChannelId, array<handlerIdentifier, paymentMethodId>>
+     * @var string[]
      */
-    private array $salesChannels = [];
+    private ?array $salesChannels = null;
 
     /**
      * @internal
      */
     public function __construct(
         Connection $connection,
-        EntityRepository $salesChannelRepository,
-        PaymentMethodDataRegistry $paymentMethodDataRegistry,
+        EntityRepository $salesChannelRepository
     ) {
         $this->connection = $connection;
         $this->salesChannelRepository = $salesChannelRepository;
-        $this->paymentMethodDataRegistry = $paymentMethodDataRegistry;
-    }
-
-    /**
-     * Checks if a payment method is active for a given sales channel (context).
-     * This does not mean that the payment method is available in the sense of the {@see AvailabilityContext}.
-     *
-     * @param array<string|AbstractMethodData|PaymentMethodEntity>|null $handlerIdentifier - If `null` given, all PayPal handlers will be considered
-     */
-    public function isPaymentMethodActive(SalesChannelContext $salesChannelContext, ?array $handlerIdentifier = null): bool
-    {
-        $handlerIdentifier ??= $this->paymentMethodDataRegistry->getPaymentHandlers();
-
-        if (!$handlerIdentifier) {
-            return false;
-        }
-
-        $handlerIdentifier = \array_map($this->intoHandlerIdentifier(...), $handlerIdentifier);
-        $handlerIdentifier = \array_flip($handlerIdentifier);
-
-        if ($paymentMethods = $salesChannelContext->getSalesChannel()->getPaymentMethods()) {
-            return (bool) $paymentMethods->filter(static fn (PaymentMethodEntity $pm) => $pm->getActive() && isset($handlerIdentifier[$pm->getHandlerIdentifier()]))->first();
-        }
-
-        $paymentMethodIds = $this->getAllPaymentMethodIdsPerSalesChannel($salesChannelContext->getSalesChannelId());
-        foreach ($handlerIdentifier as $hi => $_) {
-            if (isset($paymentMethodIds[$hi])) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public function getPaymentMethodId(string|AbstractMethodData $handlerIdentifier): ?string
-    {
-        return $this->getAllPaymentMethodIds()[$this->intoHandlerIdentifier($handlerIdentifier)] ?? null;
     }
 
     public function getPayPalPaymentMethodId(Context $context): ?string
     {
-        return $this->getPaymentMethodId(PayPalPaymentHandler::class);
+        return $this->getPaymentMethodIdByHandler(PayPalPaymentHandler::class);
     }
 
-    /**
-     * @deprecated tag:v11.0.0 - Will be removed and is replaced by {@see self::isPaymentMethodActive}
-     */
     public function isPaypalPaymentMethodInSalesChannel(
         SalesChannelContext $salesChannelContext,
         ?PaymentMethodCollection $paymentMethods = null
     ): bool {
-        if (!($paypalPaymentMethodId = $this->getPayPalPaymentMethodId($salesChannelContext->getContext()))) {
+        $context = $salesChannelContext->getContext();
+        $paypalPaymentMethodId = $this->getPayPalPaymentMethodId($context);
+        if (!$paypalPaymentMethodId) {
             return false;
         }
 
@@ -114,23 +66,55 @@ class PaymentMethodUtil implements ResetInterface
             return $paymentMethods->has($paypalPaymentMethodId);
         }
 
-        return $this->isPaymentMethodActive($salesChannelContext, [PayPalMethodData::class]);
+        $paymentMethods = $salesChannelContext->getSalesChannel()->getPaymentMethods();
+        if ($paymentMethods !== null) {
+            return $paymentMethods->filterByProperty('active', true)->has($paypalPaymentMethodId);
+        }
+
+        if ($this->salesChannels === null) {
+            // skip repository for performance reasons
+            $salesChannels = $this->connection->fetchFirstColumn(
+                'SELECT LOWER(HEX(assoc.`sales_channel_id`))
+                FROM `sales_channel_payment_method` AS assoc
+                    LEFT JOIN `payment_method` AS pm
+                        ON pm.`id` = assoc.`payment_method_id`
+                WHERE
+                    assoc.`payment_method_id` = ? AND
+                    pm.`active` = 1',
+                [Uuid::fromHexToBytes($paypalPaymentMethodId)]
+            );
+
+            $this->salesChannels = $salesChannels;
+        }
+
+        return \in_array($salesChannelContext->getSalesChannelId(), $this->salesChannels, true);
     }
 
     public function setPayPalAsDefaultPaymentMethod(Context $context, ?string $salesChannelId): void
     {
-        if (!($payPalPaymentMethodId = $this->getPayPalPaymentMethodId($context))) {
+        $payPalPaymentMethodId = $this->getPayPalPaymentMethodId($context);
+        if ($payPalPaymentMethodId === null) {
             return;
         }
 
         $salesChannelsToChange = $this->getSalesChannelsToChange($context, $salesChannelId);
-        $updateData = \array_values($salesChannelsToChange->map(static fn (SalesChannelEntity $salesChannel) => [
-            'id' => $salesChannel->getId(),
-            'paymentMethodId' => $payPalPaymentMethodId,
-            ...($salesChannel->getPaymentMethods()?->get($payPalPaymentMethodId) ? [] : [
-                'paymentMethods' => [['id' => $payPalPaymentMethodId]],
-            ]),
-        ]));
+        $updateData = [];
+
+        foreach ($salesChannelsToChange as $salesChannel) {
+            $salesChannelUpdateData = [
+                'id' => $salesChannel->getId(),
+                'paymentMethodId' => $payPalPaymentMethodId,
+            ];
+
+            $paymentMethodCollection = $salesChannel->getPaymentMethods();
+            if ($paymentMethodCollection === null || $paymentMethodCollection->get($payPalPaymentMethodId) === null) {
+                $salesChannelUpdateData['paymentMethods'][] = [
+                    'id' => $payPalPaymentMethodId,
+                ];
+            }
+
+            $updateData[] = $salesChannelUpdateData;
+        }
 
         $this->salesChannelRepository->update($updateData, $context);
     }
@@ -138,10 +122,22 @@ class PaymentMethodUtil implements ResetInterface
     public function reset(): void
     {
         $this->paymentMethodIds = null;
-        $this->salesChannels = [];
+        $this->salesChannels = null;
     }
 
-    private function getSalesChannelsToChange(Context $context, ?string $salesChannelId): SalesChannelCollection
+    private function getPaymentMethodIdByHandler(string $handlerIdentifier): ?string
+    {
+        if ($this->paymentMethodIds === null) {
+            /** @var array<class-string, string> $ids */
+            $ids = $this->connection->fetchAllKeyValue('SELECT `handler_identifier`, LOWER(HEX(`id`)) FROM `payment_method`');
+
+            $this->paymentMethodIds = $ids;
+        }
+
+        return $this->paymentMethodIds[$handlerIdentifier] ?? null;
+    }
+
+    private function getSalesChannelsToChange(Context $context, ?string $salesChannelId): EntityCollection
     {
         if ($salesChannelId !== null) {
             $criteria = new Criteria([$salesChannelId]);
@@ -157,56 +153,9 @@ class PaymentMethodUtil implements ResetInterface
 
         $criteria->addAssociation('paymentMethods');
 
-        /** @var SalesChannelCollection $salesChannels */
-        $salesChannels = $this->salesChannelRepository->search($criteria, $context)->getEntities();
+        /** @var EntityCollection $collection */
+        $collection = $this->salesChannelRepository->search($criteria, $context)->getEntities();
 
-        return $salesChannels;
-    }
-
-    private function intoHandlerIdentifier(string|AbstractMethodData|PaymentMethodEntity $pm): string
-    {
-        return match (true) {
-            $pm instanceof PaymentMethodEntity => $pm->getHandlerIdentifier(),
-            $pm instanceof AbstractMethodData => $pm->getHandler(),
-            \is_a($pm, AbstractMethodData::class, true) => $this->paymentMethodDataRegistry->getPaymentMethod($pm)->getHandler(),
-            default => $pm,
-        };
-    }
-
-    /**
-     * @return array<string, string> - array<handlerIdentifier, paymentMethodId>
-     */
-    private function getAllPaymentMethodIdsPerSalesChannel(string $salesChannelId): array
-    {
-        if (isset($this->salesChannels[$salesChannelId])) {
-            return $this->salesChannels[$salesChannelId];
-        }
-
-        // get all active sales channel payment method ids mapped by their handler identifier
-        /** @var array<string, string> $pms */
-        $pms = $this->connection->fetchAllKeyValue(
-            'SELECT pm.`handler_identifier`, LOWER(HEX(sc_pm.`payment_method_id`))
-                FROM `sales_channel_payment_method` AS sc_pm
-                LEFT JOIN `payment_method` AS pm ON pm.`id` = sc_pm.`payment_method_id`
-                WHERE sc_pm.`sales_channel_id` = ? AND pm.`active` = 1',
-            [Uuid::fromHexToBytes($salesChannelId)]
-        );
-
-        return $this->salesChannels[$salesChannelId] = $pms;
-    }
-
-    /**
-     * @return array<string, string> - array<handlerIdentifier, paymentMethodId>
-     */
-    private function getAllPaymentMethodIds(): array
-    {
-        if ($this->paymentMethodIds !== null) {
-            return $this->paymentMethodIds;
-        }
-
-        /** @var array<class-string, string> $ids */
-        $ids = $this->connection->fetchAllKeyValue('SELECT `handler_identifier`, LOWER(HEX(`id`)) FROM `payment_method`');
-
-        return $this->paymentMethodIds = $ids;
+        return $collection;
     }
 }

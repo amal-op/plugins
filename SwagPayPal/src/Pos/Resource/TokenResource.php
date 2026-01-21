@@ -8,12 +8,10 @@
 namespace Swag\PayPal\Pos\Resource;
 
 use Psr\Cache\CacheItemPoolInterface;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Authentication\OAuthCredentials;
 use Swag\PayPal\Pos\Api\Authentication\Token;
 use Swag\PayPal\Pos\Client\TokenClientFactory;
 
-#[Package('checkout')]
 class TokenResource
 {
     private const CACHE_ID = 'pos_auth_';
@@ -77,7 +75,7 @@ class TokenResource
 
     private function isTokenValid(Token $token): bool
     {
-        $dateTimeNow = new \DateTime('now', new \DateTimeZone('UTC'));
+        $dateTimeNow = new \DateTime();
         $dateTimeExpire = $token->getExpireDateTime();
         // Decrease expire date by one hour just to make sure, it doesn't run into an unauthorized exception.
         $dateTimeExpire = $dateTimeExpire->sub(new \DateInterval('PT1H'));

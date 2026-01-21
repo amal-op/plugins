@@ -6,7 +6,7 @@
     &__foreground{
         position: relative;
         z-index: 1;
-
+        
         .cta-wrapper__inner.container{
             padding-left: rem(20);
             padding-right: rem(20);
@@ -74,7 +74,7 @@
 }
 
 .cms-element-hatslogic-title{
-    & + .cms-element-hatslogic-cta-slider{
+    & + .cms-element-cmsbundle-cta-slider{
         margin-top: rem(120);
         max-width: rem(1460);
         margin-left: auto;

@@ -9,7 +9,7 @@ namespace Swag\PayPal\Checkout\ExpressCheckout\Service;
 
 use Shopware\Core\Checkout\Cart\SalesChannel\CartService;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
-use Shopware\Core\Framework\Log\Package;
+use Shopware\Core\Framework\Context;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Swag\PayPal\Checkout\Cart\Service\CartPriceService;
@@ -17,27 +17,45 @@ use Swag\PayPal\Checkout\ExpressCheckout\ExpressCheckoutButtonData;
 use Swag\PayPal\Checkout\Payment\PayPalPaymentHandler;
 use Swag\PayPal\Setting\Service\CredentialsUtilInterface;
 use Swag\PayPal\Setting\Settings;
-use Swag\PayPal\Storefront\Data\Service\AbstractScriptDataService;
 use Swag\PayPal\Util\LocaleCodeProvider;
 use Swag\PayPal\Util\PaymentMethodUtil;
 use Symfony\Component\Routing\RouterInterface;
 
-#[Package('checkout')]
-class PayPalExpressCheckoutDataService extends AbstractScriptDataService implements ExpressCheckoutDataServiceInterface
+class PayPalExpressCheckoutDataService implements ExpressCheckoutDataServiceInterface
 {
+    private CartService $cartService;
+
+    private LocaleCodeProvider $localeCodeProvider;
+
+    private RouterInterface $router;
+
+    private PaymentMethodUtil $paymentMethodUtil;
+
+    private SystemConfigService $systemConfigService;
+
+    private CredentialsUtilInterface $credentialsUtil;
+
+    private CartPriceService $cartPriceService;
+
     /**
      * @internal
      */
     public function __construct(
-        private readonly CartService $cartService,
+        CartService $cartService,
         LocaleCodeProvider $localeCodeProvider,
-        private readonly RouterInterface $router,
-        private readonly PaymentMethodUtil $paymentMethodUtil,
+        RouterInterface $router,
+        PaymentMethodUtil $paymentMethodUtil,
         SystemConfigService $systemConfigService,
         CredentialsUtilInterface $credentialsUtil,
-        private readonly CartPriceService $cartPriceService
+        CartPriceService $cartPriceService
     ) {
-        parent::__construct($localeCodeProvider, $systemConfigService, $credentialsUtil);
+        $this->cartService = $cartService;
+        $this->localeCodeProvider = $localeCodeProvider;
+        $this->router = $router;
+        $this->paymentMethodUtil = $paymentMethodUtil;
+        $this->systemConfigService = $systemConfigService;
+        $this->credentialsUtil = $credentialsUtil;
+        $this->cartPriceService = $cartPriceService;
     }
 
     public function buildExpressCheckoutButtonData(
@@ -62,13 +80,7 @@ class PayPalExpressCheckoutDataService extends AbstractScriptDataService impleme
         $context = $salesChannelContext->getContext();
         $salesChannelId = $salesChannelContext->getSalesChannelId();
 
-        $fundingSources = ['paypal', 'venmo'];
-        if ($this->systemConfigService->getBool(Settings::ECS_SHOW_PAY_LATER, $salesChannelId)) {
-            \array_splice($fundingSources, 1, 0, ['paylater']);
-        }
-
         return (new ExpressCheckoutButtonData())->assign([
-            ...parent::getBaseData($salesChannelContext),
             'productDetailEnabled' => $this->systemConfigService->getBool(Settings::ECS_DETAIL_ENABLED, $salesChannelId),
             'offCanvasEnabled' => $this->systemConfigService->getBool(Settings::ECS_OFF_CANVAS_ENABLED, $salesChannelId),
             'loginEnabled' => $this->systemConfigService->getBool(Settings::ECS_LOGIN_ENABLED, $salesChannelId),
@@ -76,6 +88,10 @@ class PayPalExpressCheckoutDataService extends AbstractScriptDataService impleme
             'listingEnabled' => $this->systemConfigService->getBool(Settings::ECS_LISTING_ENABLED, $salesChannelId),
             'buttonColor' => $this->systemConfigService->getString(Settings::ECS_BUTTON_COLOR, $salesChannelId),
             'buttonShape' => $this->systemConfigService->getString(Settings::ECS_BUTTON_SHAPE, $salesChannelId),
+            'clientId' => $this->credentialsUtil->getClientId($salesChannelId),
+            'languageIso' => $this->getInContextButtonLanguage($salesChannelId, $context),
+            'currency' => $salesChannelContext->getCurrency()->getIsoCode(),
+            'intent' => \mb_strtolower($this->systemConfigService->getString(Settings::INTENT, $salesChannelId)),
             'addProductToCart' => $addProductToCart,
             'contextSwitchUrl' => $this->router->generate('frontend.paypal.express.prepare_cart'),
             'payPalPaymentMethodId' => $this->paymentMethodUtil->getPayPalPaymentMethodId($context),
@@ -86,17 +102,22 @@ class PayPalExpressCheckoutDataService extends AbstractScriptDataService impleme
                 [PayPalPaymentHandler::PAYPAL_EXPRESS_CHECKOUT_ID => true],
                 RouterInterface::ABSOLUTE_URL
             ),
-            /** @deprecated tag:v10.0.0 - Will be removed, use handleErrorUrl instead */
             'addErrorUrl' => $this->router->generate('frontend.paypal.error'),
-            'handleErrorUrl' => $this->router->generate('frontend.paypal.handle-error'),
             'cancelRedirectUrl' => $this->router->generate($addProductToCart ? 'frontend.checkout.cart.page' : 'frontend.checkout.register.page'),
-            'showPayLater' => $this->systemConfigService->getBool(Settings::ECS_SHOW_PAY_LATER, $salesChannelId),
-            'fundingSources' => $fundingSources,
+            'disablePayLater' => true,
         ]);
     }
 
-    protected function getButtonLanguageSetting(): string
+    private function getInContextButtonLanguage(string $salesChannelId, Context $context): string
     {
-        return Settings::ECS_BUTTON_LANGUAGE_ISO;
+        if ($settingsLocale = $this->systemConfigService->getString(Settings::ECS_BUTTON_LANGUAGE_ISO, $salesChannelId)) {
+            return $settingsLocale;
+        }
+
+        return \str_replace(
+            '-',
+            '_',
+            $this->localeCodeProvider->getLocaleCodeFromContext($context)
+        );
     }
 }

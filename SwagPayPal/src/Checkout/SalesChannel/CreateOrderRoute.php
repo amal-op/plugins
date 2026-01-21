@@ -7,57 +7,66 @@
 
 namespace Swag\PayPal\Checkout\SalesChannel;
 
-use OpenApi\Attributes as OA;
+use OpenApi\Annotations as OA;
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Checkout\Cart\CartException;
 use Shopware\Core\Checkout\Cart\Exception\CustomerNotLoggedInException;
 use Shopware\Core\Checkout\Cart\SalesChannel\CartService;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
 use Shopware\Core\Checkout\Order\OrderEntity;
-use Shopware\Core\Checkout\Order\OrderException;
-use Shopware\Core\Checkout\Payment\Cart\AbstractPaymentTransactionStructFactory;
+use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Checkout\Payment\Exception\InvalidOrderException;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Plugin\Exception\DecorationPatternException;
-use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
+use Shopware\Core\Framework\Routing\Annotation\Since;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Swag\PayPal\Checkout\TokenResponse;
-use Swag\PayPal\OrdersApi\Builder\AbstractOrderBuilder;
-use Swag\PayPal\OrdersApi\Builder\ACDCOrderBuilder;
-use Swag\PayPal\OrdersApi\Builder\ApplePayOrderBuilder;
-use Swag\PayPal\OrdersApi\Builder\GooglePayOrderBuilder;
-use Swag\PayPal\OrdersApi\Builder\PayPalOrderBuilder;
-use Swag\PayPal\OrdersApi\Builder\VenmoOrderBuilder;
+use Swag\PayPal\OrdersApi\Builder\OrderFromCartBuilder;
+use Swag\PayPal\OrdersApi\Builder\OrderFromOrderBuilder;
 use Swag\PayPal\RestApi\PartnerAttributionId;
 use Swag\PayPal\RestApi\V2\Api\Order;
 use Swag\PayPal\RestApi\V2\Resource\OrderResource;
+use Swag\PayPal\Util\Compatibility\Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Package('checkout')]
-#[Route(defaults: ['_routeScope' => ['store-api']])]
+/**
+ * @Route(defaults={"_routeScope"={"store-api"}})
+ */
 class CreateOrderRoute extends AbstractCreateOrderRoute
 {
-    public const FAKE_URL = 'https://www.example.com/';
+    private const FAKE_URL = 'https://www.example.com/';
+
+    private OrderFromCartBuilder $orderFromCartBuilder;
+
+    private OrderFromOrderBuilder $orderFromOrderBuilder;
+
+    private CartService $cartService;
+
+    private EntityRepository $orderRepository;
+
+    private OrderResource $orderResource;
+
+    private LoggerInterface $logger;
 
     /**
      * @internal
      */
     public function __construct(
-        private readonly CartService $cartService,
-        private readonly EntityRepository $orderRepository,
-        private readonly PayPalOrderBuilder $payPalOrderBuilder,
-        private readonly ACDCOrderBuilder $acdcOrderBuilder,
-        private readonly ApplePayOrderBuilder $applePayOrderBuilder,
-        private readonly GooglePayOrderBuilder $googlePayOrderBuilder,
-        private readonly VenmoOrderBuilder $venmoOrderBuilder,
-        private readonly OrderResource $orderResource,
-        private readonly LoggerInterface $logger,
-        private readonly AbstractPaymentTransactionStructFactory $paymentTransactionStructFactory,
+        CartService $cartService,
+        EntityRepository $orderRepository,
+        OrderFromOrderBuilder $orderFromOrderBuilder,
+        OrderFromCartBuilder $orderFromCartBuilder,
+        OrderResource $orderResource,
+        LoggerInterface $logger
     ) {
+        $this->cartService = $cartService;
+        $this->orderRepository = $orderRepository;
+        $this->orderFromOrderBuilder = $orderFromOrderBuilder;
+        $this->orderFromCartBuilder = $orderFromCartBuilder;
+        $this->orderResource = $orderResource;
+        $this->logger = $logger;
     }
 
     public function getDecorated(): AbstractCreateOrderRoute
@@ -66,64 +75,66 @@ class CreateOrderRoute extends AbstractCreateOrderRoute
     }
 
     /**
+     * @Since("5.0.0")
+     *
+     * @OA\Post(
+     *     path="/store-api/paypal/create-order",
+     *     description="Creates a PayPal order from the existing cart or an order",
+     *     operationId="createPayPalOrder",
+     *     tags={"Store API", "PayPal"},
+     *
+     *     @OA\RequestBody(
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="product",
+     *                 type="string",
+     *                 default="ppcp",
+     *                 required=false,
+     *                 description="Use an existing order id to create PayPal order",
+     *             ),
+     *             @OA\Property(
+     *                 property="orderId",
+     *                 type="string",
+     *                 required=false,
+     *                 description="Use an existing order id to create PayPal order",
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response="200",
+     *         description="The new token of the order"
+     *    )
+     * )
+     *
+     * @Route(
+     *     "/store-api/paypal/create-order",
+     *      name="store-api.paypal.create_order",
+     *      methods={"POST"}
+     * )
+     *
      * @throws CustomerNotLoggedInException
      */
-    #[OA\Post(
-        path: '/paypal/create-order',
-        operationId: 'createPayPalOrder',
-        description: 'Creates a PayPal order from the existing cart or an order',
-        requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [
-            new OA\Property(
-                property: 'product',
-                description: 'Use an existing order id to create PayPal order',
-                type: 'string',
-                default: 'ppcp',
-            ),
-            new OA\Property(
-                property: 'orderId',
-                description: 'Use an existing order id to create PayPal order',
-                type: 'string',
-            ),
-        ])),
-        tags: ['Store API', 'PayPal'],
-        responses: [new OA\Response(
-            response: 200,
-            description: 'Returns the created PayPal order id',
-            content: new OA\JsonContent(properties: [new OA\Property(
-                property: 'token',
-                type: 'string',
-            )])
-        )]
-    )]
-    #[Route(path: '/store-api/paypal/create-order', name: 'store-api.paypal.create_order', defaults: [AbstractOrderBuilder::PRELIMINARY_ATTRIBUTE => true], methods: ['POST'])]
-    #[Route(path: '/store-api/subscription/paypal/create-order', name: 'store-api.subscription.paypal.create_order', defaults: ['_subscriptionCart' => true, '_subscriptionContext' => true, AbstractOrderBuilder::PRELIMINARY_ATTRIBUTE => true], methods: ['POST'])]
     public function createPayPalOrder(SalesChannelContext $salesChannelContext, Request $request): TokenResponse
     {
         try {
-            $requestDataBag = new RequestDataBag($request->request->all());
-            $requestDataBag->set(AbstractOrderBuilder::PRELIMINARY_ATTRIBUTE, true);
-            $this->logger->debug('Started', ['request' => $requestDataBag->all()]);
+            $this->logger->debug('Started', ['request' => $request->request->all()]);
             $customer = $salesChannelContext->getCustomer();
             if ($customer === null) {
-                throw CartException::customerNotLoggedIn();
+                throw Exception::customerNotLoggedIn();
             }
 
-            $orderId = $requestDataBag->getAlnum('orderId');
+            $orderId = $request->request->get('orderId');
+            if (\is_string($orderId)) {
+                $paypalOrder = $this->getOrderFromOrder($orderId, $salesChannelContext, $customer);
+            } else {
+                $paypalOrder = $this->getOrderFromCart($salesChannelContext, $customer);
+            }
 
-            $orderBuilder = match ($requestDataBag->get('product')) {
-                'acdc' => $this->acdcOrderBuilder,
-                'applepay' => $this->applePayOrderBuilder,
-                'googlepay' => $this->googlePayOrderBuilder,
-                'venmo' => $this->venmoOrderBuilder,
-                default => $this->payPalOrderBuilder,
-            };
-
-            $paypalOrder = $orderId
-                ? $this->getOrderFromOrder($orderBuilder, $orderId, $customer, $requestDataBag, $salesChannelContext)
-                : $this->getOrderFromCart($orderBuilder, $salesChannelContext, $requestDataBag);
-
-            $salesChannelId = $salesChannelContext->getSalesChannelId();
-            $response = $this->orderResource->create($paypalOrder, $salesChannelId, $this->getPartnerAttributionId($requestDataBag));
+            $salesChannelId = $salesChannelContext->getSalesChannel()->getId();
+            $response = $this->orderResource->create($paypalOrder, $salesChannelId, $this->getPartnerAttributionId($request));
 
             return new TokenResponse($response->getId());
         } catch (\Throwable $e) {
@@ -133,43 +144,27 @@ class CreateOrderRoute extends AbstractCreateOrderRoute
         }
     }
 
-    private function getOrderFromCart(
-        AbstractOrderBuilder $orderBuilder,
-        SalesChannelContext $salesChannelContext,
-        RequestDataBag $requestDataBag,
-    ): Order {
+    private function getOrderFromCart(SalesChannelContext $salesChannelContext, CustomerEntity $customer): Order
+    {
         $cart = $this->cartService->getCart($salesChannelContext->getToken(), $salesChannelContext);
 
-        return $orderBuilder->getOrderFromCart($cart, $salesChannelContext, $requestDataBag);
+        return $this->orderFromCartBuilder->getOrder($cart, $salesChannelContext, $customer);
     }
 
     private function getOrderFromOrder(
-        AbstractOrderBuilder $orderBuilder,
         string $orderId,
-        CustomerEntity $customer,
-        RequestDataBag $requestDataBag,
         SalesChannelContext $salesChannelContext,
+        CustomerEntity $customer
     ): Order {
         $criteria = new Criteria([$orderId]);
         $criteria->addAssociation('transactions');
         $criteria->addAssociation('lineItems');
-        $criteria->addAssociation('billingAddress.country');
-        $criteria->addAssociation('billingAddress.countryState');
-        $criteria->addAssociation('orderCustomer');
-        $criteria->addAssociation('deliveries.shippingOrderAddress.country');
-        $criteria->addAssociation('deliveries.shippingOrderAddress.countryState');
-        $criteria->addAssociation('subscription');
         $criteria->getAssociation('transactions')->addSorting(new FieldSorting('createdAt'));
         /** @var OrderEntity|null $order */
         $order = $this->orderRepository->search($criteria, $salesChannelContext->getContext())->first();
 
         if ($order === null) {
-            throw OrderException::orderNotFound($orderId);
-        }
-
-        $orderCustomer = $order->getOrderCustomer();
-        if ($orderCustomer !== null && $orderCustomer->getCustomerId() !== null && $orderCustomer->getCustomerId() !== $customer->getId()) {
-            throw OrderException::orderNotFound($orderId);
+            throw Exception::orderNotFound($orderId);
         }
 
         $transactionCollection = $order->getTransactions();
@@ -182,16 +177,16 @@ class CreateOrderRoute extends AbstractCreateOrderRoute
             throw new InvalidOrderException($orderId);
         }
 
-        return $orderBuilder->getOrder(
-            $this->paymentTransactionStructFactory->sync($transaction, $order),
+        return $this->orderFromOrderBuilder->getOrder(
+            new AsyncPaymentTransactionStruct($transaction, $order, self::FAKE_URL),
             $salesChannelContext,
-            $requestDataBag,
+            $customer
         );
     }
 
-    private function getPartnerAttributionId(RequestDataBag $requestDataBag): string
+    private function getPartnerAttributionId(Request $request): string
     {
-        $product = $requestDataBag->get('product');
+        $product = $request->request->get('product');
 
         if (!\is_string($product) || $product === '') {
             return PartnerAttributionId::PAYPAL_PPCP;

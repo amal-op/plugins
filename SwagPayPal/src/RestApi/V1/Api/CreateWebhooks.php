@@ -7,34 +7,26 @@
 
 namespace Swag\PayPal\RestApi\V1\Api;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\CreateWebhooks\EventType;
-use Swag\PayPal\RestApi\V1\Api\CreateWebhooks\EventTypeCollection;
 
-#[OA\Schema(schema: 'swag_paypal_v1_create_webhooks')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_create_webhooks")
+ */
 class CreateWebhooks extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
-    protected string $id;
-
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $url;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: EventType::class))]
-    protected EventTypeCollection $eventTypes;
-
-    public function getId(): string
-    {
-        return $this->id;
-    }
-
-    public function setId(string $id): void
-    {
-        $this->id = $id;
-    }
+    /**
+     * @var EventType[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_create_webhooks_event_type"})
+     */
+    protected array $eventTypes;
 
     public function getUrl(): string
     {
@@ -46,12 +38,18 @@ class CreateWebhooks extends PayPalApiStruct
         $this->url = $url;
     }
 
-    public function getEventTypes(): EventTypeCollection
+    /**
+     * @return EventType[]
+     */
+    public function getEventTypes(): array
     {
         return $this->eventTypes;
     }
 
-    public function setEventTypes(EventTypeCollection $eventTypes): void
+    /**
+     * @param EventType[] $eventTypes
+     */
+    public function setEventTypes(array $eventTypes): void
     {
         $this->eventTypes = $eventTypes;
     }

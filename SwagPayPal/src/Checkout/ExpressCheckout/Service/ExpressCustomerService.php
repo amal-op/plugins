@@ -18,19 +18,15 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\MultiFilter;
-use Shopware\Core\Framework\Log\Package;
-use Shopware\Core\Framework\Routing\RoutingException;
+use Shopware\Core\Framework\Routing\Exception\MissingRequestParameterException;
 use Shopware\Core\Framework\Struct\ArrayStruct;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\Framework\Validation\DataBag\RequestDataBag;
 use Shopware\Core\PlatformRequest;
-use Shopware\Core\System\SalesChannel\Entity\SalesChannelRepository;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
-use Swag\PayPal\Checkout\Exception\MissingPayloadException;
 use Swag\PayPal\RestApi\V2\Api\Order;
 
-#[Package('checkout')]
 class ExpressCustomerService
 {
     public const EXPRESS_CHECKOUT_ACTIVE = 'payPalExpressCheckoutActive';
@@ -46,22 +42,46 @@ class ExpressCustomerService
         'additionalAddressLine1',
     ];
 
+    private AbstractRegisterRoute $registerRoute;
+
+    private EntityRepository $countryRepository;
+
+    private EntityRepository $countryStateRepository;
+
+    private EntityRepository $salutationRepository;
+
+    private EntityRepository $customerRepository;
+
+    private AccountService $accountService;
+
+    private SystemConfigService $systemConfigService;
+
+    private LoggerInterface $logger;
+
     /**
      * @internal
      */
     public function __construct(
-        private readonly AbstractRegisterRoute $registerRoute,
-        private readonly SalesChannelRepository $countryRepository,
-        private readonly EntityRepository $countryStateRepository,
-        private readonly EntityRepository $salutationRepository,
-        private readonly EntityRepository $customerRepository,
-        private readonly AccountService $accountService,
-        private readonly SystemConfigService $systemConfigService,
-        private readonly LoggerInterface $logger,
+        AbstractRegisterRoute $registerRoute,
+        EntityRepository $countryRepository,
+        EntityRepository $countryStateRepository,
+        EntityRepository $salutationRepository,
+        EntityRepository $customerRepository,
+        AccountService $accountService,
+        SystemConfigService $systemConfigService,
+        LoggerInterface $logger
     ) {
+        $this->registerRoute = $registerRoute;
+        $this->countryRepository = $countryRepository;
+        $this->countryStateRepository = $countryStateRepository;
+        $this->salutationRepository = $salutationRepository;
+        $this->customerRepository = $customerRepository;
+        $this->accountService = $accountService;
+        $this->systemConfigService = $systemConfigService;
+        $this->logger = $logger;
     }
 
-    public function loginCustomer(Order $paypalOrder, SalesChannelContext $salesChannelContext, RequestDataBag $data): string
+    public function loginCustomer(Order $paypalOrder, SalesChannelContext $salesChannelContext): string
     {
         $this->logger->debug('Searching for existing customer');
         $newContextToken = $this->findExistingCustomer($paypalOrder, $salesChannelContext);
@@ -72,21 +92,16 @@ class ExpressCustomerService
 
         $this->logger->debug('No existing customer found');
 
-        return $this->registerNewCustomer($paypalOrder, $salesChannelContext, $data);
+        return $this->registerNewCustomer($paypalOrder, $salesChannelContext);
     }
 
     private function findExistingCustomer(Order $paypalOrder, SalesChannelContext $salesChannelContext): ?string
     {
-        $paypal = $paypalOrder->getPaymentSource()?->getPaypal();
-        if (!$paypal) {
-            return null;
-        }
-
         $criteria = new Criteria();
         $criteria->addAssociation('addresses');
         $criteria->addFilter(new EqualsFilter('guest', true));
-        $criteria->addFilter(new EqualsFilter('email', $paypal->getEmailAddress()));
-        $criteria->addFilter(new EqualsFilter(\sprintf('customFields.%s', self::EXPRESS_PAYER_ID), $paypal->getAccountId()));
+        $criteria->addFilter(new EqualsFilter('email', $paypalOrder->getPayer()->getEmailAddress()));
+        $criteria->addFilter(new EqualsFilter(\sprintf('customFields.%s', self::EXPRESS_PAYER_ID), $paypalOrder->getPayer()->getPayerId()));
         $criteria->addFilter(new MultiFilter(MultiFilter::CONNECTION_OR, [
             new EqualsFilter('boundSalesChannelId', null),
             new EqualsFilter('boundSalesChannelId', $salesChannelContext->getSalesChannel()->getId()),
@@ -104,14 +119,17 @@ class ExpressCustomerService
         $this->updateCustomer($customer, $paypalOrder, $salesChannelContext);
 
         $this->logger->debug('Logging in existing customer');
+        if (!\method_exists($this->accountService, 'loginById')) {
+            return $this->accountService->login($customer->getEmail(), $salesChannelContext, true);
+        }
 
         return $this->accountService->loginById($customer->getId(), $salesChannelContext);
     }
 
-    private function registerNewCustomer(Order $paypalOrder, SalesChannelContext $salesChannelContext, RequestDataBag $data): string
+    private function registerNewCustomer(Order $paypalOrder, SalesChannelContext $salesChannelContext): string
     {
         $salesChannelContext->getContext()->addExtension(self::EXPRESS_CHECKOUT_ACTIVE, new ArrayStruct());
-        $customerDataBag = $this->getRegisterCustomerDataBag($paypalOrder, $salesChannelContext, $data);
+        $customerDataBag = $this->getRegisterCustomerDataBag($paypalOrder, $salesChannelContext);
         $response = $this->registerRoute->register($customerDataBag, $salesChannelContext, false);
         $salesChannelContext->getContext()->removeExtension(self::EXPRESS_CHECKOUT_ACTIVE);
         $this->logger->debug('Customer created and logged in');
@@ -119,62 +137,51 @@ class ExpressCustomerService
         $newToken = $response->headers->get(PlatformRequest::HEADER_CONTEXT_TOKEN);
 
         if ($newToken === null || $newToken === '') {
-            throw RoutingException::missingRequestParameter(PlatformRequest::HEADER_CONTEXT_TOKEN);
+            throw new MissingRequestParameterException(PlatformRequest::HEADER_CONTEXT_TOKEN);
         }
 
         return $newToken;
     }
 
-    private function getRegisterCustomerDataBag(Order $paypalOrder, SalesChannelContext $salesChannelContext, RequestDataBag $data): RequestDataBag
+    private function getRegisterCustomerDataBag(Order $paypalOrder, SalesChannelContext $salesChannelContext): RequestDataBag
     {
         $salutationId = $this->getSalutationId($salesChannelContext->getContext());
 
-        $paypal = $paypalOrder->getPaymentSource()?->getPaypal();
-        if (!$paypal) {
-            throw new MissingPayloadException($paypalOrder->getId(), 'paymentSource.paypal');
-        }
-
-        $data->add([
+        return new RequestDataBag([
             'guest' => true,
             'storefrontUrl' => $this->getStorefrontUrl($salesChannelContext),
             'salutationId' => $salutationId,
-            'email' => $paypal->getEmailAddress(),
-            'firstName' => $paypal->getName()->getGivenName(),
-            'lastName' => $paypal->getName()->getSurname(),
-            'billingAddress' => $this->getAddressData($paypalOrder, $salesChannelContext, $salutationId),
+            'email' => $paypalOrder->getPayer()->getEmailAddress(),
+            'firstName' => $paypalOrder->getPayer()->getName()->getGivenName(),
+            'lastName' => $paypalOrder->getPayer()->getName()->getSurname(),
+            'billingAddress' => $this->getAddressData($paypalOrder, $salesChannelContext->getContext(), $salutationId),
             'acceptedDataProtection' => true,
-            self::EXPRESS_PAYER_ID => $paypal->getAccountId(),
+            self::EXPRESS_PAYER_ID => $paypalOrder->getPayer()->getPayerId(),
         ]);
-
-        return $data->toRequestDataBag();
     }
 
     /**
      * @return array<string, string|null>
      */
-    private function getAddressData(Order $order, SalesChannelContext $context, ?string $salutationId = null): array
+    private function getAddressData(Order $order, Context $context, ?string $salutationId = null): array
     {
-        $paypal = $order->getPaymentSource()?->getPaypal();
-        if (!$paypal) {
-            throw new MissingPayloadException($order->getId(), 'paymentSource.paypal');
-        }
-        $purchaseUnit = $order->getPurchaseUnits()->first();
-        if ($purchaseUnit) {
-            $shipping = $purchaseUnit->getShipping();
+        $payer = $order->getPayer();
+        if (!empty($order->getPurchaseUnits())) {
+            $shipping = $order->getPurchaseUnits()[0]->getShipping();
             $address = $shipping->getAddress();
             $names = \explode(' ', $shipping->getName()->getFullName());
             $lastName = \array_pop($names);
             $firstName = \implode(' ', $names);
         } else {
-            $address = $paypal->getAddress();
-            $firstName = $paypal->getName()->getGivenName();
-            $lastName = $paypal->getName()->getSurname();
+            $address = $payer->getAddress();
+            $firstName = $payer->getName()->getGivenName();
+            $lastName = $payer->getName()->getSurname();
         }
 
         $countryCode = $address->getCountryCode();
         $countryId = $this->getCountryId($countryCode, $context);
-        $countryStateId = $this->getCountryStateId($countryId, $countryCode, $address->getAdminArea1(), $context->getContext());
-        $phone = $paypal->getPhoneNumber();
+        $countryStateId = $this->getCountryStateId($countryId, $countryCode, $address->getAdminArea1(), $context);
+        $phone = $payer->getPhone();
 
         return [
             'firstName' => $firstName,
@@ -184,7 +191,7 @@ class ExpressCustomerService
             'zipcode' => $address->getPostalCode(),
             'countryId' => $countryId,
             'countryStateId' => $countryStateId,
-            'phoneNumber' => $phone?->getNationalNumber(),
+            'phoneNumber' => $phone !== null ? $phone->getPhoneNumber()->getNationalNumber() : null,
             'city' => $address->getAdminArea2(),
             'additionalAddressLine1' => $address->getAddressLine2(),
         ];
@@ -211,7 +218,7 @@ class ExpressCustomerService
         return $salutationId;
     }
 
-    private function getCountryId(string $code, SalesChannelContext $context): ?string
+    private function getCountryId(string $code, Context $context): ?string
     {
         $criteria = new Criteria();
         $criteria->addFilter(new EqualsFilter('iso', $code));
@@ -262,7 +269,7 @@ class ExpressCustomerService
     {
         $addressData = $this->getAddressData(
             $paypalOrder,
-            $salesChannelContext,
+            $salesChannelContext->getContext()
         );
 
         $matchingAddress = null;
@@ -281,17 +288,12 @@ class ExpressCustomerService
         $addressId = $matchingAddress === null ? Uuid::randomHex() : $matchingAddress->getId();
         $salutationId = $this->getSalutationId($salesChannelContext->getContext());
 
-        $paypal = $paypalOrder->getPaymentSource()?->getPaypal();
-        if (!$paypal) {
-            throw new MissingPayloadException($paypalOrder->getId(), 'paymentSource.paypal');
-        }
-
         $customerData = [
             'id' => $customer->getId(),
             'defaultShippingAddressId' => $addressId,
             'defaultBillingAddressId' => $addressId,
-            'firstName' => $paypal->getName()->getGivenName(),
-            'lastName' => $paypal->getName()->getSurname(),
+            'firstName' => $paypalOrder->getPayer()->getName()->getGivenName(),
+            'lastName' => $paypalOrder->getPayer()->getName()->getSurname(),
             'salutationId' => $salutationId,
             'addresses' => [
                 \array_merge($addressData, [

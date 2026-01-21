@@ -12,10 +12,8 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\DataAbstractionLayer\Entity\PosSalesChannelRunCollection;
 
-#[Package('checkout')]
 class LogCleaner
 {
     private const LOG_RETENTION_PERIOD = 30;
@@ -41,7 +39,7 @@ class LogCleaner
         $criteria->addSorting(new FieldSorting('createdAt', FieldSorting::DESCENDING));
 
         /** @var PosSalesChannelRunCollection $runs */
-        $runs = $this->runRepository->search($criteria, $context)->getEntities();
+        $runs = $this->runRepository->search($criteria, $context);
 
         $now = new \DateTime();
         $logsPerProduct = [];

@@ -7,12 +7,12 @@
 
 namespace Swag\PayPal\Checkout\SalesChannel;
 
-use OpenApi\Attributes as OA;
+use OpenApi\Annotations as OA;
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Plugin\Exception\DecorationPatternException;
-use Shopware\Core\Framework\Routing\RoutingException;
+use Shopware\Core\Framework\Routing\Annotation\Since;
+use Shopware\Core\Framework\Routing\Exception\InvalidRequestParameterException;
 use Shopware\Core\System\SalesChannel\NoContentResponse;
 use Swag\PayPal\Checkout\Payment\Method\ACDCHandler;
 use Swag\PayPal\Checkout\Payment\Method\PayLaterHandler;
@@ -20,10 +20,12 @@ use Swag\PayPal\Checkout\Payment\Method\SEPAHandler;
 use Swag\PayPal\Checkout\Payment\Method\VenmoHandler;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Package('checkout')]
-#[Route(defaults: ['_routeScope' => ['store-api']])]
+/**
+ * @Route(defaults={"_routeScope"={"store-api"}})
+ */
 class MethodEligibilityRoute extends AbstractMethodEligibilityRoute
 {
     public const REMOVABLE_PAYMENT_HANDLERS = [
@@ -45,33 +47,54 @@ class MethodEligibilityRoute extends AbstractMethodEligibilityRoute
         $this->logger = $logger;
     }
 
-    public function getDecorated(): AbstractMethodEligibilityRoute
+    public function getDecorated(): AbstractErrorRoute
     {
         throw new DecorationPatternException(self::class);
     }
 
-    #[OA\Post(
-        path: '/paypal/payment-method-eligibility',
-        operationId: 'setPaymentMethodEligibility',
-        description: 'Sets ineligible payment methods to be removed from the session',
-        requestBody: new OA\RequestBody(content: new OA\JsonContent(properties: [
-            new OA\Property(
-                property: 'paymentMethods',
-                description: 'List of PayPal payment method identifiers according to constant REMOVABLE_PAYMENT_HANDLERS',
-                type: 'array',
-                items: new OA\Items(type: 'string')
-            ),
-        ])),
-        tags: ['Store API', 'PayPal'],
-        responses: [new OA\Response(response: Response::HTTP_NO_CONTENT, description: 'Success')],
-    )]
-    #[Route(path: '/store-api/paypal/payment-method-eligibility', name: 'store-api.paypal.payment-method-eligibility', defaults: ['XmlHttpRequest' => true], methods: ['POST'])]
+    /**
+     * @Since("5.1.0")
+     *
+     * @OA\Post(
+     *     path="/store-api/paypal/payment-method-eligibility",
+     *     description="Sets ineligible payment methods to be removed from the session",
+     *     operationId="setPaymentMethodEligibility",
+     *     tags={"Store API", "PayPal"},
+     *
+     *     @OA\RequestBody(
+     *
+     *         @OA\JsonContent(
+     *
+     *             @OA\Property(
+     *                 property="paymentMethods",
+     *                 type="array",
+     *
+     *                 @OA\Items(
+     *                     type="string",
+     *                 ),
+     *                 description="List of PayPal payment method identifiers according to constant REMOVABLE_PAYMENT_HANDLERS"
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *          response="204"
+     *     )
+     * )
+     *
+     * @Route(
+     *     "/store-api/paypal/payment-method-eligibility",
+     *     name="store-api.paypal.payment-method-eligibility",
+     *     methods={"POST"},
+     *     defaults={"XmlHttpRequest"=true}
+     * )
+     */
     public function setPaymentMethodEligibility(Request $request, Context $context): Response
     {
         /** @var mixed|array $paymentMethods */
         $paymentMethods = $request->request->all()['paymentMethods'] ?? null;
         if (!\is_array($paymentMethods)) {
-            RoutingException::invalidRequestParameter('paymentMethods');
+            throw new InvalidRequestParameterException('paymentMethods');
         }
 
         $handlers = [];

@@ -7,11 +7,9 @@
 
 namespace Swag\PayPal\Pos\Webhook\Exception;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\ShopwareHttpException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[Package('checkout')]
 class WebhookException extends ShopwareHttpException
 {
     /**

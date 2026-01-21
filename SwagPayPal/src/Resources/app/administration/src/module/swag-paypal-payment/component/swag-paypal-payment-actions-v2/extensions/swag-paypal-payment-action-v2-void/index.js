@@ -1,6 +1,7 @@
 import template from './swag-paypal-payment-action-v2-void.html.twig';
 
 const { Component } = Shopware;
+const utils = Shopware.Utils;
 
 Component.register('swag-paypal-payment-action-v2-void', {
     template,
@@ -8,7 +9,7 @@ Component.register('swag-paypal-payment-action-v2-void', {
     inject: ['SwagPayPalOrderService'],
 
     mixins: [
-        Shopware.Mixin.getByName('notification'),
+        'notification',
     ],
 
     props: {
@@ -49,6 +50,9 @@ Component.register('swag-paypal-payment-action-v2-void', {
                 });
                 this.isLoading = false;
                 this.closeModal();
+                this.$nextTick(() => {
+                    this.$router.replace(`${this.$route.path}?hash=${utils.createId()}`);
+                });
             }).catch((errorResponse) => {
                 try {
                     this.createNotificationError({

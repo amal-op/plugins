@@ -2,7 +2,6 @@ import './component';
 import './config';
 import './preview';
 
-const Criteria = Shopware.Data.Criteria;
 
 Shopware.Service('cmsService').registerCmsElement({
 	name: 'tocafix-job-teaser',

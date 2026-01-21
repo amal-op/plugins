@@ -7,9 +7,6 @@
 
 namespace Swag\PayPal\Pos\Api\Authentication;
 
-use Shopware\Core\Framework\Log\Package;
-
-#[Package('checkout')]
 class OAuthCredentials
 {
     protected string $apiKey;

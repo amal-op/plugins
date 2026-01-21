@@ -1,27 +1,55 @@
 const { Component } = Shopware;
 
-Component.extend('tocafix-team-category-create', 'tocafix-team-category-detail', {
+Component.extend(
+  "tocafix-team-category-create",
+  "tocafix-team-category-detail",
+  {
     methods: {
-        getTeamCategory() {
-            this.teamCategory = this.repository.create(Shopware.Context.api);
-        },
+      createdComponent() {
+        const systemLanguageId = Shopware.Context.api.systemLanguageId;
+        const currentLanguageId = Shopware.Context.api.languageId;
 
-        onClickSave() {
-            this.isLoading = true;
-
-            this.repository
-                .save(this.teamCategory, Shopware.Context.api)
-                .then(() => {
-                    this.isLoading = false;
-                    this.$router.push({ name: 'tocafix.team.category.detail', params: { id: this.teamCategory.id } });
-                }).catch((exception) => {
-                    this.isLoading = false;
-
-                    this.createNotificationError({
-                        title: this.$t('tocafix-team-category.detail.errorTitle'),
-                        message: exception
-                    });
-                });
+        if (currentLanguageId !== systemLanguageId) {
+          Shopware.State.commit("context/setApiLanguageId", systemLanguageId);
         }
-    }
-});
+
+        this.$super("createdComponent");
+      },
+      getTeamCategory() {
+        this.teamCategory = this.teamCategoryRepository.create();
+      },
+
+      onClickSave() {
+        this.isLoading = true;
+
+        this.teamCategoryRepository
+          .save(this.teamCategory, Shopware.Context.api)
+          .then(() => {
+            this.isLoading = false;
+            this.$router.push({
+              name: "tocafix.team.category.detail",
+              params: { id: this.teamCategory.id },
+            });
+          })
+          .catch((exception) => {
+            this.isLoading = false;
+
+            let errorMessage = this.$tc(
+              "tocafix-team-category.detail.errorTitle",
+            );
+
+            if (exception.response?.data?.errors) {
+              errorMessage = exception.response.data.errors
+                .map((error) => error.detail)
+                .join(" ");
+            }
+
+            this.createNotificationError({
+              title: this.$tc("tocafix-team-category.detail.errorTitle"),
+              message: errorMessage,
+            });
+          });
+      },
+    },
+  },
+);

@@ -7,13 +7,9 @@
 
 namespace Swag\PayPal\Pos\Api\Service;
 
-use Psr\Log\LoggerInterface;
 use Shopware\Core\Content\Product\ProductCollection;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\Currency\CurrencyEntity;
-use Swag\PayPal\Pos\Api\Exception\PosConversionException;
 use Swag\PayPal\Pos\Api\Product;
-use Swag\PayPal\Pos\Api\Product\VariantOptionDefinitions\Definition;
 use Swag\PayPal\Pos\Api\Service\Converter\CategoryConverter;
 use Swag\PayPal\Pos\Api\Service\Converter\OptionGroupConverter;
 use Swag\PayPal\Pos\Api\Service\Converter\PresentationConverter;
@@ -23,21 +19,37 @@ use Swag\PayPal\Pos\Sync\Context\ProductContext;
 use Swag\PayPal\Pos\Sync\Product\Util\ProductGrouping;
 use Swag\PayPal\Pos\Sync\Product\Util\ProductGroupingCollection;
 
-#[Package('checkout')]
 class ProductConverter
 {
+    private UuidConverter $uuidConverter;
+
+    private CategoryConverter $categoryConverter;
+
+    private VariantConverter $variantConverter;
+
+    private OptionGroupConverter $optionGroupConverter;
+
+    private PresentationConverter $presentationConverter;
+
+    private MetadataGenerator $metadataGenerator;
+
     /**
      * @internal
      */
     public function __construct(
-        private readonly UuidConverter $uuidConverter,
-        private readonly CategoryConverter $categoryConverter,
-        private readonly VariantConverter $variantConverter,
-        private readonly OptionGroupConverter $optionGroupConverter,
-        private readonly PresentationConverter $presentationConverter,
-        private readonly MetadataGenerator $metadataGenerator,
-        private readonly LoggerInterface $logger,
+        UuidConverter $uuidConverter,
+        CategoryConverter $categoryConverter,
+        VariantConverter $variantConverter,
+        OptionGroupConverter $optionGroupConverter,
+        PresentationConverter $presentationConverter,
+        MetadataGenerator $metadataGenerator
     ) {
+        $this->uuidConverter = $uuidConverter;
+        $this->categoryConverter = $categoryConverter;
+        $this->variantConverter = $variantConverter;
+        $this->optionGroupConverter = $optionGroupConverter;
+        $this->presentationConverter = $presentationConverter;
+        $this->metadataGenerator = $metadataGenerator;
     }
 
     /**
@@ -49,21 +61,13 @@ class ProductConverter
         $groupingCollection->addProducts($shopwareProducts);
 
         foreach ($groupingCollection as $grouping) {
-            try {
-                $product = $this->convertProductGrouping($grouping, $currency, $productContext);
-                $grouping->setProduct($product);
-            } catch (PosConversionException $e) {
-                $groupingCollection->remove($grouping->getIdentifyingId());
-                $this->logger->warning($e, ['product' => $grouping->getIdentifyingEntity()]);
-            }
+            $product = $this->convertProductGrouping($grouping, $currency, $productContext);
+            $grouping->setProduct($product);
         }
 
         return $groupingCollection;
     }
 
-    /**
-     * @deprecated tag:v10.0.0 - will be private
-     */
     protected function convertProductGrouping(ProductGrouping $productGrouping, ?CurrencyEntity $currency, ProductContext $productContext): Product
     {
         $shopwareProduct = $productGrouping->getIdentifyingEntity();
@@ -79,7 +83,7 @@ class ProductConverter
             // no warning to produce, since it will also be added in VariantConverter
         }
 
-        $tax = $shopwareProduct->getCalculatedPrice()->getTaxRules()->first();
+        $tax = $shopwareProduct->getTax();
         if ($tax !== null) {
             $product->setVatPercentage($tax->getTaxRate());
         }
@@ -97,41 +101,26 @@ class ProductConverter
             $product->setPresentation($presentation);
         }
 
+        $configuratorSettings = $shopwareProduct->getConfiguratorSettings();
+        if ($configuratorSettings && $configuratorSettings->count()) {
+            $product->setVariantOptionDefinitions($this->optionGroupConverter->convert($configuratorSettings->getGroupedOptions()));
+        }
+
         foreach ($productGrouping->getVariantEntities() as $shopwareVariant) {
             $product->addVariant($this->variantConverter->convert($shopwareVariant, $currency, $productContext));
         }
 
-        if (\count($product->getVariants()) > 1) {
-            $configuratorSettings = $shopwareProduct->getConfiguratorSettings();
-            if ($configuratorSettings && $configuratorSettings->count()) {
-                $product->setVariantOptionDefinitions($this->optionGroupConverter->convert($configuratorSettings->getGroupedOptions()));
-            } else {
-                $product->setVariantOptionDefinitions($this->optionGroupConverter->convertFromVariants(...$product->getVariants()));
-            }
+        if ($product->getVariantOptionDefinitions() === null
+            && \count($product->getVariants()) > 1) {
+            $product->setVariantOptionDefinitions($this->optionGroupConverter->convertFromVariants(...$product->getVariants()));
         }
 
         if (\count($product->getVariants()) === 0) {
             $product->addVariant($this->variantConverter->convert($shopwareProduct, $currency, $productContext));
         }
 
-        if ($this->hasInvalidVariants($product)) {
-            throw new PosConversionException('product', 'Count of variants does not match configurator options');
-        }
-
         $product->setMetadata($this->metadataGenerator->generate());
 
         return $product;
-    }
-
-    private function hasInvalidVariants(Product $product): bool
-    {
-        $validVariantCount = 1;
-        /** @var Definition[] $definitions */
-        $definitions = $product->getVariantOptionDefinitions()?->getDefinitions() ?? [];
-        foreach ($definitions as $definition) {
-            $validVariantCount *= \count($definition->getProperties());
-        }
-
-        return $validVariantCount !== \count($product->getVariants());
     }
 }

@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Installment\Banner;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Struct\Struct;
 
-#[Package('checkout')]
 class BannerData extends Struct
 {
     protected string $clientId;
@@ -18,10 +16,6 @@ class BannerData extends Struct
     protected float $amount;
 
     protected string $currency;
-
-    protected string $partnerAttributionId;
-
-    protected string $merchantPayerId;
 
     protected string $layout = 'text';
 
@@ -33,48 +27,33 @@ class BannerData extends Struct
 
     protected string $textColor = 'black';
 
-    protected string $paymentMethodId;
+    private string $paymentMethodId;
 
-    protected bool $footerEnabled;
-
-    protected bool $cartEnabled;
-
-    protected bool $offCanvasCartEnabled;
-
-    protected bool $loginPageEnabled;
-
-    protected bool $detailPageEnabled;
-
-    protected ?string $crossBorderBuyerCountry;
+    public function __construct(
+        string $paymentMethodId,
+        string $clientId,
+        float $amount,
+        string $currency,
+        string $layout = 'text',
+        string $color = 'blue',
+        string $ratio = '8x1',
+        string $logoType = 'primary',
+        string $textColor = 'black'
+    ) {
+        $this->paymentMethodId = $paymentMethodId;
+        $this->clientId = $clientId;
+        $this->amount = $amount;
+        $this->currency = $currency;
+        $this->layout = $layout;
+        $this->color = $color;
+        $this->ratio = $ratio;
+        $this->logoType = $logoType;
+        $this->textColor = $textColor;
+    }
 
     public function getPaymentMethodId(): string
     {
         return $this->paymentMethodId;
-    }
-
-    public function setPaymentMethodId(string $paymentMethodId): void
-    {
-        $this->paymentMethodId = $paymentMethodId;
-    }
-
-    public function getMerchantPayerId(): string
-    {
-        return $this->merchantPayerId;
-    }
-
-    public function setMerchantPayerId(string $merchantPayerId): void
-    {
-        $this->merchantPayerId = $merchantPayerId;
-    }
-
-    public function getPartnerAttributionId(): string
-    {
-        return $this->partnerAttributionId;
-    }
-
-    public function setPartnerAttributionId(string $partnerAttributionId): void
-    {
-        $this->partnerAttributionId = $partnerAttributionId;
     }
 
     public function getClientId(): string
@@ -120,100 +99,5 @@ class BannerData extends Struct
     public function getTextColor(): string
     {
         return $this->textColor;
-    }
-
-    public function getFooterEnabled(): bool
-    {
-        return $this->footerEnabled;
-    }
-
-    public function getCartEnabled(): bool
-    {
-        return $this->cartEnabled;
-    }
-
-    public function getOffCanvasCartEnabled(): bool
-    {
-        return $this->offCanvasCartEnabled;
-    }
-
-    public function getLoginPageEnabled(): bool
-    {
-        return $this->loginPageEnabled;
-    }
-
-    public function getDetailPageEnabled(): bool
-    {
-        return $this->detailPageEnabled;
-    }
-
-    public function setAmount(float $amount): void
-    {
-        $this->amount = $amount;
-    }
-
-    public function setCurrency(string $currency): void
-    {
-        $this->currency = $currency;
-    }
-
-    public function setLayout(string $layout): void
-    {
-        $this->layout = $layout;
-    }
-
-    public function setColor(string $color): void
-    {
-        $this->color = $color;
-    }
-
-    public function setRatio(string $ratio): void
-    {
-        $this->ratio = $ratio;
-    }
-
-    public function setLogoType(string $logoType): void
-    {
-        $this->logoType = $logoType;
-    }
-
-    public function setTextColor(string $textColor): void
-    {
-        $this->textColor = $textColor;
-    }
-
-    public function setFooterEnabled(bool $footerEnabled): void
-    {
-        $this->footerEnabled = $footerEnabled;
-    }
-
-    public function setCartEnabled(bool $cartEnabled): void
-    {
-        $this->cartEnabled = $cartEnabled;
-    }
-
-    public function setOffCanvasCartEnabled(bool $offCanvasCartEnabled): void
-    {
-        $this->offCanvasCartEnabled = $offCanvasCartEnabled;
-    }
-
-    public function setLoginPageEnabled(bool $loginPageEnabled): void
-    {
-        $this->loginPageEnabled = $loginPageEnabled;
-    }
-
-    public function setDetailPageEnabled(bool $detailPageEnabled): void
-    {
-        $this->detailPageEnabled = $detailPageEnabled;
-    }
-
-    public function getCrossBorderBuyerCountry(): ?string
-    {
-        return $this->crossBorderBuyerCountry;
-    }
-
-    public function setCrossBorderBuyerCountry(?string $crossBorderBuyerCountry): void
-    {
-        $this->crossBorderBuyerCountry = $crossBorderBuyerCountry;
     }
 }

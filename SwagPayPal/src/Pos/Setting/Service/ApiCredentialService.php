@@ -11,7 +11,6 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Swag\PayPal\Pos\Api\Authentication\OAuthCredentials;
 use Swag\PayPal\Pos\Api\Service\ApiKeyDecoder;
@@ -19,7 +18,6 @@ use Swag\PayPal\Pos\Resource\TokenResource;
 use Swag\PayPal\Pos\Util\PosSalesChannelTrait;
 use Swag\PayPal\SwagPayPal;
 
-#[Package('checkout')]
 class ApiCredentialService
 {
     use PosSalesChannelTrait;

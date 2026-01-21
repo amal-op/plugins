@@ -7,19 +7,28 @@
 
 namespace Swag\PayPal\Storefront\Data\Service;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Swag\PayPal\Checkout\SalesChannel\MethodEligibilityRoute;
 use Swag\PayPal\Setting\Service\CredentialsUtilInterface;
+use Swag\PayPal\Setting\Settings;
 use Swag\PayPal\Storefront\Data\Struct\FundingEligibilityData;
 use Swag\PayPal\Util\LocaleCodeProvider;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\RouterInterface;
 
-#[Package('checkout')]
-class FundingEligibilityDataService extends AbstractScriptDataService
+class FundingEligibilityDataService
 {
+    private CredentialsUtilInterface $credentialsUtil;
+
+    private SystemConfigService $systemConfigService;
+
+    private LocaleCodeProvider $localeCodeProvider;
+
+    private RouterInterface $router;
+
+    private RequestStack $requestStack;
+
     /**
      * @internal
      */
@@ -27,19 +36,42 @@ class FundingEligibilityDataService extends AbstractScriptDataService
         CredentialsUtilInterface $credentialsUtil,
         SystemConfigService $systemConfigService,
         LocaleCodeProvider $localeCodeProvider,
-        private readonly RouterInterface $router,
-        private readonly RequestStack $requestStack
+        RouterInterface $router,
+        RequestStack $requestStack
     ) {
-        parent::__construct($localeCodeProvider, $systemConfigService, $credentialsUtil);
+        $this->credentialsUtil = $credentialsUtil;
+        $this->systemConfigService = $systemConfigService;
+        $this->localeCodeProvider = $localeCodeProvider;
+        $this->router = $router;
+        $this->requestStack = $requestStack;
     }
 
     public function buildData(SalesChannelContext $context): ?FundingEligibilityData
     {
-        return (new FundingEligibilityData())->assign([
-            ...parent::getBaseData($context),
-            'methodEligibilityUrl' => $this->router->generate('frontend.paypal.payment-method-eligibility'),
-            'filteredPaymentMethods' => $this->getFilteredPaymentMethods(),
-        ]);
+        return (new FundingEligibilityData())->assign(
+            [
+                'clientId' => $this->credentialsUtil->getClientId($context->getSalesChannelId()),
+                'merchantPayerId' => $this->credentialsUtil->getMerchantPayerId($context->getSalesChannelId()),
+                'languageIso' => $this->getButtonLanguage($context),
+                'currency' => $context->getCurrency()->getIsoCode(),
+                'intent' => \mb_strtolower($this->systemConfigService->getString(Settings::INTENT, $context->getSalesChannelId())),
+                'methodEligibilityUrl' => $this->router->generate('frontend.paypal.payment-method-eligibility'),
+                'filteredPaymentMethods' => $this->getFilteredPaymentMethods(),
+            ]
+        );
+    }
+
+    private function getButtonLanguage(SalesChannelContext $context): string
+    {
+        if ($settingsLocale = $this->systemConfigService->getString(Settings::SPB_BUTTON_LANGUAGE_ISO, $context->getSalesChannelId())) {
+            return $settingsLocale;
+        }
+
+        return \str_replace(
+            '-',
+            '_',
+            $this->localeCodeProvider->getLocaleCodeFromContext($context->getContext())
+        );
     }
 
     private function getFilteredPaymentMethods(): array

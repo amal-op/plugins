@@ -7,35 +7,47 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V1\Api\Common\Money;
-use Swag\PayPal\RestApi\V1\Api\Disputes\Common\ProductDetails;
-use Swag\PayPal\RestApi\V1\Api\Disputes\Common\ServiceDetails;
-use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties\Common\AgreedRefundDetails;
-use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties\Common\CancellationDetails;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties\CreditNotProcessed\AgreedRefundDetails;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties\CreditNotProcessed\CancellationDetails;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties\CreditNotProcessed\ExpectedRefund;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties\CreditNotProcessed\ProductDetails;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties\CreditNotProcessed\ServiceDetails;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_item_extensions_billing_dispute_properties_credit_not_processed')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_extensions_cretid_not_processed")
+ */
 class CreditNotProcessed extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $issueType;
 
-    #[OA\Property(ref: Money::class)]
-    protected Money $expectedRefund;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_money")
+     */
+    protected ExpectedRefund $expectedRefund;
 
-    #[OA\Property(ref: CancellationDetails::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_disputes_extensions_cancellation_details")
+     */
     protected CancellationDetails $cancellationDetails;
 
-    #[OA\Property(ref: ProductDetails::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_disputes_common_product_details")
+     */
     protected ProductDetails $productDetails;
 
-    #[OA\Property(ref: ServiceDetails::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_disputes_common_service_details")
+     */
     protected ServiceDetails $serviceDetails;
 
-    #[OA\Property(ref: AgreedRefundDetails::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_disputes_extensions_aggred_refund_details")
+     */
     protected AgreedRefundDetails $agreedRefundDetails;
 
     public function getIssueType(): string
@@ -48,12 +60,12 @@ class CreditNotProcessed extends PayPalApiStruct
         $this->issueType = $issueType;
     }
 
-    public function getExpectedRefund(): Money
+    public function getExpectedRefund(): ExpectedRefund
     {
         return $this->expectedRefund;
     }
 
-    public function setExpectedRefund(Money $expectedRefund): void
+    public function setExpectedRefund(ExpectedRefund $expectedRefund): void
     {
         $this->expectedRefund = $expectedRefund;
     }

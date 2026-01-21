@@ -8,12 +8,10 @@
 namespace Swag\PayPal\PaymentsApi\Builder\Util;
 
 use Shopware\Core\Checkout\Cart\Price\Struct\CalculatedPrice;
-use Shopware\Core\Framework\Log\Package;
-use Swag\PayPal\RestApi\V1\Api\Common\Amount;
-use Swag\PayPal\RestApi\V1\Api\Common\Details;
+use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\Amount;
+use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\Amount\Details;
 use Swag\PayPal\Util\PriceFormatter;
 
-#[Package('checkout')]
 class AmountProvider
 {
     private PriceFormatter $priceFormatter;
@@ -29,24 +27,24 @@ class AmountProvider
     public function createAmount(
         CalculatedPrice $transactionAmount,
         float $shippingCostsTotal,
-        string $currencyCode
+        string $currency
     ): Amount {
         $amount = new Amount();
-        $amount->setTotal($this->priceFormatter->formatPrice($transactionAmount->getTotalPrice(), $currencyCode));
-        $amount->setCurrency($currencyCode);
-        $amount->setDetails($this->getAmountDetails($shippingCostsTotal, $transactionAmount, $currencyCode));
+        $amount->setTotal($this->priceFormatter->formatPrice($transactionAmount->getTotalPrice()));
+        $amount->setCurrency($currency);
+        $amount->setDetails($this->getAmountDetails($shippingCostsTotal, $transactionAmount));
 
         return $amount;
     }
 
-    private function getAmountDetails(float $shippingCostsTotal, CalculatedPrice $orderTransactionAmount, string $currencyCode): Details
+    private function getAmountDetails(float $shippingCostsTotal, CalculatedPrice $orderTransactionAmount): Details
     {
         $amountDetails = new Details();
 
-        $amountDetails->setShipping($this->priceFormatter->formatPrice($shippingCostsTotal, $currencyCode));
+        $amountDetails->setShipping($this->priceFormatter->formatPrice($shippingCostsTotal));
         $totalAmount = $orderTransactionAmount->getTotalPrice();
-        $amountDetails->setSubtotal($this->priceFormatter->formatPrice($totalAmount - $shippingCostsTotal, $currencyCode));
-        $amountDetails->setTax($this->priceFormatter->formatPrice(0, $currencyCode));
+        $amountDetails->setSubtotal($this->priceFormatter->formatPrice($totalAmount - $shippingCostsTotal));
+        $amountDetails->setTax($this->priceFormatter->formatPrice(0));
 
         return $amountDetails;
     }

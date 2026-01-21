@@ -7,37 +7,35 @@
 
 namespace Swag\PayPal\PaymentsApi\Patch;
 
+use Shopware\Core\Checkout\Customer\CustomerEntity;
 use Shopware\Core\Checkout\Customer\Exception\AddressNotFoundException;
-use Shopware\Core\Checkout\Order\OrderEntity;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\RestApi\V1\Api\Patch;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList\ShippingAddress;
 
-#[Package('checkout')]
 class ShippingAddressPatchBuilder
 {
     /**
      * @throws AddressNotFoundException
      */
-    public function createShippingAddressPatch(OrderEntity $order): Patch
+    public function createShippingAddressPatch(CustomerEntity $customer): Patch
     {
-        $orderShippingAddress = $order->getDeliveries()?->first()?->getShippingOrderAddress();
-        if ($orderShippingAddress === null) {
-            throw new AddressNotFoundException($order->getDeliveries()?->first()?->getShippingOrderAddressId() ?? '');
+        $customerShippingAddress = $customer->getActiveShippingAddress();
+        if ($customerShippingAddress === null) {
+            throw new AddressNotFoundException($customer->getDefaultShippingAddressId());
         }
 
         $shippingAddress = new ShippingAddress();
 
-        $shippingAddress->setLine1($orderShippingAddress->getStreet());
+        $shippingAddress->setLine1($customerShippingAddress->getStreet());
 
-        $additionalAddressLine1 = $orderShippingAddress->getAdditionalAddressLine1();
+        $additionalAddressLine1 = $customerShippingAddress->getAdditionalAddressLine1();
         if ($additionalAddressLine1 !== null) {
             $shippingAddress->setLine2($additionalAddressLine1);
         }
 
-        $shippingAddress->setCity($orderShippingAddress->getCity());
+        $shippingAddress->setCity($customerShippingAddress->getCity());
 
-        $country = $orderShippingAddress->getCountry();
+        $country = $customerShippingAddress->getCountry();
         if ($country !== null) {
             $countryIso = $country->getIso();
             if ($countryIso !== null) {
@@ -45,14 +43,14 @@ class ShippingAddressPatchBuilder
             }
         }
 
-        $shippingAddress->setPostalCode($orderShippingAddress->getZipcode());
+        $shippingAddress->setPostalCode($customerShippingAddress->getZipcode() ?? '');
 
-        $state = $orderShippingAddress->getCountryState();
+        $state = $customerShippingAddress->getCountryState();
         if ($state !== null) {
             $shippingAddress->setState($state->getShortCode());
         }
 
-        $shippingAddress->setRecipientName(\sprintf('%s %s', $orderShippingAddress->getFirstName(), $orderShippingAddress->getLastName()));
+        $shippingAddress->setRecipientName(\sprintf('%s %s', $customerShippingAddress->getFirstName(), $customerShippingAddress->getLastName()));
         $shippingAddressArray = \json_decode((string) \json_encode($shippingAddress), true);
 
         $shippingAddressPatch = new Patch();

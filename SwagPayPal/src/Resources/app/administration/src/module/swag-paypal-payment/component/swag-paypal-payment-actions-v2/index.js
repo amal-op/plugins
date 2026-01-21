@@ -58,7 +58,6 @@ Component.register('swag-paypal-payment-actions-v2', {
 
         closeModal() {
             this.modalType = '';
-            this.$emit('reload-paypal-order');
         },
     },
 });

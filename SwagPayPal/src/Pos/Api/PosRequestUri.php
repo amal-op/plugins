@@ -7,9 +7,6 @@
 
 namespace Swag\PayPal\Pos\Api;
 
-use Shopware\Core\Framework\Log\Package;
-
-#[Package('checkout')]
 final class PosRequestUri
 {
     // Image

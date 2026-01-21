@@ -9,9 +9,7 @@ namespace Swag\PayPal\Pos\Run;
 
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
-use Shopware\Core\Framework\Log\Package;
 
-#[Package('checkout')]
 class LoggerFactory
 {
     public function createLogger(): Logger

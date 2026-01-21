@@ -1,7 +1,4 @@
 {
-    "locale": {
-      "en-AU": "English (AU)"
-    },
     "sw-privileges": {
         "permissions": {
             "parents": {
@@ -22,11 +19,6 @@
         "tooltip": "Go to the <a class=\"swag-paypal-go-to-settings-link\" href=\"#/swag/paypal/index\">PayPal extension settings →</a> and activate PayPal Commerce Platform to activate this payment method."
     },
     "swag-paypal": {
-        "errors": {
-            "UNKNOWN": "An unknown error occurred",
-            "SWAG_PAYPAL__API_INVALID_CREDENTIALS": "The API credentials are invalid",
-            "SWAG_PAYPAL__INVALID_API_CREDENTIALS": "The API credentials are invalid"
-        },
         "header": "PayPal",
         "saleschannelCard": {
             "button": {
@@ -34,37 +26,13 @@
                 "label": "Set PayPal as default"
             }
         },
-        "tabs": {
-          "general": "General",
-          "storefront": "Storefront presentation",
-          "advanced": "Advanced"
+        "shippingAlert": {
+            "title": "Package tracking available",
+            "message": "You can now provide package tracking if you select a default shipping carrier in your <a href=\"#/sw/settings/shipping/index\">shipping methods →</a>."
         },
         "general": {
             "mainMenuItemGeneral": "PayPal",
             "descriptionTextModule": "PayPal settings"
-        },
-        "webhook": {
-          "cardTitle": "Webhook",
-          "buttonRefresh": "Refresh webhook",
-          "refreshFailed": {
-            "title": "Failed to refresh webhook",
-            "errorUnknown": "Unknown error"
-          },
-          "status": {
-            "unknown": "Loading...",
-            "missing": "Not registered",
-            "invalid": "Registered, but possible domain mismatch",
-            "valid": "Registered"
-          },
-          "infoText": "The webhook is used for updating the status of a transaction asynchronously. Incorrectly registered webhooks, e.g. on a different or not publicly available server, may result in unconfirmed transactions, regardless whether the transaction has been processed by PayPal."
-        },
-        "cross-border": {
-          "cardTitle": "Pay Later cross-border messaging",
-          "infoText": "Pay Later messaging is a feature that allows you to display a Pay Later message in the language of the customer. This feature is only available for certain countries. {0}",
-          "warningText": "Please contact your PayPal representative to enable this feature for your account.",
-          "crossBorderBuyerCountryOverride" : "Localization",
-          "crossBorderBuyerCountryAuto": "Automatic determination",
-          "crossBorderMessagingEnable" : "Enable cross-border localization of Pay Later message"
         },
         "messageNotBlank": "This value should not be blank.",
         "settingForm": {
@@ -95,14 +63,9 @@
                 "switch": {
                     "label": "Active"
                 },
-                "domainAssociation": {
-                    "title": "Please make sure your domain is set correctly for Apple Pay to work properly. The domain association file is already present.",
-                    "link": "Open domains settings"
-                },
                 "paymentMethodText": "Payment methods",
                 "showCredentials": "Show credentials",
                 "appImageAlt": "PayPal",
-                "ratePayLabel": "by Ratepay",
                 "editDetail": "Edit details",
                 "startOnboardingButtonLabel": "Start onboarding",
                 "availabilityToolTip": {
@@ -110,6 +73,7 @@
                     "blikapmhandler": "BLIK is available for the following countries: Poland",
                     "boletobancarioapmhandler": "Boleto Bancário is available for the following countries: Brazil",
                     "epsapmhandler": "eps is available for the following countries: Austria",
+                    "giropayapmhandler": "Giropay is available for the following countries: Germany",
                     "idealapmhandler": "iDEAL is available for the following countries: Netherlands",
                     "multibancoapmhandler": "Multibanco is available for the following countries: Portugal",
                     "mybankapmhandler": "MyBank is available for the following countries: Italy",
@@ -118,6 +82,7 @@
                     "paylaterhandler": "Pay Later is available for the following countries: Australia, France, Germany, Italy, Spain, United Kingdom, United States",
                     "puihandler": "Pay upon invoice is available for the following countries: Germany",
                     "sepahandler": "SEPA Lastschrift is available for the following countries: Germany",
+                    "sofortapmhandler": "Sofort is available for the following countries: Austria, Belgium, Germany, Italy, Netherlands, Spain, United Kingdom",
                     "venmohandler": "Venmo is available for the following countries: United States",
                     "trustlyapmhandler": "Trustly is available for the following countries: Estonia, Finland, Netherlands, Sweden"
                 },
@@ -126,13 +91,11 @@
                     "limited": "Limited",
                     "pending": "Authorization pending",
                     "ineligible": "Ineligible",
-                    "inactive": "Onboarding needed",
-                    "mybank": "Limited"
+                    "inactive": "Onboarding needed"
                 },
                 "onboardingStatusTooltip": {
                     "ineligible": "PayPal informed us, that this payment method is currently ineligible for your account.",
-                    "limited": "PayPal informed us, that this payment method has some limitations for your account.",
-                    "mybank": "Merchants enabling MyBank after February 2023 will need manual approval by PayPal. Reach out to PayPal support for further information on this."
+                    "limited": "PayPal informed us, that this payment method has some limitations for your account."
                 },
                 "paymentMethodStatusChangedSuccess": {
                     "active": "Payment method \"{name}\" is now active.",
@@ -208,12 +171,12 @@
                     "label": "PayPal landing page",
                     "helpText": {
                         "login": "Login: The PayPal site displays a login screen as landing page.",
-                        "guest_checkout": "Guest Checkout: The PayPal site displays a form for payment information, the customer does not need to log in.",
+                        "billing": "Registration: The PayPal site displays a registration form as landing page.",
                         "no_preference": "No preference: PayPal decides which page is shown, depending on the previous interaction of the customer with PayPal."
                     },
                     "options": {
                         "login": "Login",
-                        "guest_checkout": "Guest Checkout",
+                        "billing": "Registration",
                         "no_preference": "No preference"
                     }
                 },
@@ -247,29 +210,25 @@
                 }
             },
             "express": {
-                "cardTitle": "Express Checkout Shortcut",
-                "cardSubtitle": "Express Checkouts increase the conversion rate in your shop and pose no financial risk to you as a merchant. It is recommended to keep them activated. ",
-                "alertMessage": "Double opt-in for guests is activated in one of your Sales Channels. This feature is not compatible with PayPal Express Shortcut buttons. Customers who sign up via the Express Checkout Shortcut buttons won't receive double opt-in verification emails.",
-                "alertMessagePhone": "Phone numbers are required for one of your Sales Channels. Please ensure that you have enabled the transmission for \"contact phone number\" in the PayPal account settings to avoid checkout issues. You can find this setting {url}.",
-                "alertMessagePhoneLink": "here",
+                "cardTitle": "PayPal Express Checkout",
                 "ecsDetailEnabled": {
-                    "label": "'PayPal Checkout' on detail page",
+                    "label": "'Pay Now' on detail page",
                     "helpText": "If this option is active, the Express Checkout button will be shown on each product detail page."
                 },
                 "ecsCartEnabled": {
-                    "label": "'PayPal Checkout' on cart",
+                    "label": "'Pay Now' on cart",
                     "helpText": "If this option is active, the Express Checkout button will be shown on the cart."
                 },
                 "ecsOffCanvasEnabled": {
-                    "label": "'PayPal Checkout' on off-canvas cart",
-                    "helpText": "If this option is active, the Express Checkout button will be shown on the off-canvas cart."
+                    "label": "'Pay Now' on Off-Canvas cart",
+                    "helpText": "If this option is active, the Express Checkout button will be shown on the Off-Canvas cart."
                 },
                 "ecsLoginEnabled": {
-                    "label": "'PayPal Checkout' on login page",
+                    "label": "'Pay Now' on login page",
                     "helpText": "If this option is active, the Express Checkout button will be shown on the login and register page."
                 },
                 "ecsListingEnabled": {
-                    "label": "'PayPal Checkout' on listing pages",
+                    "label": "'Pay Now' on listing pages",
                     "helpText": "If this option is active, the Express Checkout button will be shown on listing pages."
                 },
                 "ecsButtonColor": {
@@ -277,7 +236,7 @@
                     "options": {
                         "blue": "Blue",
                         "black": "Black",
-                        "gold": "Gold (recommended)",
+                        "gold": "Gold",
                         "silver": "Silver",
                         "white": "White"
                     }
@@ -285,9 +244,8 @@
                 "ecsButtonShape": {
                     "label": "Button shape",
                     "options": {
-                        "sharp": "Rectangular with sharp corners",
                         "pill": "Round",
-                        "rect": "Rectangular with rounded corners"
+                        "rect": "Rectangular"
                     }
                 },
                 "ecsSubmitCart": {
@@ -297,43 +255,19 @@
                 "ecsButtonLanguageIso": {
                     "label": "Button locale",
                     "helpText": "If not set, the sales channel language will be used."
-                },
-                "ecsShowPayLater": {
-                    "label": "Display 'Pay Later' button next to the 'PayPal Checkout' button",
-                    "helpText": "The 'Pay Later' button will be displayed on the same pages and in the same design as the 'PayPal Checkout' button."
                 }
             },
             "installment": {
-                "cardTitle": "'Pay Later' banner",
-                "cardSubtitle": "Banners increase the conversion rate in your shop and pose no financial risk to you as a merchant. It is recommended to keep them activated.",
+                "cardTitle": "Installments",
                 "installmentBannerEnabled": {
-                    "detailPage": {
-                      "label": "'Pay Later' banner on detail page",
-                      "helpText": "If this option is active, the 'Pay Later' banner will be shown on each product detail page."
-                    },
-                    "cart": {
-                      "label": "'Pay Later' banner on cart",
-                      "helpText": "If this option is active, the 'Pay Later' banner will be shown on the cart."
-                    },
-                    "offCanvasCart": {
-                      "label": "'Pay Later' banner on off-canvas cart",
-                      "helpText": "If this option is active, the 'Pay Later' banner will be shown on the off-canvas cart."
-                    },
-                    "loginPage": {
-                      "label": "'Pay Later' banner on login page",
-                      "helpText": "If this option is active, the 'Pay Later' banner will be shown on the login and register page."
-                    },
-                    "footer": {
-                      "label": "'Pay Later' banner on footer",
-                      "helpText": "If this option is active, the 'Pay Later' banner will be shown on the footer."
-                    }
+                    "label": "Enable installment banner"
                 }
             },
             "acdc": {
                 "cardTitle": "Credit- or debit card",
                 "acdcForce3DS": {
-                    "label": "Block payments from non-3DS countries",
-                    "helpText": "PayPal checks whether 3DS (Strong Customer Authentication) is required based on the credit or debit card presented. Setting this option will reject payment attempts without a 3DS check."
+                    "label": "Execute transactions with 3D Secure only",
+                    "helpText": "Transaction will not be accepted, if 3D Secure is unavailable."
                 }
             },
             "pui": {
@@ -344,7 +278,7 @@
                 }
             },
             "spb": {
-                "cardTitle": "Smart Payment Buttons",
+                "cardTitle": "PayPal Checkout with Smart Payment Buttons",
                 "spbCheckoutEnabled": {
                     "label": "Enable Smart Payment Buttons"
                 },
@@ -357,7 +291,7 @@
                     "helpText": "Alternative payment methods are credit- and debit cards and more."
                 },
                 "spbShowPayLater": {
-                    "label": "Display 'Pay Later' button next to PayPal button"
+                    "label": "Display Pay Later as separate button"
                 }
             },
             "plus": {
@@ -372,25 +306,6 @@
                     "inactive": "Avoid displaying duplicate payment methods and deactivate PayPal PLUS. <a href=\"https://www.shopware.com/en/news/paypal-launches-new-product/?utm_source=product&utm_medium=sw6-onprem&utm_campaign=paypal-checkout&utm_content=link-en-blog\" target=\"_blank\">More information</a>"
                 }
             },
-            "vaulting": {
-              "cardTitle": "Vaulting",
-              "description": {
-                "title": "One-time Paypal checkout",
-                "text": "Vaulting a PayPal account will allow you to charge the account in the future without requiring your customer to be present during the transaction or re-authenticate with PayPal when they are present during the transaction."
-              },
-              "enableWallet": {
-                "label": "Enable Vaulting for PayPal payments"
-              },
-              "enableACDC": {
-                "label": "Enable Vaulting for credit and debit cards"
-              },
-              "enableVenmo": {
-                "label": "Enable Vaulting for Venmo payments"
-              },
-              "activateButton": {
-                "label": "Activate Vaulting"
-              }
-            },
             "locale-field": {
                 "infobox": {
                     "text": "To see a list of valid locale codes click ",
@@ -400,14 +315,9 @@
                     "detail": "The locale code you provided doesn't match the format required by PayPal. A valid format is \"en_GB\"."
                 }
             },
-            "environment": {
-              "title": "Environment",
-              "label": "Local development environment",
-              "info": "PayPal will send order status updates to the shop via webhooks, and will also request cart recalculations when customers make changes in the PayPal Express Checkout UI. If the shop is not publicly accessible (e.g. if it is in a development/staging environment, or if it requires authentication), you can mark this instance as a \"local environment\" to prevent connection errors.\nPlease note that any webhook listener will be deregistered when saving."
-            },
             "messageSaveSuccess": "The PayPal settings have been saved.",
             "messageTestSuccess": "The API credentials have been validated.",
-            "messageTestError": "The API credentials could not be validated",
+            "messageTestError": "The API credentials could not be validated.",
             "messageWebhookCreated": "The webhook has been registered.",
             "messageWebhookUpdated": "The webhook has been updated.",
             "messageWebhookError": "The webhook could not be saved. The following errors occurred:"

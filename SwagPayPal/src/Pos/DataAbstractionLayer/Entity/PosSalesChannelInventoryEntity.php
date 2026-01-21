@@ -8,9 +8,7 @@
 namespace Swag\PayPal\Pos\DataAbstractionLayer\Entity;
 
 use Shopware\Core\Framework\DataAbstractionLayer\Entity;
-use Shopware\Core\Framework\Log\Package;
 
-#[Package('checkout')]
 class PosSalesChannelInventoryEntity extends Entity
 {
     protected string $salesChannelId;

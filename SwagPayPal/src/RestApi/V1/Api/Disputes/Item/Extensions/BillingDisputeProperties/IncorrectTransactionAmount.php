@@ -7,27 +7,31 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V1\Api\Common\Money;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\Extensions\BillingDisputeProperties\IncorrectTransactionAmount\CorrectTransactionAmount;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_item_extensions_billing_dispute_properties_incorrect_transaction_amount')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_extensions_incorrect_transaction_amount")
+ */
 class IncorrectTransactionAmount extends PayPalApiStruct
 {
-    #[OA\Property(ref: Money::class)]
-    protected Money $correctTransactionAmount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_money")
+     */
+    protected CorrectTransactionAmount $correctTransactionAmount;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $correctTransactionTime;
 
-    public function getCorrectTransactionAmount(): Money
+    public function getCorrectTransactionAmount(): CorrectTransactionAmount
     {
         return $this->correctTransactionAmount;
     }
 
-    public function setCorrectTransactionAmount(Money $correctTransactionAmount): void
+    public function setCorrectTransactionAmount(CorrectTransactionAmount $correctTransactionAmount): void
     {
         $this->correctTransactionAmount = $correctTransactionAmount;
     }

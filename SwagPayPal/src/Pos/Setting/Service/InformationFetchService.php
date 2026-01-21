@@ -12,7 +12,6 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\ContainsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\Country\CountryEntity;
 use Shopware\Core\System\Currency\CurrencyEntity;
 use Shopware\Core\System\Language\LanguageEntity;
@@ -23,7 +22,6 @@ use Swag\PayPal\Pos\Setting\Exception\CurrencyNotFoundException;
 use Swag\PayPal\Pos\Setting\Exception\PosInvalidApiCredentialsException;
 use Swag\PayPal\Pos\Setting\Struct\AdditionalInformation;
 
-#[Package('checkout')]
 class InformationFetchService
 {
     private UserResource $userResource;

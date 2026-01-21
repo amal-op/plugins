@@ -7,12 +7,6 @@
 
 namespace Swag\PayPal\Setting\Service;
 
-use Shopware\Core\Framework\Log\Package;
-
-/**
- * @deprecated tag:v10.0.0 - interface will be removed, use `ApiCredentialService` instead
- */
-#[Package('checkout')]
 interface ApiCredentialServiceInterface
 {
     public function testApiCredentials(string $clientId, string $clientSecret, bool $sandboxActive): bool;

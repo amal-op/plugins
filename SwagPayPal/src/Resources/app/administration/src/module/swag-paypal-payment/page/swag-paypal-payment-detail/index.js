@@ -1,9 +1,9 @@
 import template from './swag-paypal-payment-detail.html.twig';
 import './swag-paypal-payment-detail.scss';
 
-const { Component, Filter } = Shopware;
+const { Component, Filter, Context } = Shopware;
 const { isEmpty } = Shopware.Utils.types;
-const { mapState } = Component.getComponentHelper();
+const Criteria = Shopware.Data.Criteria;
 
 Component.register('swag-paypal-payment-detail', {
     template,
@@ -14,90 +14,124 @@ Component.register('swag-paypal-payment-detail', {
         'repositoryFactory',
     ],
 
-    mixins: [
-        Shopware.Mixin.getByName('notification'),
-    ],
-
-    props: {
-        isLoading: {
-            type: Boolean,
-            required: true,
-        },
-    },
+    mixins: ['notification'],
 
     data() {
         return {
-            loading: false,
-            paypalOrder: null,
-            paymentResource: null,
+            order: {},
+            orderTransaction: {},
+            paypalOrder: {},
+            paymentResource: {},
+            isLoading: true,
+            orderTransactionState: null,
         };
     },
 
     computed: {
-        ...mapState('swOrderDetail', ['order']),
-
-        orderTransaction() {
-            return this.order.transactions.last();
-        },
-
         dateFilter() {
             return Filter.getByName('date');
         },
 
         stateFailedCancelled() {
-            return this.orderTransaction.stateMachineState.technicalName in ['cancelled', 'failed'];
+            return this.orderTransactionState === 'failed' || this.orderTransactionState === 'cancelled';
         },
 
-        hasPayPalDetails() {
-            return !!this.paypalOrder || !!this.paymentResource;
+        showCanceledPaymentError() {
+            return this.isLoading === false
+                && this.showPayPalPayment === false
+                && this.showPayPalOrder === false
+                && this.stateFailedCancelled === true;
+        },
+
+        showSandboxLiveError() {
+            return this.isLoading === false
+                && this.showPayPalPayment === false
+                && this.showPayPalOrder === false
+                && this.stateFailedCancelled === false;
+        },
+
+        showGeneralError() {
+            return this.isLoading === false
+                && this.showPayPalPayment === false
+                && this.showPayPalOrder === false
+                && this.showCanceledPaymentError === false
+                && this.showSandboxLiveError === false;
+        },
+
+        showPayPalPayment() {
+            return isEmpty(this.paymentResource) === false;
+        },
+
+        showPayPalOrder() {
+            return isEmpty(this.paypalOrder) === false;
         },
     },
 
     watch: {
-        order: {
-            immediate: true,
-            handler() {
-                this.paypalOrder = null;
-                this.paymentResource = null;
+        '$route'() {
+            this.resetDataAttributes();
+            this.createdComponent();
+        },
 
-                this.fetchPayPalDetails();
-            },
+        'order.orderNumber'() {
+            this.emitIdentifier();
+        },
+
+        isLoading(value) {
+            this.$emit('loading-change', value);
         },
     },
 
+    created() {
+        this.createdComponent();
+    },
+
     methods: {
-        async fetchPayPalDetails() {
-            if (!this.order || isEmpty(this.orderTransaction.customFields)) {
-                return;
-            }
+        createdComponent() {
+            this.$emit('loading-change', true);
+            const orderId = this.$route.params.id;
+            const orderRepository = this.repositoryFactory.create('order');
+            const orderCriteria = new Criteria(1, 1);
+            orderCriteria.addAssociation('transactions.stateMachineState');
+            orderCriteria
+                .getAssociation('transactions')
+                .addSorting(Criteria.sort('createdAt', 'DESC'))
+                .setLimit(1);
 
-            this.loading = true;
+            orderRepository.get(orderId, Context.api, orderCriteria).then((order) => {
+                this.order = order;
+                this.orderTransaction = order.transactions.last();
+                this.orderTransactionState = this.orderTransaction.stateMachineState.technicalName;
 
-            const paypalPaymentId = this.orderTransaction.customFields.swag_paypal_transaction_id;
-            if (paypalPaymentId) {
-                await this.handlePayPalPayment(paypalPaymentId);
-            }
+                if (this.orderTransaction.customFields === null) {
+                    this.isLoading = false;
 
-            const paypalOrderId = this.orderTransaction.customFields.swag_paypal_order_id;
-            if (paypalOrderId) {
-                await this.handlePayPalOrder(paypalOrderId);
-            }
+                    return;
+                }
+
+                const paypalPaymentId = this.orderTransaction.customFields.swag_paypal_transaction_id;
+                if (paypalPaymentId) {
+                    this.handlePayPalPayment(paypalPaymentId);
+                }
+                const paypalOrderId = this.orderTransaction.customFields.swag_paypal_order_id;
+                if (paypalOrderId) {
+                    this.handlePayPalOrder(paypalOrderId);
+                }
+            });
         },
 
         handlePayPalOrder(paypalOrderId) {
-            return this.SwagPayPalOrderService.getOrderDetails(this.orderTransaction.id, paypalOrderId)
-                .then((paypalOrder) => {
-                    this.paypalOrder = paypalOrder;
-                    this.loading = false;
-                }).catch(this.handleError);
+            this.SwagPayPalOrderService.getOrderDetails(this.orderTransaction.id, paypalOrderId).then((paypalOrder) => {
+                this.paypalOrder = paypalOrder;
+                this.isLoading = false;
+            }).catch(this.handleError);
         },
 
         handlePayPalPayment(paypalPaymentId) {
-            return this.SwagPayPalPaymentService.getPaymentDetails(this.order.id, paypalPaymentId)
-                .then((payment) => {
-                    this.paymentResource = payment;
-                    this.loading = false;
-                }).catch(this.handleError);
+            this.SwagPayPalPaymentService.getPaymentDetails(this.order.id, paypalPaymentId).then((payment) => {
+                this.paymentResource = payment;
+                this.isLoading = false;
+            }).catch(this.handleError);
         },
 
         handleError(errorResponse) {
@@ -113,8 +147,18 @@ Component.register('swag-paypal-payment-detail', {
                     autoClose: false,
                 });
             } finally {
-                this.loading = false;
+                this.isLoading = false;
             }
+        },
+
+        emitIdentifier() {
+            const orderNumber = this.order !== null ? this.order.orderNumber : '';
+            this.$emit('identifier-change', orderNumber);
+        },
+
+        resetDataAttributes() {
+            this.isLoading = true;
+            this.paypalOrder = {};
         },
     },
 });

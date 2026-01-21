@@ -1,0 +1,30 @@
+
+.cms-element-cmsbundle-cta{ 
+    .cta-element__foreground{
+        
+        .cta-element__background{
+            z-index: -1;
+            left: 0;
+            top: 0;
+        }
+    }
+    
+    
+}
+.cms-element-cmsbundle-cta-block{
+    .cta-element__foreground{
+        padding: 15px;
+    }
+    
+}
+.background-wrap{
+    img{
+        object-fit: cover;
+    }
+}
+
+.cms-block-cmsbundle-section{
+    .section__background{
+        z-index: -2;
+    }
+}

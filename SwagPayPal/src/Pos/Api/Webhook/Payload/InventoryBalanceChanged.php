@@ -7,11 +7,9 @@
 
 namespace Swag\PayPal\Pos\Api\Webhook\Payload;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Webhook\Payload\InventoryBalanceChanged\Balance;
 use Swag\PayPal\Pos\Api\Webhook\Payload\InventoryBalanceChanged\Updated;
 
-#[Package('checkout')]
 class InventoryBalanceChanged extends AbstractPayload
 {
     /**

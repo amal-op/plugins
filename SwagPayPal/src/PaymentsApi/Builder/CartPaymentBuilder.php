@@ -13,7 +13,6 @@ use Shopware\Core\Checkout\Cart\LineItem\LineItem;
 use Shopware\Core\Checkout\Cart\LineItem\LineItemCollection;
 use Shopware\Core\Checkout\Cart\Price\Struct\CalculatedPrice;
 use Shopware\Core\Checkout\Payment\Exception\InvalidTransactionException;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Swag\PayPal\PaymentsApi\Builder\Event\PayPalV1ItemFromCartEvent;
@@ -23,14 +22,11 @@ use Swag\PayPal\RestApi\V1\Api\Payment;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList\Item;
-use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList\ItemCollection;
-use Swag\PayPal\RestApi\V1\Api\Payment\TransactionCollection;
 use Swag\PayPal\Setting\Settings;
 use Swag\PayPal\Util\LocaleCodeProvider;
 use Swag\PayPal\Util\PriceFormatter;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-#[Package('checkout')]
 class CartPaymentBuilder extends AbstractPaymentBuilder implements CartPaymentBuilderInterface
 {
     /**
@@ -64,7 +60,7 @@ class CartPaymentBuilder extends AbstractPaymentBuilder implements CartPaymentBu
         $requestPayment = new Payment();
         $requestPayment->setPayer($payer);
         $requestPayment->setRedirectUrls($redirectUrls);
-        $requestPayment->setTransactions(new TransactionCollection([$transaction]));
+        $requestPayment->setTransactions([$transaction]);
         $requestPayment->setApplicationContext($applicationContext);
 
         return $requestPayment;
@@ -83,16 +79,16 @@ class CartPaymentBuilder extends AbstractPaymentBuilder implements CartPaymentBu
             throw new InvalidTransactionException('');
         }
         $transactionAmount = $cartTransaction->getAmount();
-        $currencyCode = $salesChannelContext->getCurrency()->getIsoCode();
+        $currency = $salesChannelContext->getCurrency()->getIsoCode();
 
         $transaction = new Transaction();
         $shippingCostsTotal = $cart->getShippingCosts()->getTotalPrice();
-        $amount = (new AmountProvider($this->priceFormatter))->createAmount($transactionAmount, $shippingCostsTotal, $currencyCode);
+        $amount = (new AmountProvider($this->priceFormatter))->createAmount($transactionAmount, $shippingCostsTotal, $currency);
         $transaction->setAmount($amount);
 
         $itemListValid = true;
         if ($this->systemConfigService->getBool(Settings::SUBMIT_CART, $salesChannelContext->getSalesChannelId())) {
-            $this->setItemList($transaction, $cart->getLineItems(), $currencyCode);
+            $this->setItemList($transaction, $cart->getLineItems(), $currency);
             $itemListValid = TransactionValidator::validateItemList([$transaction]);
         }
 
@@ -110,18 +106,21 @@ class CartPaymentBuilder extends AbstractPaymentBuilder implements CartPaymentBu
     ): void {
         $items = $this->getItemList($lineItemCollection, $currency);
 
-        if ($items->count() > 0) {
+        if (!empty($items)) {
             $itemList = new ItemList();
             $itemList->setItems($items);
             $transaction->setItemList($itemList);
         }
     }
 
+    /**
+     * @return Item[]
+     */
     private function getItemList(
         LineItemCollection $lineItemCollection,
         string $currency
-    ): ItemCollection {
-        $items = new ItemCollection();
+    ): array {
+        $items = [];
 
         foreach ($lineItemCollection->getElements() as $lineItem) {
             $price = $lineItem->getPrice();
@@ -130,7 +129,7 @@ class CartPaymentBuilder extends AbstractPaymentBuilder implements CartPaymentBu
                 continue;
             }
 
-            $items->add($this->createItemFromLineItem($lineItem, $currency, $price));
+            $items[] = $this->createItemFromLineItem($lineItem, $currency, $price);
         }
 
         return $items;
@@ -138,17 +137,17 @@ class CartPaymentBuilder extends AbstractPaymentBuilder implements CartPaymentBu
 
     private function createItemFromLineItem(
         LineItem $lineItem,
-        string $currencyCode,
+        string $currency,
         CalculatedPrice $price
     ): Item {
         $item = new Item();
         $this->setName($lineItem, $item);
         $this->setSku($lineItem, $item);
 
-        $item->setCurrency($currencyCode);
+        $item->setCurrency($currency);
         $item->setQuantity($lineItem->getQuantity());
-        $item->setPrice($this->priceFormatter->formatPrice($price->getUnitPrice(), $currencyCode));
-        $item->setTax($this->priceFormatter->formatPrice(0, $currencyCode));
+        $item->setPrice($this->priceFormatter->formatPrice($price->getUnitPrice()));
+        $item->setTax($this->priceFormatter->formatPrice(0));
 
         $event = new PayPalV1ItemFromCartEvent($item, $lineItem);
         $this->eventDispatcher->dispatch($event);

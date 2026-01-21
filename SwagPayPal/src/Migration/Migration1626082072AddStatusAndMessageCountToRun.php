@@ -8,14 +8,12 @@
 namespace Swag\PayPal\Migration;
 
 use Doctrine\DBAL\Connection;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Migration\MigrationStep;
 use Swag\PayPal\Pos\DataAbstractionLayer\Entity\PosSalesChannelRunDefinition;
 
 /**
  * @internal
  */
-#[Package('checkout')]
 class Migration1626082072AddStatusAndMessageCountToRun extends MigrationStep
 {
     public function getCreationTimestamp(): int
@@ -25,11 +23,6 @@ class Migration1626082072AddStatusAndMessageCountToRun extends MigrationStep
 
     public function update(Connection $connection): void
     {
-        if ($this->columnExists($connection, PosSalesChannelRunDefinition::ENTITY_NAME, 'status')
-         || $this->columnExists($connection, PosSalesChannelRunDefinition::ENTITY_NAME, 'message_count')) {
-            return;
-        }
-
         $sql = <<<SQL
             ALTER TABLE `#table#`
                 ADD `status` VARCHAR(255) DEFAULT '#default_status#' NOT NULL,

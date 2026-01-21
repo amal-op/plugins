@@ -7,13 +7,14 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Plan;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\Plan\BillingCycle\Frequency;
 use Swag\PayPal\RestApi\V1\Api\Plan\BillingCycle\PricingScheme;
 
 /**
+ * @OA\Schema(schema="swag_paypal_v1_plan_billing_cycle")
+ *
  * @codeCoverageIgnore
  *
  * @experimental
@@ -21,23 +22,31 @@ use Swag\PayPal\RestApi\V1\Api\Plan\BillingCycle\PricingScheme;
  * This class is experimental and not officially supported.
  * It is currently not used within the plugin itself. Use with caution.
  */
-#[OA\Schema(schema: 'swag_paypal_v1_plan_billing_cycle')]
-#[Package('checkout')]
 class BillingCycle extends PayPalApiStruct
 {
-    #[OA\Property(ref: Frequency::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_plan_frequency")
+     */
     protected Frequency $frequency;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $tenureType;
 
-    #[OA\Property(type: 'integer')]
+    /**
+     * @OA\Property(type="integer")
+     */
     protected int $sequence;
 
-    #[OA\Property(ref: PricingScheme::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_plan_pricing_scheme")
+     */
     protected PricingScheme $pricingScheme;
 
-    #[OA\Property(type: 'integer')]
+    /**
+     * @OA\Property(type="integer")
+     */
     protected int $totalCycles;
 
     public function getFrequency(): Frequency

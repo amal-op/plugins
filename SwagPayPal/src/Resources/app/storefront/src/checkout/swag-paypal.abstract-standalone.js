@@ -4,17 +4,87 @@ import HttpClient from 'src/service/http-client.service';
 import PageLoadingIndicatorUtil from 'src/utility/loading-indicator/page-loading-indicator.util';
 import SwagPaypalAbstractButtons from '../swag-paypal.abstract-buttons';
 import SwagPayPalScriptLoading from '../swag-paypal.script-loading';
-import ElementLoadingIndicatorUtil from 'src/utility/loading-indicator/element-loading-indicator.util';
 
 export default class SwagPaypalAbstractStandalone extends SwagPaypalAbstractButtons {
-    /**
-     * @deprecated tag:v10.0.0 - will be removed without replacement
-     */
     static scriptLoading = new SwagPayPalScriptLoading();
-    static product = 'spb';
 
     static options = {
-        ...super.options,
+        /**
+         * This option holds the client id specified in the settings
+         *
+         * @type string
+         */
+        clientId: '',
+
+        /**
+         * This option holds the merchant id specified in the settings
+         *
+         * @type string
+         */
+        merchantPayerId: '',
+
+        /**
+         * This option holds the client token required for field rendering
+         *
+         * @type string
+         */
+        clientToken: '',
+
+        /**
+         * This options specifies the currency of the PayPal button
+         *
+         * @type string
+         */
+        currency: 'EUR',
+
+        /**
+         * This options defines the payment intent
+         *
+         * @type string
+         */
+        intent: 'capture',
+
+        /**
+         * This option toggles the PayNow/Login text at PayPal
+         *
+         * @type boolean
+         */
+        commit: true,
+
+        /**
+         * This option specifies the language of the PayPal button
+         *
+         * @type string
+         */
+        languageIso: 'en_GB',
+
+        /**
+         * This option specifies the PayPal button color
+         *
+         * @type string
+         */
+        buttonColor: 'black',
+
+        /**
+         * This option specifies the PayPal button shape
+         *
+         * @type string
+         */
+        buttonShape: 'rect',
+
+        /**
+         * This option specifies the PayPal button size
+         *
+         * @type string
+         */
+        buttonSize: 'small',
+
+        /**
+         * URL to create a new PayPal order
+         *
+         * @type string
+         */
+        createOrderUrl: '',
 
         /**
          * Is set, if the plugin is used on the order edit page
@@ -26,16 +96,12 @@ export default class SwagPaypalAbstractStandalone extends SwagPaypalAbstractButt
         /**
          * URL to the after order edit page, as the payment has failed
          *
-         * @deprecated tag:v10.0.0 - Will be removed, use {@link handleErrorUrl} instead
-         *
          * @type string|null
          */
         accountOrderEditFailedUrl: '',
 
         /**
          * URL to the after order edit page, as the user has cancelled
-         *
-         * @deprecated tag:v10.0.0 - Will be removed, use {@link handleErrorUrl} instead
          *
          * @type string|null
          */
@@ -62,20 +128,6 @@ export default class SwagPaypalAbstractStandalone extends SwagPaypalAbstractButt
          * @type boolean
          */
         preventErrorReload: false,
-
-        /**
-         * The brand name of the shop
-         *
-         * @type string
-         */
-        brandName: '',
-
-        /**
-         * Indicates whether the PayPal button is rendered within a checkout context.
-         * 
-         * @type {boolean}
-         */
-        isCheckout: true,
     };
 
     init() {
@@ -85,22 +137,14 @@ export default class SwagPaypalAbstractStandalone extends SwagPaypalAbstractButt
             DomAccess.querySelector(this.confirmOrderForm, this.options.confirmOrderButtonSelector).disabled = 'disabled';
 
             return;
-        } else {
-            ElementLoadingIndicatorUtil.create(this.el);
         }
 
         DomAccess.querySelector(this.confirmOrderForm, this.options.confirmOrderButtonSelector).classList.add('d-none');
 
         this._client = new HttpClient();
 
-        this.createScript(async (paypal) => {
-            // catch sync and async errors - `.catch()` or similar aren't able to do so
-            try {
-                await this.render(paypal);
-            } catch (error) {
-                this.handleError(this.SCRIPT_ERROR, true, error);
-            }
-            ElementLoadingIndicatorUtil.remove(this.el);
+        this.createScript((paypal) => {
+            this.render(paypal);
         });
     }
 
@@ -108,7 +152,7 @@ export default class SwagPaypalAbstractStandalone extends SwagPaypalAbstractButt
         const button = paypal.Buttons(this.getButtonConfig(this.getFundingSource(paypal)));
 
         if (!button.isEligible()) {
-            return void this.handleError(this.NOT_ELIGIBLE, true, `Funding for PayPal button is not eligible (${this.getFundingSource(paypal)})`);
+            this.createError(`Funding for PayPal button is not eligible (${this.getFundingSource(paypal)})`);
         }
 
         button.render(this.el);
@@ -129,13 +173,13 @@ export default class SwagPaypalAbstractStandalone extends SwagPaypalAbstractButt
                 size: this.options.buttonSize,
                 shape: this.options.buttonShape,
                 color: this.options.buttonColor,
-                label: 'pay',
+                label: 'checkout',
             },
 
             /**
              * Will be called if when the payment process starts
              */
-            createOrder: this.createOrder.bind(this, this.constructor.product),
+            createOrder: this.createOrder.bind(this),
 
             /**
              * Will be called if the payment process is approved by paypal
@@ -160,9 +204,9 @@ export default class SwagPaypalAbstractStandalone extends SwagPaypalAbstractButt
     }
 
     /**
-     * @param {String} product
+     * @param product String
      *
-     * @return {Promise<String>}
+     * @return {Promise}
      */
     createOrder(product) {
         const formData = FormSerializeUtil.serialize(this.confirmOrderForm);
@@ -193,38 +237,31 @@ export default class SwagPaypalAbstractStandalone extends SwagPaypalAbstractButt
         });
     }
 
-    /**
-     * @param {Object} data
-     * @param {String} data.orderID PayPal order id
-     */
     onApprove(data) {
-        const existingInput = this.confirmOrderForm.querySelector('[name="paypalOrderId"]');
-        if (existingInput) {
-            return;
-        }
-
         PageLoadingIndicatorUtil.create();
 
         const input = document.createElement('input');
         input.setAttribute('type', 'hidden');
         input.setAttribute('name', 'paypalOrderId');
-        input.setAttribute('value', data.orderID ?? data.orderId);
+        input.setAttribute('value', Object.prototype.hasOwnProperty.call(data,'orderId') ? data.orderId : data.orderID);
 
         this.confirmOrderForm.appendChild(input);
-        this.confirmOrderForm.submit();
+        DomAccess.querySelector(this.confirmOrderForm, this.options.confirmOrderButtonSelector).click();
     }
 
-    /**
-     * Triggers the form validation
-     * @param _
-     * @param {{reject: Function, resolve: Function}} actions
-     * @returns {*}
-     */
-    onClick(_, actions) {
+    onCancel() {
+        this.createError(null, true);
+    }
+
+    onClick(data, actions) {
         if (!this.confirmOrderForm.checkValidity()) {
             return actions.reject();
         }
 
         return actions.resolve();
+    }
+
+    onError(error) {
+        this.createError(error);
     }
 }

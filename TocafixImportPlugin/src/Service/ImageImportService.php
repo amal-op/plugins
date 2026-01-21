@@ -7,7 +7,7 @@ use Shopware\Core\Content\Media\File\MediaFile;
 use Shopware\Core\Content\Media\MediaService;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Content\Media\Exception\DuplicatedMediaFileNameException;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepositoryInterface;
+use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Indexing\EntityIndexerRegistry;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
@@ -25,12 +25,12 @@ class ImageImportService
     /**
      * ImageImport constructor.
      *
-     * @param EntityRepositoryInterface $mediaRepository
+     * @param EntityRepository $mediaRepository
      * @param MediaService $mediaService
      * @param FileSaver $fileSaver
      */
     public function __construct (
-        EntityRepositoryInterface $mediaRepository,
+        EntityRepository $mediaRepository,
         MediaService $mediaService,
         FileSaver $fileSaver
     )

@@ -7,9 +7,6 @@
 
 namespace Swag\PayPal\Pos\MessageQueue\Message\Sync\Traits;
 
-use Shopware\Core\Framework\Log\Package;
-
-#[Package('checkout')]
 trait OffsetTrait
 {
     protected int $limit;

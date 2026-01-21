@@ -7,18 +7,22 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Common;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(schema: 'swag_paypal_v2_common_name')]
-#[Package('checkout')]
-class Name extends PayPalApiStruct
+/**
+ * @OA\Schema(schema="swag_paypal_v2_common_name")
+ */
+abstract class Name extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $givenName;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $surname;
 
     public function getGivenName(): string

@@ -7,9 +7,6 @@
 
 namespace Swag\PayPal\Setting\Service;
 
-use Shopware\Core\Framework\Log\Package;
-
-#[Package('checkout')]
 interface CredentialsUtilInterface
 {
     public function isSandbox(?string $salesChannelId = null): bool;

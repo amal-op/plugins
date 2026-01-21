@@ -8,12 +8,16 @@
 namespace Swag\PayPal\Pos\DataAbstractionLayer\Entity;
 
 use Shopware\Core\Framework\DataAbstractionLayer\EntityCollection;
-use Shopware\Core\Framework\Log\Package;
 
 /**
- * @extends EntityCollection<PosSalesChannelInventoryEntity>
+ * @method void                                       add(PosSalesChannelInventoryEntity $entity)
+ * @method void                                       set(string $key, PosSalesChannelInventoryEntity $entity)
+ * @method \Generator<PosSalesChannelInventoryEntity> getIterator()
+ * @method PosSalesChannelInventoryEntity[]           getElements()
+ * @method PosSalesChannelInventoryEntity|null        get(string $key)
+ * @method PosSalesChannelInventoryEntity|null        first()
+ * @method PosSalesChannelInventoryEntity|null        last()
  */
-#[Package('checkout')]
 class PosSalesChannelInventoryCollection extends EntityCollection
 {
     protected function getExpectedClass(): string

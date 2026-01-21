@@ -15,14 +15,9 @@ use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData;
 
-/**
- * @internal
- */
-#[Package('checkout')]
 class MediaInstaller
 {
     private const PAYMENT_METHOD_MEDIA_DIR = 'Resources/icons';
@@ -59,7 +54,6 @@ class MediaInstaller
 
         $criteria = new Criteria([$paymentMethodId]);
         $criteria->addAssociation('media');
-        /** @var PaymentMethodEntity|null $paymentMethod */
         $paymentMethod = $this->paymentMethodRepository->search($criteria, $context)->first();
         if ($paymentMethod === null) {
             throw new UnknownPaymentMethodException($paymentMethodId);

@@ -13,6 +13,16 @@
         text-transform: uppercase;
         color: $primary-color;
     }
+    &.text-center{
+        text-align: center;
+        margin-left: auto;
+        margin-right: auto;
+
+        p{
+            margin-left: auto;
+            margin-right: auto;
+        }
+    }
     &.center{
         text-align: center;
         margin-left: auto;

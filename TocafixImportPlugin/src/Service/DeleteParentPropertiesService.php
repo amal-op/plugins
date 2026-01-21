@@ -65,7 +65,6 @@ class DeleteParentPropertiesService
                 }
             }
         }
-        dd($productConfiguratorUpdatedConfig);
 
         $progressBar->finish();
 

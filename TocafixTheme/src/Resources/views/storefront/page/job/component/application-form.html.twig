@@ -5,7 +5,6 @@
             <div class="col-12">
                 <form id="tocafix-job-application-form" action="{{ path('frontend.tocafix-job-form.send') }}" method="post" class="bewerben__form" enctype="multipart/form-data" data-form-csrf-handler="true" data-form-validation="true" data-form-ajax-submit="true">
                     <div class="form-content">
-                        {{ sw_csrf('frontend.tocafix-job-form.send') }}
                         {% block tocafix_application_form_element_form_address_inputs_gender %}
                             <div class="abonnieren__form-row">
                                 <div class="bewerben__form-checkbox">

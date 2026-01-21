@@ -7,51 +7,73 @@
 
 namespace Swag\PayPal\RestApi\V1\Api;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\Capability;
-use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\CapabilityCollection;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\OauthIntegration;
-use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\OauthIntegrationCollection;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\Product;
-use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\ProductCollection;
 
-#[OA\Schema(schema: 'swag_paypal_v1_merchant_integrations')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_merchant_integrations")
+ */
 class MerchantIntegrations extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $merchantId;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $trackingId;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Product::class))]
-    protected ProductCollection $products;
+    /**
+     * @var Product[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_merchant_integrations_product"})
+     */
+    protected array $products = [];
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Capability::class), nullable: true)]
-    protected ?CapabilityCollection $capabilities = null;
+    /**
+     * @var Capability[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_merchant_integrations_capability"})
+     */
+    protected array $capabilities = [];
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: OauthIntegration::class))]
-    protected OauthIntegrationCollection $oauthIntegrations;
+    /**
+     * @var OauthIntegration[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_merchant_integrations_oauth_integration"})
+     */
+    protected array $oauthIntegrations = [];
 
     /**
      * @var string[]
+     *
+     * @OA\Property(type="array", items={"type": "string"})
      */
-    #[OA\Property(type: 'array', items: new OA\Items(type: 'string'))]
     protected array $grantedPermissions = [];
 
-    #[OA\Property(type: 'boolean')]
+    /**
+     * @OA\Property(type="boolean")
+     */
     protected bool $paymentsReceivable;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $legalName;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $primaryEmail;
 
-    #[OA\Property(type: 'boolean')]
+    /**
+     * @OA\Property(type="boolean")
+     */
     protected bool $primaryEmailConfirmed;
 
     public function getMerchantId(): string
@@ -74,27 +96,33 @@ class MerchantIntegrations extends PayPalApiStruct
         $this->trackingId = $trackingId;
     }
 
-    public function getProducts(): ProductCollection
+    /**
+     * @return Product[]
+     */
+    public function getProducts(): array
     {
         return $this->products;
     }
 
-    public function setProducts(ProductCollection $products): void
+    public function setProducts(array $products): void
     {
         $this->products = $products;
     }
 
-    public function getCapabilities(): ?CapabilityCollection
+    /**
+     * @return Capability[]
+     */
+    public function getCapabilities(): array
     {
         return $this->capabilities;
     }
 
-    public function setCapabilities(?CapabilityCollection $capabilities): void
+    public function setCapabilities(array $capabilities): void
     {
         $this->capabilities = $capabilities;
     }
 
-    public function isPaymentsReceivable(): bool
+    public function getPaymentsReceivable(): bool
     {
         return $this->paymentsReceivable;
     }
@@ -124,7 +152,7 @@ class MerchantIntegrations extends PayPalApiStruct
         $this->primaryEmail = $primaryEmail;
     }
 
-    public function isPrimaryEmailConfirmed(): bool
+    public function getPrimaryEmailConfirmed(): bool
     {
         return $this->primaryEmailConfirmed;
     }
@@ -134,35 +162,32 @@ class MerchantIntegrations extends PayPalApiStruct
         $this->primaryEmailConfirmed = $primaryEmailConfirmed;
     }
 
-    /**
-     * @return string[]
-     */
     public function getGrantedPermissions(): array
     {
         return $this->grantedPermissions;
     }
 
-    /**
-     * @param string[] $grantedPermissions
-     */
     public function setGrantedPermissions(array $grantedPermissions): void
     {
         $this->grantedPermissions = $grantedPermissions;
     }
 
-    public function getOauthIntegrations(): OauthIntegrationCollection
+    /**
+     * @return OauthIntegration[]
+     */
+    public function getOauthIntegrations(): array
     {
         return $this->oauthIntegrations;
     }
 
-    public function setOauthIntegrations(OauthIntegrationCollection $oauthIntegrations): void
+    public function setOauthIntegrations(array $oauthIntegrations): void
     {
         $this->oauthIntegrations = $oauthIntegrations;
     }
 
     public function getSpecificCapability(string $name): ?Capability
     {
-        foreach (($this->capabilities ?? []) as $capability) {
+        foreach ($this->capabilities as $capability) {
             if ($capability->getName() === $name) {
                 return $capability;
             }

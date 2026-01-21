@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Setting\Service;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Setting\Exception\PayPalSettingsInvalidException;
 
-#[Package('checkout')]
 interface SettingsValidationServiceInterface
 {
     /**

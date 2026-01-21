@@ -7,11 +7,9 @@
 
 namespace Swag\PayPal\Pos\Api\Inventory;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Common\PosStruct;
 use Swag\PayPal\Pos\Api\Inventory\BulkChanges\ProductChange;
 
-#[Package('checkout')]
 class BulkChanges extends PosStruct
 {
     protected ?string $returnBalanceForLocationUuid = null;

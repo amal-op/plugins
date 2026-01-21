@@ -10,7 +10,7 @@
             <argument type="service" id="Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionStateHandler"/>
             <argument type="service" id="Swag\PayPal\Setting\Service\SettingsValidationService"/>
             <argument type="service" id="Swag\PayPal\RestApi\V2\Resource\OrderResource"/>
-            <argument type="service" id="monolog.logger.paypal"/>
+            <argument type="service" id="Swag\PayPal\Util\Logger"/>
         </service>
 
         <service id="Swag\PayPal\Checkout\Payment\Method\BancontactAPMHandler"
@@ -90,7 +90,6 @@
                  parent="Swag\PayPal\Checkout\Payment\Method\APMHandler">
             <argument type="service" id="Swag\PayPal\OrdersApi\Builder\APM\SofortOrderBuilder"/>
             <tag name="shopware.payment.method.async"/>
-            <deprecated package="swag/paypal" version="10.0.0">tag:v10.0.0 - The %service_id% service will be removed</deprecated>
         </service>
 
         <service id="Swag\PayPal\Checkout\Payment\Method\TrustlyAPMHandler"

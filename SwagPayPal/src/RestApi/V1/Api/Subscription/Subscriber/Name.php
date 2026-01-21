@@ -7,11 +7,12 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Subscription\Subscriber;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
 /**
+ * @OA\Schema(schema="swag_paypal_v1_subscription_name")
+ *
  * @codeCoverageIgnore
  *
  * @experimental
@@ -19,14 +20,16 @@ use Swag\PayPal\RestApi\PayPalApiStruct;
  * This class is experimental and not officially supported.
  * It is currently not used within the plugin itself. Use with caution.
  */
-#[OA\Schema(schema: 'swag_paypal_v1_subscription_subscriber_name')]
-#[Package('checkout')]
 class Name extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $givenName;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $surname;
 
     public function getGivenName(): string

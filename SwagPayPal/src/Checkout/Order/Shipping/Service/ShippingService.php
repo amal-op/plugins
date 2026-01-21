@@ -8,25 +8,17 @@
 namespace Swag\PayPal\Checkout\Order\Shipping\Service;
 
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Checkout\Order\Aggregate\OrderTransaction\OrderTransactionEntity;
-use Shopware\Core\Checkout\Order\OrderException;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
-use Shopware\Core\Framework\Log\Package;
-use Swag\PayPal\Checkout\Order\Shipping\MessageQueue\ShippingInformationMessageHandler;
 use Swag\PayPal\RestApi\V1\Api\Shipping;
 use Swag\PayPal\RestApi\V1\Api\Shipping\Tracker;
-use Swag\PayPal\RestApi\V1\Api\Shipping\TrackerCollection;
 use Swag\PayPal\RestApi\V1\Resource\ShippingResource;
 use Swag\PayPal\SwagPayPal;
+use Swag\PayPal\Util\Compatibility\Exception;
 
-/**
- * @deprecated tag:v10.0.0 - Will be removed and is replaced by {@see ShippingInformationMessageHandler}
- */
-#[Package('checkout')]
 class ShippingService
 {
     private ShippingResource $shippingResource;
@@ -98,9 +90,9 @@ class ShippingService
             return;
         }
 
-        $trackers = new TrackerCollection();
+        $trackers = [];
         foreach ($addedTrackingCodes as $trackingCode) {
-            $trackers->add($this->createTracker($transactionId, $trackingCode, $carrier, Tracker::STATUS_SHIPPED));
+            $trackers[] = $this->createTracker($transactionId, $trackingCode, $carrier, Tracker::STATUS_SHIPPED);
         }
 
         $this->logger->info('Adding tracking codes for order delivery "{orderDeliveryId}"', [
@@ -146,7 +138,6 @@ class ShippingService
         $criteria->addSorting(new FieldSorting('createdAt', FieldSorting::DESCENDING));
         $criteria->setLimit(1);
 
-        /** @var OrderTransactionEntity|null $transaction */
         $transaction = $this->orderTransactionRepository->search($criteria, $context)->first();
         if ($transaction === null) {
             return null;
@@ -187,7 +178,7 @@ class ShippingService
 
         $id = $this->salesChannelRepository->searchIds($criteria, $context)->firstId();
         if ($id === null) {
-            throw OrderException::orderDeliveryNotFound($orderDeliveryId);
+            throw Exception::orderDeliveryNotFound($orderDeliveryId);
         }
 
         return $id;

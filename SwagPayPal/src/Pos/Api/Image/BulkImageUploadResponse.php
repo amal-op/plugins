@@ -7,11 +7,9 @@
 
 namespace Swag\PayPal\Pos\Api\Image;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Common\PosStruct;
 use Swag\PayPal\Pos\Api\Image\BulkImageUploadResponse\Uploaded;
 
-#[Package('checkout')]
 class BulkImageUploadResponse extends PosStruct
 {
     /**

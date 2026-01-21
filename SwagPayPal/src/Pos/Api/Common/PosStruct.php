@@ -7,9 +7,6 @@
 
 namespace Swag\PayPal\Pos\Api\Common;
 
-use Shopware\Core\Framework\Log\Package;
-
-#[Package('checkout')]
 abstract class PosStruct implements \JsonSerializable
 {
     final public function __construct()

@@ -7,41 +7,34 @@
 
 namespace Swag\PayPal\RestApi\V1\Resource;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\RestApi\Client\PayPalClientFactoryInterface;
 use Swag\PayPal\RestApi\PartnerId;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations;
 use Swag\PayPal\RestApi\V1\RequestUriV1;
 use Swag\PayPal\Setting\Exception\PayPalInvalidApiCredentialsException;
 
-#[Package('checkout')]
 class MerchantIntegrationsResource implements MerchantIntegrationsResourceInterface
 {
+    private PayPalClientFactoryInterface $payPalClientFactory;
+
     /**
      * @internal
      */
-    public function __construct(private readonly PayPalClientFactoryInterface $payPalClientFactory)
-    {
+    public function __construct(
+        PayPalClientFactoryInterface $payPalClientFactory
+    ) {
+        $this->payPalClientFactory = $payPalClientFactory;
     }
 
     public function get(string $merchantId, ?string $salesChannelId = null, bool $sandboxActive = true): MerchantIntegrations
     {
         if (!$merchantId) {
-            // throw new PayPalApiException(
-            //     'merchant_id_missing',
-            //     'The merchant id is missing',
-            //     Response::HTTP_UNAUTHORIZED,
-            //     PayPalApiException::ERROR_CODE_INVALID_CREDENTIALS,
-            // );
-            /**
-             * @deprecated tag:v10.0.0 - Will be replaced by a PayPalApiException
-             */
             throw new PayPalInvalidApiCredentialsException();
         }
 
         $partnerId = $sandboxActive ? PartnerId::SANDBOX : PartnerId::LIVE;
 
-        $response = $this->payPalClientFactory->getPayPalClient($salesChannelId, isFirstParty: true)->sendGetRequest(
+        $response = $this->payPalClientFactory->getPayPalClient($salesChannelId)->sendGetRequest(
             \sprintf(RequestUriV1::MERCHANT_INTEGRATIONS_RESOURCE, $partnerId, $merchantId)
         );
 

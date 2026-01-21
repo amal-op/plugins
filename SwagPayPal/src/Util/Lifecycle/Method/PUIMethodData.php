@@ -7,22 +7,14 @@
 
 namespace Swag\PayPal\Util\Lifecycle\Method;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Checkout\Payment\Method\PUIHandler;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\Capability;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\Product;
 use Swag\PayPal\Util\Availability\AvailabilityContext;
 
-/**
- * @internal
- */
-#[Package('checkout')]
 class PUIMethodData extends AbstractMethodData
 {
-    /**
-     * @return array<string, array<string, string>>
-     */
     public function getTranslations(): array
     {
         return [
@@ -55,8 +47,7 @@ class PUIMethodData extends AbstractMethodData
         return $availabilityContext->getTotalAmount() >= 5.0
             && $availabilityContext->getTotalAmount() <= 2500.0
             && $availabilityContext->getCurrencyCode() === 'EUR'
-            && $availabilityContext->getBillingCountryCode() === 'DE'
-            && !$availabilityContext->hasDigitalProducts();
+            && $availabilityContext->getBillingCountryCode() === 'DE';
     }
 
     public function getInitialState(): bool

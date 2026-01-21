@@ -13,7 +13,6 @@ use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Sorting\FieldSorting;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Plugin\Util\PluginIdProvider;
 use Shopware\Core\System\DeliveryTime\DeliveryTimeEntity;
 use Swag\PayPal\Pos\Payment\PosPayment;
@@ -21,7 +20,6 @@ use Swag\PayPal\Pos\Setting\Exception\CustomerGroupNotFoundException;
 use Swag\PayPal\Pos\Setting\Struct\AdditionalInformation;
 use Swag\PayPal\SwagPayPal;
 
-#[Package('checkout')]
 class InformationDefaultService
 {
     public const POS_PAYMENT_METHOD_ID = 'abab06a108014a37b5f49c9a4d8943db';
@@ -183,7 +181,6 @@ class InformationDefaultService
         $criteria->addFilter(new EqualsFilter('min', 0));
         $criteria->addFilter(new EqualsFilter('max', 0));
         $criteria->addFilter(new EqualsFilter('unit', DeliveryTimeEntity::DELIVERY_TIME_DAY));
-        /** @var DeliveryTimeEntity|null $first */
         $first = $this->deliveryTimeRepository->search($criteria, $context)->first();
 
         if ($first !== null) {

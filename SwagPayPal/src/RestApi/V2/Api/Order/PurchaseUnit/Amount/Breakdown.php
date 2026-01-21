@@ -7,102 +7,122 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V2\Api\Common\Money;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown\Discount;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown\Handling;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown\Insurance;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown\ItemTotal;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown\Shipping;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown\ShippingDiscount;
+use Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Amount\Breakdown\TaxTotal;
 
-#[OA\Schema(schema: 'swag_paypal_v2_order_purchase_unit_amount_breakdown')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_order_breakdown")
+ */
 class Breakdown extends PayPalApiStruct
 {
-    #[OA\Property(ref: Money::class)]
-    protected Money $itemTotal;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money")
+     */
+    protected ItemTotal $itemTotal;
 
-    #[OA\Property(ref: Money::class)]
-    protected Money $shipping;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money")
+     */
+    protected Shipping $shipping;
 
-    #[OA\Property(ref: Money::class)]
-    protected Money $handling;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money")
+     */
+    protected Handling $handling;
 
-    #[OA\Property(ref: Money::class, nullable: true)]
-    protected ?Money $taxTotal = null;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money", nullable=true)
+     */
+    protected ?TaxTotal $taxTotal = null;
 
-    #[OA\Property(ref: Money::class)]
-    protected Money $insurance;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money")
+     */
+    protected Insurance $insurance;
 
-    #[OA\Property(ref: Money::class)]
-    protected Money $shippingDiscount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money")
+     */
+    protected ShippingDiscount $shippingDiscount;
 
-    #[OA\Property(ref: Money::class)]
-    protected Money $discount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v2_common_money")
+     */
+    protected Discount $discount;
 
-    public function getItemTotal(): Money
+    public function getItemTotal(): ItemTotal
     {
         return $this->itemTotal;
     }
 
-    public function setItemTotal(Money $itemTotal): void
+    public function setItemTotal(ItemTotal $itemTotal): void
     {
         $this->itemTotal = $itemTotal;
     }
 
-    public function getShipping(): Money
+    public function getShipping(): Shipping
     {
         return $this->shipping;
     }
 
-    public function setShipping(Money $shipping): void
+    public function setShipping(Shipping $shipping): void
     {
         $this->shipping = $shipping;
     }
 
-    public function getHandling(): Money
+    public function getHandling(): Handling
     {
         return $this->handling;
     }
 
-    public function setHandling(Money $handling): void
+    public function setHandling(Handling $handling): void
     {
         $this->handling = $handling;
     }
 
-    public function getTaxTotal(): ?Money
+    public function getTaxTotal(): ?TaxTotal
     {
         return $this->taxTotal;
     }
 
-    public function setTaxTotal(?Money $taxTotal): void
+    public function setTaxTotal(?TaxTotal $taxTotal): void
     {
         $this->taxTotal = $taxTotal;
     }
 
-    public function getInsurance(): Money
+    public function getInsurance(): Insurance
     {
         return $this->insurance;
     }
 
-    public function setInsurance(Money $insurance): void
+    public function setInsurance(Insurance $insurance): void
     {
         $this->insurance = $insurance;
     }
 
-    public function getShippingDiscount(): Money
+    public function getShippingDiscount(): ShippingDiscount
     {
         return $this->shippingDiscount;
     }
 
-    public function setShippingDiscount(Money $shippingDiscount): void
+    public function setShippingDiscount(ShippingDiscount $shippingDiscount): void
     {
         $this->shippingDiscount = $shippingDiscount;
     }
 
-    public function getDiscount(): Money
+    public function getDiscount(): Discount
     {
         return $this->discount;
     }
 
-    public function setDiscount(Money $discount): void
+    public function setDiscount(Discount $discount): void
     {
         $this->discount = $discount;
     }

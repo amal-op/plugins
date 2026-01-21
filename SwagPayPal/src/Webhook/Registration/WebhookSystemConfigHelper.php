@@ -8,13 +8,11 @@
 namespace Swag\PayPal\Webhook\Registration;
 
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Swag\PayPal\Setting\Service\SettingsValidationServiceInterface;
 use Swag\PayPal\Setting\Settings;
 use Swag\PayPal\Webhook\WebhookServiceInterface;
 
-#[Package('checkout')]
 class WebhookSystemConfigHelper
 {
     private const WEBHOOK_KEYS = [
@@ -23,6 +21,7 @@ class WebhookSystemConfigHelper
         Settings::CLIENT_ID_SANDBOX,
         Settings::CLIENT_SECRET_SANDBOX,
         Settings::SANDBOX,
+        Settings::WEBHOOK_ID,
     ];
 
     private LoggerInterface $logger;
@@ -74,8 +73,7 @@ class WebhookSystemConfigHelper
                 continue;
             }
 
-            $isLocalEnvironment = $newSettings[Settings::IS_LOCAL_ENVIRONMENT] ?? $this->systemConfigService->getBool(Settings::IS_LOCAL_ENVIRONMENT, $salesChannelId);
-            if (!$isLocalEnvironment && !$this->configHasChangedSettings($newSettings, $oldActualSettings)) {
+            if (!$this->configHasChangedSettings($newSettings, $oldActualSettings)) {
                 // No writing of new credentials in this Sales Channel
                 continue;
             }
@@ -104,10 +102,6 @@ class WebhookSystemConfigHelper
         foreach ($salesChannelIds as $salesChannelId) {
             if ($salesChannelId === 'null') {
                 $salesChannelId = null;
-            }
-
-            if ($this->systemConfigService->get(Settings::IS_LOCAL_ENVIRONMENT, $salesChannelId)) {
-                continue;
             }
 
             $newSettings = $this->fetchSettings($salesChannelId);

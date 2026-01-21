@@ -12,7 +12,7 @@
 
     {% block swag_paypal_checkout_method_name %}
     <div class="swag-paypal-checkout-method__name">
-        {{ paymentMethod.translated.name }} <span v-if="isPayPalPui">({{ $tc('swag-paypal.settingForm.checkout.ratePayLabel') }})</span>
+        {{ paymentMethod.translated.name }}
     </div>
     {% endblock %}
 
@@ -74,19 +74,7 @@
         :label="$tc('swag-paypal.settingForm.checkout.switch.label')"
         :disabled="paymentMethodToggleDisabled || !acl.can('swag_paypal.editor')"
         :value="paymentMethod.active"
-        {% if VUE3 %}
-        @update:value="onChangePaymentMethodActive"
-        {% else %}
         @change="onChangePaymentMethodActive"
-        {% endif %}
-    />
-    {% endblock %}
-
-    {% block swag_paypal_checkout_method_apple_pay_domain_association %}
-    <swag-paypal-checkout-domain-association
-        v-if="isApplePayAndActive && isAlertActive"
-        :is-sandbox="actualConfigData['SwagPayPal.settings.sandbox']"
-        @hideDomainAssociationEvent="hideDomainAssociationAlert"
     />
     {% endblock %}
 </div>

@@ -12,7 +12,6 @@ use Shopware\Core\Content\Product\Aggregate\ProductVisibility\ProductVisibilityC
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\MessageQueue\Handler\Sync\AbstractSyncHandler;
 use Swag\PayPal\Pos\MessageQueue\Message\AbstractSyncMessage;
 use Swag\PayPal\Pos\MessageQueue\Message\CloneVisibilityMessage;
@@ -23,7 +22,6 @@ use Swag\PayPal\Pos\Run\RunService;
 /**
  * @internal
  */
-#[Package('checkout')]
 class CloneVisibilityHandler extends AbstractSyncHandler
 {
     private EntityRepository $productVisibilityRepository;

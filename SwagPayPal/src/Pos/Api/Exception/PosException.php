@@ -7,11 +7,9 @@
 
 namespace Swag\PayPal\Pos\Api\Exception;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\ShopwareHttpException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[Package('checkout')]
 class PosException extends ShopwareHttpException
 {
     private int $posStatusCode = Response::HTTP_INTERNAL_SERVER_ERROR;

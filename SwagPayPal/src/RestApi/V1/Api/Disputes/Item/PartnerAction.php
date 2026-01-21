@@ -7,35 +7,49 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Item;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V1\Api\Common\Money;
+use Swag\PayPal\RestApi\V1\Api\Disputes\Item\PartnerAction\Amount;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_item_partner_action')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_partner_action")
+ */
 class PartnerAction extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $id;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $name;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $createTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $updateTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $dueTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $status;
 
-    #[OA\Property(ref: Money::class)]
-    protected Money $amount;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_money")
+     */
+    protected Amount $amount;
 
     public function getId(): string
     {
@@ -97,12 +111,12 @@ class PartnerAction extends PayPalApiStruct
         $this->status = $status;
     }
 
-    public function getAmount(): Money
+    public function getAmount(): Amount
     {
         return $this->amount;
     }
 
-    public function setAmount(Money $amount): void
+    public function setAmount(Amount $amount): void
     {
         $this->amount = $amount;
     }

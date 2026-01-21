@@ -7,11 +7,9 @@
 
 namespace Swag\PayPal\Checkout\PUI\Exception;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\ShopwareHttpException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[Package('checkout')]
 class MissingPaymentInstructionsException extends ShopwareHttpException
 {
     public function __construct(string $transactionId)

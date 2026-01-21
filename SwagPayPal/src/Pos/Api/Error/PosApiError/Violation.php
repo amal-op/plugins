@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Pos\Api\Error\PosApiError;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Common\PosStruct;
 
-#[Package('checkout')]
 class Violation extends PosStruct
 {
     protected ?string $propertyName = null;

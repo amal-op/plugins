@@ -7,11 +7,9 @@
 
 namespace Swag\PayPal\PaymentsApi\Administration\Exception;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\ShopwareHttpException;
 use Symfony\Component\HttpFoundation\Response;
 
-#[Package('checkout')]
 class RequiredParameterInvalidException extends ShopwareHttpException
 {
     public function __construct(string $missingParameter)

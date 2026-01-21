@@ -7,12 +7,12 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Referral\Operation\ApiIntegrationPreference\RestApiIntegration;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(schema: 'swag_paypal_v2_referral_operation_integration_preference_integration_third_party_details')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_referral_third_party_details")
+ */
 class ThirdPartyDetails extends PayPalApiStruct
 {
     public const FEATURE_TYPE_PAYMENT = 'PAYMENT';
@@ -23,13 +23,12 @@ class ThirdPartyDetails extends PayPalApiStruct
     public const FEATURE_TYPE_READ_SELLER_DISPUTE = 'READ_SELLER_DISPUTE';
     public const FEATURE_TYPE_DELAY_FUNDS_DISBURSEMENT = 'DELAY_FUNDS_DISBURSEMENT';
     public const FEATURE_TYPE_TRACKING_SHIPMENT_READWRITE = 'TRACKING_SHIPMENT_READWRITE';
-    public const FEATURE_TYPE_VAULT = 'VAULT';
-    public const FEATURE_TYPE_BILLING_AGREEMENT = 'BILLING_AGREEMENT';
 
     /**
      * @var string[]
+     *
+     * @OA\Property(type="array", items={"type": "string"})
      */
-    #[OA\Property(type: 'array', items: new OA\Items(type: 'string'))]
     protected array $features = [
         self::FEATURE_TYPE_PAYMENT,
         self::FEATURE_TYPE_REFUND,
@@ -39,8 +38,6 @@ class ThirdPartyDetails extends PayPalApiStruct
         self::FEATURE_TYPE_READ_SELLER_DISPUTE,
         self::FEATURE_TYPE_DELAY_FUNDS_DISBURSEMENT,
         self::FEATURE_TYPE_TRACKING_SHIPMENT_READWRITE,
-        self::FEATURE_TYPE_VAULT,
-        self::FEATURE_TYPE_BILLING_AGREEMENT,
     ];
 
     /**
@@ -57,10 +54,5 @@ class ThirdPartyDetails extends PayPalApiStruct
     public function setFeatures(array $features): void
     {
         $this->features = $features;
-    }
-
-    public function addFeature(string $feature): void
-    {
-        $this->features[] = $feature;
     }
 }

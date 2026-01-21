@@ -7,29 +7,18 @@
 
 namespace Swag\PayPal\Util\Lifecycle\Method;
 
-use Shopware\Core\Framework\Log\Package;
-use Shopware\Core\System\SalesChannel\SalesChannelContext;
-use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Swag\PayPal\Checkout\Payment\Method\VenmoHandler;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\Capability;
-use Swag\PayPal\Setting\Settings;
 use Swag\PayPal\Storefront\Data\CheckoutDataMethodInterface;
 use Swag\PayPal\Storefront\Data\Service\AbstractCheckoutDataService;
 use Swag\PayPal\Storefront\Data\Service\VenmoCheckoutDataService;
 use Swag\PayPal\Util\Availability\AvailabilityContext;
 
-/**
- * @internal
- */
-#[Package('checkout')]
 class VenmoMethodData extends AbstractMethodData implements CheckoutDataMethodInterface
 {
     public const PAYPAL_VENMO_FIELD_DATA_EXTENSION_ID = 'payPalVenmoFieldData';
 
-    /**
-     * @return array<string, array<string, string>>
-     */
     public function getTranslations(): array
     {
         return [
@@ -59,18 +48,8 @@ class VenmoMethodData extends AbstractMethodData implements CheckoutDataMethodIn
 
     public function isAvailable(AvailabilityContext $availabilityContext): bool
     {
-        if ($availabilityContext->getCurrencyCode() !== 'USD'
-            || $availabilityContext->getBillingCountryCode() !== 'US') {
-            return false;
-        }
-
-        if ($availabilityContext->isSubscription()) {
-            $systemConfigService = $this->container->get(SystemConfigService::class);
-
-            return $systemConfigService->getBool(Settings::VAULTING_ENABLED_VENMO, $availabilityContext->getSalesChannelId());
-        }
-
-        return true;
+        return $availabilityContext->getCurrencyCode() === 'USD'
+            && $availabilityContext->getBillingCountryCode() === 'US';
     }
 
     public function getInitialState(): bool
@@ -101,16 +80,5 @@ class VenmoMethodData extends AbstractMethodData implements CheckoutDataMethodIn
         }
 
         return self::CAPABILITY_INELIGIBLE;
-    }
-
-    public function isVaultable(SalesChannelContext $context): bool
-    {
-        if (!$context->getCustomer() || $context->getCustomer()->getGuest()) {
-            return false;
-        }
-
-        $systemConfigService = $this->container->get(SystemConfigService::class);
-
-        return $systemConfigService->getBool(Settings::VAULTING_ENABLED_VENMO, $context->getSalesChannelId());
     }
 }

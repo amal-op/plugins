@@ -9,7 +9,6 @@ namespace Swag\PayPal\Pos\MessageQueue\Handler\Sync;
 
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\DataAbstractionLayer\Entity\PosSalesChannelMediaCollection;
 use Swag\PayPal\Pos\DataAbstractionLayer\Entity\PosSalesChannelMediaEntity;
 use Swag\PayPal\Pos\MessageQueue\Message\AbstractSyncMessage;
@@ -22,7 +21,6 @@ use Swag\PayPal\Pos\Sync\ImageSyncer;
 /**
  * @internal
  */
-#[Package('checkout')]
 class ImageSyncHandler extends AbstractSyncHandler
 {
     private EntityRepository $posMediaRepository;

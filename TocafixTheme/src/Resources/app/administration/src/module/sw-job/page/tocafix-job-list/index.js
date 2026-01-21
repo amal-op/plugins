@@ -13,7 +13,6 @@ Component.register('tocafix-job-list', {
     data() {
         return {
             isLoading: false,
-            repository: null,
             jobs: null
         };
     },
@@ -24,44 +23,22 @@ Component.register('tocafix-job-list', {
         };
     },
 
-    filters: {
-        dateFilter: function(value) {
-            if (value === null) {
-                return '';
-            }
-
-            const dateObj = new Date(value);
-            // eslint-disable-next-line
-            if (isNaN(dateObj)) {
-                return '';
-            }
-
-            const langCode = navigator.language;
-            const options = {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            };
-            const dateTimeFormatter = new Intl.DateTimeFormat(langCode, options);
-
-            return dateTimeFormatter.format(dateObj);
-        }
-    },
-
     computed: {
+        jobRepository() {
+            return this.repositoryFactory.create('tocafix_job');
+        },
+
         columns() {
             return [{
                 property: 'name',
-                dataIndex: 'name',
-                label: this.$t('tocafix-job.list.columnName'),
+                label: this.$tc('tocafix-job.list.columnName'),
                 routerLink: 'tocafix.job.detail',
                 inlineEdit: 'string',
                 allowResize: true,
                 primary: true
             }, {
                 property: 'jobDate',
-                dataIndex: 'jobDate',
-                label: this.$t('tocafix-job.list.columnJobDate'),
+                label: this.$tc('tocafix-job.list.columnJobDate'),
                 allowResize: true
             }];
         }
@@ -72,17 +49,31 @@ Component.register('tocafix-job-list', {
     },
 
     methods: {
-        loadList() {
+        async loadList() {
             this.isLoading = true;
-            this.repository = this.repositoryFactory.create('tocafix_job');
             const jobCriteria = new Criteria();
 
-            this.repository
-                .search(jobCriteria, Shopware.Context.api)
-                .then((result) => {
-                    this.jobs = result;
-                    this.isLoading = false;
-                });
+            try {
+                const result = await this.jobRepository.search(jobCriteria, Shopware.Context.api);
+                this.jobs = result;
+            } catch (error) {
+                console.error(error);
+            } finally {
+                this.isLoading = false;
+            }
+        },
+
+        formatDate(value) {
+            if (!value) return '';
+
+            const dateObj = new Date(value);
+            if (isNaN(dateObj)) return '';
+
+            return Shopware.Utils.format.date(value, {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
         },
 
         onChangeLanguage() {

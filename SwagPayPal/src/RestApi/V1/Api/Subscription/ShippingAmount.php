@@ -7,7 +7,6 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Subscription;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\RestApi\V1\Api\Common\Money;
 
 /**
@@ -18,7 +17,6 @@ use Swag\PayPal\RestApi\V1\Api\Common\Money;
  * This class is experimental and not officially supported.
  * It is currently not used within the plugin itself. Use with caution.
  */
-#[Package('checkout')]
 class ShippingAmount extends Money
 {
 }

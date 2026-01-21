@@ -7,14 +7,16 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Order\PaymentSource;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 
-#[OA\Schema(schema: 'swag_paypal_v2_order_payment_source_oxxo')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_order_payment_source_oxxo")
+ */
 class Oxxo extends AbstractAPMPaymentSource
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $email;
 
     public function getEmail(): string

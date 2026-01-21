@@ -11,7 +11,6 @@ use Shopware\Core\Content\Product\ProductCollection;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Swag\PayPal\Pos\Api\Service\ApiKeyDecoder;
 use Swag\PayPal\Pos\Api\Service\Converter\UuidConverter;
@@ -26,7 +25,6 @@ use Swag\PayPal\Pos\Sync\Inventory\LocalUpdater;
 use Swag\PayPal\Pos\Sync\InventorySyncer;
 use Swag\PayPal\Pos\Webhook\WebhookEventNames;
 
-#[Package('checkout')]
 class InventoryChangedHandler extends AbstractWebhookHandler
 {
     private ApiKeyDecoder $apiKeyDecoder;
@@ -111,7 +109,8 @@ class InventoryChangedHandler extends AbstractWebhookHandler
                     continue;
                 }
 
-                foreach ($this->prepareProduct($balanceBefore, $balanceAfter) as $productId) {
+                $productId = $this->prepareProduct($balanceBefore, $balanceAfter);
+                if ($productId !== null) {
                     $productIds[] = $productId;
                 }
             }
@@ -124,7 +123,7 @@ class InventoryChangedHandler extends AbstractWebhookHandler
 
         $runId = $this->runService->startRun($salesChannel->getId(), InventoryTask::TASK_NAME_INVENTORY, [], $context);
 
-        $inventoryContext->setProductIds($productCollection->getIds());
+        $inventoryContext->setProductIds($productIds);
         $this->inventoryContextFactory->updateLocal($inventoryContext);
 
         $changes = $this->localUpdater->updateLocal($productCollection, $inventoryContext);
@@ -134,33 +133,24 @@ class InventoryChangedHandler extends AbstractWebhookHandler
         $this->runService->finishRun($runId, $context);
     }
 
-    /**
-     * @return string[]
-     */
-    private function prepareProduct(Balance $balanceBefore, Balance $balanceAfter): array
+    private function prepareProduct(Balance $balanceBefore, Balance $balanceAfter): ?string
     {
         $change = $balanceAfter->getBalance() - $balanceBefore->getBalance();
 
         if ($change === 0) {
-            return [];
+            return null;
         }
 
-        $productUuidV4 = $this->uuidConverter->convertUuidToV4($balanceBefore->getProductUuid());
-        $productUuidV7 = $this->uuidConverter->convertUuidToV7($balanceBefore->getProductUuid());
-        $variantUuidV4 = $this->uuidConverter->convertUuidToV4($balanceBefore->getVariantUuid());
-        $variantUuidV7 = $this->uuidConverter->convertUuidToV7($balanceBefore->getVariantUuid());
+        $productUuid = $this->uuidConverter->convertUuidToV4($balanceBefore->getProductUuid());
+        $variantUuid = $this->uuidConverter->convertUuidToV4($balanceBefore->getVariantUuid());
 
-        if ($this->uuidConverter->incrementUuid($productUuidV4) !== $variantUuidV4) {
-            $productUuidV4 = $variantUuidV4;
-        }
-        if ($this->uuidConverter->incrementUuid($productUuidV7) !== $variantUuidV7) {
-            $productUuidV7 = $variantUuidV7;
+        if ($this->uuidConverter->incrementUuid($productUuid) !== $variantUuid) {
+            $productUuid = $variantUuid;
         }
 
-        $this->localCalculator->addFixedUpdate($productUuidV4, $change);
-        $this->localCalculator->addFixedUpdate($productUuidV7, $change);
+        $this->localCalculator->addFixedUpdate($productUuid, $change);
 
-        return [$productUuidV4, $productUuidV7];
+        return $productUuid;
     }
 
     private function isOwnClientId(?string $reportedClientId, SalesChannelEntity $salesChannel): bool

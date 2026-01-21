@@ -20,42 +20,25 @@
             <argument type="service" id="Shopware\Core\System\SalesChannel\Context\SalesChannelContextFactory"/>
             <argument type="service" id="Swag\PayPal\RestApi\V2\Resource\OrderResource"/>
             <argument type="service" id="Shopware\Core\Checkout\Cart\SalesChannel\CartService"/>
-            <argument type="service" id="monolog.logger.paypal"/>
+            <argument type="service" id="Swag\PayPal\Util\Logger"/>
         </service>
 
         <service id="Swag\PayPal\Checkout\ExpressCheckout\Service\ExpressCustomerService">
             <argument type="service" id="Shopware\Core\Checkout\Customer\SalesChannel\RegisterRoute"/>
-            <argument type="service" id="sales_channel.country.repository"/>
+            <argument type="service" id="country.repository"/>
             <argument type="service" id="country_state.repository"/>
             <argument type="service" id="salutation.repository"/>
             <argument type="service" id="customer.repository"/>
             <argument type="service" id="Shopware\Core\Checkout\Customer\SalesChannel\AccountService"/>
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
-            <argument type="service" id="monolog.logger.paypal"/>
+            <argument type="service" id="Swag\PayPal\Util\Logger"/>
         </service>
 
         <service id="Swag\PayPal\Checkout\ExpressCheckout\SalesChannel\ExpressCreateOrderRoute" public="true">
             <argument type="service" id="Shopware\Core\Checkout\Cart\SalesChannel\CartService"/>
-            <argument type="service" id="Swag\PayPal\OrdersApi\Builder\PayPalOrderBuilder"/>
+            <argument type="service" id="Swag\PayPal\OrdersApi\Builder\OrderFromCartBuilder"/>
             <argument type="service" id="Swag\PayPal\RestApi\V2\Resource\OrderResource"/>
-            <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
-            <argument type="service" id="router"/>
-            <argument type="service" id="monolog.logger.paypal"/>
-        </service>
-
-        <service id="Swag\PayPal\Checkout\ExpressCheckout\Service\ExpressShippingCallbackService">
-            <argument type="service" id="Shopware\Core\Checkout\Cart\SalesChannel\CartService"/>
-            <argument type="service" id="sales_channel.country.repository"/>
-            <argument type="service" id="Swag\PayPal\OrdersApi\Builder\PayPalOrderBuilder"/>
-            <argument type="service" id="Swag\PayPal\OrdersApi\Builder\Util\ShippingOptionsProvider"/>
-            <argument type="service" id="Shopware\Core\System\SalesChannel\SalesChannel\ContextSwitchRoute"/>
-            <argument type="service" id="Shopware\Core\System\SalesChannel\Context\SalesChannelContextFactory"/>
-            <argument type="service" id="monolog.logger.paypal"/>
-        </service>
-
-        <service id="Swag\PayPal\Checkout\ExpressCheckout\SalesChannel\ExpressShippingCallbackRoute" public="true">
-            <argument type="service" id="Swag\PayPal\Checkout\ExpressCheckout\Service\ExpressShippingCallbackService"/>
-            <argument type="service" id="monolog.logger.paypal"/>
+            <argument type="service" id="Swag\PayPal\Util\Logger"/>
         </service>
 
         <service id="Swag\PayPal\Checkout\ExpressCheckout\ExpressCheckoutSubscriber">
@@ -64,8 +47,7 @@
             <argument type="service" id="Shopware\Core\System\SystemConfig\SystemConfigService"/>
             <argument type="service" id="Swag\PayPal\Util\PaymentMethodUtil"/>
             <argument type="service" id="Swag\PayPal\Checkout\Cart\Service\ExcludedProductValidator"/>
-            <argument type="service" id="customer.repository"/>
-            <argument type="service" id="monolog.logger.paypal"/>
+            <argument type="service" id="Swag\PayPal\Util\Logger"/>
             <tag name="kernel.event_subscriber"/>
         </service>
 

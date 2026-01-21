@@ -7,34 +7,48 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Payment\Payer;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
-use Swag\PayPal\RestApi\V1\Api\Common\Address;
-use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList\ShippingAddress;
+use OpenApi\Annotations as OA;
+use Swag\PayPal\RestApi\V1\Api\Payment\Payer\PayerInfo\BillingAddress;
+use Swag\PayPal\RestApi\V1\Api\Payment\Payer\PayerInfo\ShippingAddress;
 
-#[OA\Schema(schema: 'swag_paypal_v1_payment_payer_payer_info')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_payment_payer_info")
+ */
 class PayerInfo extends ExecutePayerInfo
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $email;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $firstName;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $lastName;
 
-    #[OA\Property(ref: Address::class, nullable: true)]
-    protected ?Address $billingAddress = null;
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_address", nullable=true)
+     */
+    protected ?BillingAddress $billingAddress = null;
 
-    #[OA\Property(ref: ShippingAddress::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_payment_payer_info_shipping_address")
+     */
     protected ShippingAddress $shippingAddress;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $phone;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $countryCode;
 
     public function getEmail(): string
@@ -67,12 +81,12 @@ class PayerInfo extends ExecutePayerInfo
         $this->lastName = $lastName;
     }
 
-    public function getBillingAddress(): ?Address
+    public function getBillingAddress(): ?BillingAddress
     {
         return $this->billingAddress;
     }
 
-    public function setBillingAddress(?Address $billingAddress): void
+    public function setBillingAddress(?BillingAddress $billingAddress): void
     {
         $this->billingAddress = $billingAddress;
     }

@@ -7,65 +7,71 @@
 
 namespace Swag\PayPal\RestApi\V1\Api;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(schema: 'swag_paypal_v1_token')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_token")
+ */
 final class Token extends PayPalApiStruct
 {
     /**
      * Scopes expressed in the form of resource URL endpoints. The value of the scope parameter
      * is expressed as a list of space-delimited, case-sensitive strings.
+     *
+     * @OA\Property(type="string")
      */
-    #[OA\Property(type: 'string')]
     private string $scope;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     private string $nonce;
 
     /**
      * The access token issued by PayPal. After the access token
      * expires (see $expiresIn), you must request a new access token.
+     *
+     * @OA\Property(type="string")
      */
-    #[OA\Property(type: 'string')]
     private string $accessToken;
 
     /**
      * The type of the token issued as described in OAuth2.0 RFC6749,
      * Section 7.1. Value is case insensitive.
+     *
+     * @OA\Property(type="string")
      */
-    #[OA\Property(type: 'string')]
     private string $tokenType;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     private string $appId;
-
-    #[OA\Property(type: 'string', nullable: true)]
-    private ?string $idToken = null;
 
     /**
      * The lifetime of the access token, in seconds.
+     *
+     * @OA\Property(type="integer")
      */
-    #[OA\Property(type: 'integer')]
     private int $expiresIn;
 
     /**
      * Calculated expiration date
+     *
+     * @OA\Property(type="date")
      */
-    #[OA\Property(type: 'string', format: 'date-time')]
     private \DateTime $expireDateTime;
 
     /**
-     * @param array<string, mixed> $arrayDataWithSnakeCaseKeys
+     * @return static
      */
-    public function assign(array $arrayDataWithSnakeCaseKeys): static
+    public function assign(array $arrayDataWithSnakeCaseKeys)
     {
         $newToken = parent::assign($arrayDataWithSnakeCaseKeys);
 
-        // Calculate the expiration date manually
-        $expirationDateTime = new \DateTime('now', new \DateTimeZone('UTC'));
+        //Calculate the expiration date manually
+        $expirationDateTime = new \DateTime();
         $interval = \DateInterval::createFromDateString(\sprintf('%s seconds', $newToken->getExpiresIn()));
         $expirationDateTime = $expirationDateTime->add($interval ?: new \DateInterval('PT0S'));
 
@@ -122,16 +128,6 @@ final class Token extends PayPalApiStruct
     public function setAppId(string $appId): void
     {
         $this->appId = $appId;
-    }
-
-    public function getIdToken(): ?string
-    {
-        return $this->idToken;
-    }
-
-    public function setIdToken(?string $idToken): void
-    {
-        $this->idToken = $idToken;
     }
 
     public function getExpiresIn(): int

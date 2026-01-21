@@ -1,7 +1,4 @@
-{% sw_extends {
-    template: '@Storefront/storefront/component/payment/payment-method.html.twig',
-    scopes: ['default', 'subscription']
-} %}
+{% sw_extends '@Storefront/storefront/component/payment/payment-method.html.twig' %}
 
 {% set isBootstrap5 = feature('v6.5.0.0') or getAllFeatures()['v6.6.0.0'] is defined %}
 
@@ -9,35 +6,15 @@
     {{ parent() }}
 
     {# @var \Swag\PayPal\Checkout\Plus\PlusData payPalPlusData #}
-    {# @deprecated tag:v9.0.0 - Will be removed without replacement #}
+    {# @deprecated tag:v7.0.0 - Will be removed without replacement #}
     {% set payPalPlusData = page.extensions[constant('Swag\\PayPal\\Checkout\\Plus\\PlusSubscriber::PAYPAL_PLUS_DATA_EXTENSION_ID')] %}
-    {# @var \Swag\PayPal\Storefront\Data\Struct\VaultData payPalVaultData #}
-    {% set payPalVaultData = page.extensions[constant('Swag\\PayPal\\Storefront\\Data\\VaultSubscriber::VAULT_EXTENSION')] %}
 
     {% if payPalPlusData and payPalPlusData.approvalUrl and payPalPlusData.paymentMethodId is same as(context.paymentMethod.id) and payPalPlusData.paymentMethodId is same as(payment.id) %}
-        {% block component_payment_method_description_paypal_plus %}
         <div class="d-none"
              data-swag-paypal-payment-wall="true"
              data-swag-pay-pal-plus-payment-wall-options="{{ payPalPlusData|json_encode }}">
         </div>
         <div id="ppplus"></div>
-        {% endblock %}
-    {% elseif payment.id is same as(context.paymentMethod.id) and payPalVaultData is not null %}
-        {% block component_payment_method_description_paypal_vault %}
-        {% if payPalVaultData.identifier %}
-            <div>{{ payPalVaultData.identifier }}</div>
-            <a href="{{ path('frontend.paypal.vault.clear', { redirectTo: activeRoute, redirectParameters: (page.order.id ? { orderId: page.order.id } : {})|json_encode }) }}">
-                {{ ("paypal.vault." ~ payPalVaultData.snippetType ~ ".clear")|trans }}
-            </a>
-        {% elseif context.extensions.subscription is not defined %}
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="createVault" id="swagPaypalCreateVault" form="confirmOrderForm" value="1" />
-                <label class="form-check-label" for="swagPaypalCreateVault" >
-                    {{ ("paypal.vault." ~ payPalVaultData.snippetType ~ ".create")|trans }}
-                </label>
-            </div>
-        {% endif %}
-        {% endblock %}
     {% endif %}
 {% endblock %}
 
@@ -52,38 +29,59 @@
 
     {% if acdcFieldData and acdcFieldData.paymentMethodId is same as(payment.id) %}
         {% block swag_paypal_acdc_form %}
-            <div id="swag-paypal-acdc-form" class="mt-2 d-none">
-                <div class="row mb-1">
+            <div id="swag-paypal-acdc-form" class="d-none">
+                <div class="row">
                     <div class="col-sm-12">
                         <label class="d-none"
-                               for="swag-paypal-acdc-form-cardholder">{{ "paypal.acdc.cardholderName"|trans }}</label>
-                        <div id="swag-paypal-acdc-form-cardholder"
-                             data-placeholder="{{ "paypal.acdc.cardholderName"|trans }}"
-                        ></div>
-                    </div>
-                </div>
-                <div class="row mb-1">
-                    <div class="col-sm-12 swag-paypal-acdc-form-field-lg">
-                        <label class="d-none"
                                for="swag-paypal-acdc-form-cardnumber">{{ "paypal.acdc.cardNumber"|trans }}</label>
-                        <div id="swag-paypal-acdc-form-cardnumber"
+                        <div class="form-control"
+                             id="swag-paypal-acdc-form-cardnumber"
                              data-placeholder="{{ "paypal.acdc.cardNumber"|trans }}"
                         ></div>
                     </div>
                 </div>
-                <div class="row mb-1">
-                    <div class="col-sm-6 pe-1">
+                <div class="row">
+                    <div class="col-sm-6">
                         <label class="d-none"
                                for="swag-paypal-acdc-form-expiration">{{ "paypal.acdc.expiration"|trans }}</label>
-                        <div id="swag-paypal-acdc-form-expiration"
+                        <div class="form-control"
+                             id="swag-paypal-acdc-form-expiration"
                              data-placeholder="{{ "paypal.acdc.expiration"|trans }}"
                         ></div>
                     </div>
-                    <div class="col-sm-6 ps-1">
+                    <div class="col-sm-6">
                         <label class="d-none" for="swag-paypal-acdc-form-cvv">{{ "paypal.acdc.cvv"|trans }}</label>
-                        <div id="swag-paypal-acdc-form-cvv"
+                        <div class="form-control"
+                             id="swag-paypal-acdc-form-cvv"
                              data-placeholder="{{ "paypal.acdc.cvv"|trans }}"
                         ></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <label class="d-none"
+                               for="swag-paypal-acdc-form-cardholder">{{ "paypal.acdc.cardholderName"|trans }}</label>
+                        <input type="text"
+                               required
+                               form="confirmOrderForm"
+                               class="form-control"
+                               id="swag-paypal-acdc-form-cardholder"
+                               placeholder="{{ "paypal.acdc.cardholderName"|trans }}"
+                               value="{{ acdcFieldData.cardholderData.cardholderName }}"
+                        />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <label class="d-none" for="swag-paypal-acdc-form-zip">{{ "paypal.acdc.zip"|trans }}</label>
+                        <input type="text"
+                               required
+                               form="confirmOrderForm"
+                               class="form-control"
+                               id="swag-paypal-acdc-form-zip"
+                               placeholder="{{ "paypal.acdc.zip"|trans }}"
+                               value="{{ acdcFieldData.cardholderData.billingAddress.postalCode }}"
+                        />
                     </div>
                 </div>
             </div>

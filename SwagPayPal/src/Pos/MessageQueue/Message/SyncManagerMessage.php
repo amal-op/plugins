@@ -7,9 +7,6 @@
 
 namespace Swag\PayPal\Pos\MessageQueue\Message;
 
-use Shopware\Core\Framework\Log\Package;
-
-#[Package('checkout')]
 class SyncManagerMessage extends AbstractSyncMessage
 {
     /**

@@ -2,7 +2,7 @@
     <sw-page class="tocafix-team-list">
 
         {% block tocafix_team_list_smart_bar_header %}
-            <template slot="smart-bar-header">
+            <template #smart-bar-header>
                 {% block tocafix_team_list_smart_bar_header_title %}
                     <h2>
                         {% block tocafix_team_list_smart_bar_header_title_text %}
@@ -10,7 +10,7 @@
                         {% endblock %}
 
                         {% block tocafix_team_list_smart_bar_header_amount %}
-                            <span v-if="!isLoading" class="sw-page__smart-bar-amount">
+                            <span v-if="!isLoading && teams" class="sw-page__smart-bar-amount">
                                 ({{ teams.total }})
                             </span>
                         {% endblock %}
@@ -20,26 +20,30 @@
         {% endblock %}
 
         {% block tocafix_team_list_smart_bar_actions %}
-            <template slot="smart-bar-actions">
-                <sw-button variant="primary" :routerLink="{ name: 'tocafix.team.create' }">
+            <template #smart-bar-actions>
+                <sw-button 
+                    variant="primary" 
+                    :router-link="{ name: 'tocafix.team.create' }">
                     {{ $t('tocafix-team.list.addButtonText') }}
                 </sw-button>
             </template>
         {% endblock %}
 
-        <template #language-switch>
-            <sw-language-switch @on-change="onChangeLanguage"></sw-language-switch>
-        </template>
+        {% block tocafix_team_list_language_switch %}
+            <template #language-switch>
+                <sw-language-switch @on-change="onChangeLanguage"></sw-language-switch>
+            </template>
+        {% endblock %}
 
-        <template slot="content">
+        <template #content>
             {% block tocafix_team_list_content %}
                 <sw-entity-listing
                     v-if="teams"
                     :items="teams"
-                    :repository="repository"
-                    :showSelection="false"
+                    :repository="teamRepository"
+                    :show-selection="false"
                     :columns="columns"
-                    detailRoute="tocafix.team.detail">
+                    detail-route="tocafix.team.detail">
                 </sw-entity-listing>
             {% endblock %}
         </template>

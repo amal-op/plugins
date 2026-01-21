@@ -9,7 +9,6 @@ namespace Swag\PayPal\Pos\MessageQueue\Handler;
 
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 use Swag\PayPal\Pos\DataAbstractionLayer\Entity\PosSalesChannelRunDefinition;
 use Swag\PayPal\Pos\Exception\UnknownSyncStepException;
@@ -26,7 +25,6 @@ use Symfony\Component\Messenger\Handler\MessageSubscriberInterface;
 /**
  * @internal
  */
-#[Package('checkout')]
 class SyncManagerHandler implements MessageSubscriberInterface
 {
     public const SYNC_PRODUCT = 'product';
@@ -108,7 +106,7 @@ class SyncManagerHandler implements MessageSubscriberInterface
 
             $this->messageBus->bulkDispatch($messages, $runId);
         } catch (\Throwable $e) {
-            $this->logger->critical($e->getMessage(), ['error' => $e]);
+            $this->logger->critical($e->__toString());
             $this->runService->finishRun($runId, $context, PosSalesChannelRunDefinition::STATUS_FAILED);
         } finally {
             $this->runService->writeLog($runId, $context);

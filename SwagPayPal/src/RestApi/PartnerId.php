@@ -7,9 +7,6 @@
 
 namespace Swag\PayPal\RestApi;
 
-use Shopware\Core\Framework\Log\Package;
-
-#[Package('checkout')]
 final class PartnerId
 {
     public const SANDBOX = '45KXQA7PULGAG';

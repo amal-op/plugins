@@ -7,9 +7,6 @@
 
 namespace Swag\PayPal\Checkout\Payment\Method;
 
-use Shopware\Core\Framework\Log\Package;
-
-#[Package('checkout')]
 class SEPAHandler extends AbstractSyncAPMHandler
 {
 }

@@ -7,15 +7,17 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Order\PurchaseUnit\Payee;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(schema: 'swag_paypal_v2_order_purchase_unit_payee_display_data')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v2_order_display_data")
+ */
 class DisplayData extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $brandName;
 
     public function getBrandName(): string

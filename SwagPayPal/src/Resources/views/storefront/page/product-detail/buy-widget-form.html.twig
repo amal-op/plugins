@@ -12,11 +12,21 @@
 
             {% if expressSettings.productDetailEnabled %}
                 <div class="{{ isBootstrap5 ? 'row g-2 mt-0' : 'form-row mt-3' }} justify-content-end">
-                    {% sw_include '@SwagPayPal/storefront/component/ecs-spb-checkout/ecs-button.html.twig' with {
-                        button_class: showQuantitySelect ? 'col-8' : 'col-12'
-                    } %}
+                    {% sw_include '@SwagPayPal/storefront/component/ecs-spb-checkout/ecs-button.html.twig' with {button_class: 'col-8'} %}
                 </div>
             {% endif %}
+        {% endif %}
+
+        {# @var \Swag\PayPal\Installment\Banner\BannerData installmentBanner #}
+        {% set installmentBanner = page.extensions[constant('Swag\\PayPal\\Installment\\Banner\\InstallmentBannerSubscriber::PAYPAL_INSTALLMENT_BANNER_DATA_EXTENSION_ID')] %}
+
+        {% if installmentBanner is not null %}
+            <div class="{{ isBootstrap5 ? 'row g-2 mt-0' : 'form-row mt-3' }} mb-4 justify-content-end">
+                <div class="{{ buyable ? 'col-8' : 'col-12' }}"
+                     data-swag-paypal-installment-banner="true"
+                     data-swag-pay-pal-installment-banner-options="{{ installmentBanner|json_encode }}">
+                </div>
+            </div>
         {% endif %}
     {% endblock %}
 

@@ -1,3 +1,10 @@
+.cms-block-cmsbundle-category-slider{
+    .category-slider-wrapper{
+        .category-slider__background{
+            left: 0;
+        }
+    }
+}
 .category-slider{
     &-wrapper{
         position: relative;
@@ -44,12 +51,21 @@
 }
 
 
-.cms-element-hatslogic-title{
-    & + .cms-element-hatslogic-category-slider{
+.cms-element-cmsbundle-title{
+    & + .cms-element-cmsbundle-category-slider{
         margin-top: rem(100);
 
         @include desktop-sm(){
             margin-top: rem(60);
+        }
+    }
+}
+
+.cms-element-cmsbundle-category-slider{
+    .base-slider{
+        overflow: visible;
+        .tns-ovh{
+            overflow: hidden;
         }
     }
 }

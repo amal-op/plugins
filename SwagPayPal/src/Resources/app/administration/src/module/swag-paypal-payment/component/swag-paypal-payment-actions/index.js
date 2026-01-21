@@ -4,11 +4,11 @@ import './extensions/swag-paypal-payment-action-capture';
 import './extensions/swag-paypal-payment-action-refund';
 import './extensions/swag-paypal-payment-action-void';
 import {
-    CANCELLED_STATE,
+    VOIDED_STATE,
     CAPTURED_STATE,
     COMPLETED_STATE,
+    CANCELLED_STATE,
     FAILED_STATE,
-    VOIDED_STATE,
 } from './swag-paypal-payment-consts';
 
 const { Component } = Shopware;
@@ -64,7 +64,7 @@ Component.register('swag-paypal-payment-actions', {
         },
 
         setPaymentActionAmounts() {
-            if (!this.relatedResources) {
+            if (this.relatedResources === null) {
                 return;
             }
 
@@ -106,7 +106,7 @@ Component.register('swag-paypal-payment-actions', {
         },
 
         setShowVoidButton() {
-            if (!this.relatedResources) {
+            if (this.relatedResources === null) {
                 return;
             }
 

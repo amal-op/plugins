@@ -7,19 +7,12 @@
 
 namespace Swag\PayPal\Util\Lifecycle\Method;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations;
+use Swag\PayPal\RestApi\V1\Api\MerchantIntegrations\Product;
 use Swag\PayPal\Util\Availability\AvailabilityContext;
 
-/**
- * @internal
- */
-#[Package('checkout')]
 class BancontactMethodData extends AbstractMethodData
 {
-    /**
-     * @return array<string, array<string, string>>
-     */
     public function getTranslations(): array
     {
         return [
@@ -53,7 +46,7 @@ class BancontactMethodData extends AbstractMethodData
 
     public function getInitialState(): bool
     {
-        return true;
+        return false;
     }
 
     public function getMediaFileName(): ?string
@@ -63,6 +56,11 @@ class BancontactMethodData extends AbstractMethodData
 
     public function validateCapability(MerchantIntegrations $merchantIntegrations): string
     {
-        return self::CAPABILITY_ACTIVE;
+        $product = $merchantIntegrations->getSpecificProduct('PPCP_STANDARD');
+        if ($product !== null && (\in_array($product->getVettingStatus(), [Product::VETTING_STATUS_APPROVED, Product::VETTING_STATUS_SUBSCRIBED], true))) {
+            return self::CAPABILITY_ACTIVE;
+        }
+
+        return self::CAPABILITY_INELIGIBLE;
     }
 }

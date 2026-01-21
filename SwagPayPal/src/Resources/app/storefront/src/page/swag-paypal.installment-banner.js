@@ -1,18 +1,27 @@
 import SwagPaypalAbstractButtons from '../swag-paypal.abstract-buttons';
 
-/**
- * @deprecated tag:v10.0.0 - will extend SwagPaypalScriptBase instead
- */
 export default class SwagPayPalInstallmentBanner extends SwagPaypalAbstractButtons {
     static options = {
-        ...super.options,
-
         /**
-         * This option holds the buyer country for Pay Later localization
+         * This option holds the client id specified in the settings
          *
          * @type string
          */
-        crossBorderBuyerCountry: undefined,
+        clientId: '',
+
+        /**
+         * This option holds the merchant id specified in the settings
+         *
+         * @type string
+         */
+        merchantPayerId: '',
+
+        /**
+         * This option toggles the PayNow/Login text at PayPal
+         *
+         * @type boolean
+         */
+        commit: true,
 
         /**
          * Amount of money, which will be used to calculate the examples
@@ -20,6 +29,13 @@ export default class SwagPayPalInstallmentBanner extends SwagPaypalAbstractButto
          * @type number
          */
         amount: 0,
+
+        /**
+         * Currency used for the examples
+         *
+         * @type string
+         */
+        currency: 'EUR',
 
         /**
          * Layout of the installment banner
@@ -76,15 +92,6 @@ export default class SwagPayPalInstallmentBanner extends SwagPaypalAbstractButto
          * @type string
          */
         textColor: 'black',
-
-        /*
-         * Streamline options for listing pages, overriding the ones
-         * from swag-paypal.script-loading.js
-         */
-        useAlternativePaymentMethods: true,
-        commit: false,
-        scriptAwaitVisibility: true,
-        partOfDomContentLoading: false,
     };
 
     init() {
@@ -100,7 +107,6 @@ export default class SwagPayPalInstallmentBanner extends SwagPaypalAbstractButto
     getBannerConfig() {
         return {
             amount: this.options.amount,
-            buyerCountry: this.options.crossBorderBuyerCountry ?? undefined,
             currency: this.options.currency,
             style: {
                 layout: this.options.layout,

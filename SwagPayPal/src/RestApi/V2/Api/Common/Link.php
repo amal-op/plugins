@@ -7,28 +7,36 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Common;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(schema: 'swag_paypal_v2_common_link')]
-#[Package('checkout')]
-class Link extends PayPalApiStruct
+/**
+ * @OA\Schema(schema="swag_paypal_v2_common_link")
+ */
+abstract class Link extends PayPalApiStruct
 {
     public const RELATION_APPROVE = 'approve';
     public const RELATION_PAYER_ACTION = 'payer-action';
     public const RELATION_UP = 'up';
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $href;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $rel;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $method;
 
-    #[OA\Property(type: 'string', nullable: true)]
+    /**
+     * @OA\Property(type="string", nullable=true)
+     */
     protected ?string $encType = null;
 
     public function getHref(): string

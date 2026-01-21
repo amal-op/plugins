@@ -7,41 +7,56 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Payment;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
-use Swag\PayPal\RestApi\V1\Api\Common\Amount;
+use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\Amount;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\Payee;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\RelatedResource;
-use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\RelatedResourceCollection;
 
-#[OA\Schema(schema: 'swag_paypal_v1_payment_transaction')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_payment_transaction")
+ */
 class Transaction extends PayPalApiStruct
 {
-    #[OA\Property(ref: Amount::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_amount")
+     */
     protected Amount $amount;
 
-    #[OA\Property(ref: Payee::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_payment_transaction_payee")
+     */
     protected Payee $payee;
 
-    #[OA\Property(ref: ItemList::class, nullable: true)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_payment_transaction_item_list", nullable=true)
+     */
     protected ?ItemList $itemList = null;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: RelatedResource::class))]
-    protected RelatedResourceCollection $relatedResources;
+    /**
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_payment_transaction_related_resource"})
+     */
+    protected array $relatedResources;
 
-    #[OA\Property(type: 'string', nullable: true)]
+    /**
+     * @OA\Property(type="string", nullable=true)
+     */
     protected ?string $invoiceNumber = null;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $softDescriptor;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $description;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $custom;
 
     public function getAmount(): Amount
@@ -74,12 +89,18 @@ class Transaction extends PayPalApiStruct
         $this->itemList = $itemList;
     }
 
-    public function getRelatedResources(): RelatedResourceCollection
+    /**
+     * @return RelatedResource[]
+     */
+    public function getRelatedResources(): array
     {
         return $this->relatedResources;
     }
 
-    public function setRelatedResources(RelatedResourceCollection $relatedResources): void
+    /**
+     * @param RelatedResource[] $relatedResources
+     */
+    public function setRelatedResources(array $relatedResources): void
     {
         $this->relatedResources = $relatedResources;
     }

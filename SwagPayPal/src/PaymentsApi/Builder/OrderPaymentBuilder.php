@@ -14,7 +14,6 @@ use Shopware\Core\Checkout\Payment\Cart\AsyncPaymentTransactionStruct;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\Currency\CurrencyCollection;
 use Shopware\Core\System\Currency\CurrencyEntity;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
@@ -27,14 +26,11 @@ use Swag\PayPal\RestApi\V1\Api\Payment;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList;
 use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList\Item;
-use Swag\PayPal\RestApi\V1\Api\Payment\Transaction\ItemList\ItemCollection;
-use Swag\PayPal\RestApi\V1\Api\Payment\TransactionCollection;
 use Swag\PayPal\Setting\Settings;
 use Swag\PayPal\Util\LocaleCodeProvider;
 use Swag\PayPal\Util\PriceFormatter;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-#[Package('checkout')]
 class OrderPaymentBuilder extends AbstractPaymentBuilder implements OrderPaymentBuilderInterface
 {
     private EntityRepository $currencyRepository;
@@ -69,7 +65,7 @@ class OrderPaymentBuilder extends AbstractPaymentBuilder implements OrderPayment
         $requestPayment = new Payment();
         $requestPayment->setPayer($payer);
         $requestPayment->setRedirectUrls($redirectUrls);
-        $requestPayment->setTransactions(new TransactionCollection([$transaction]));
+        $requestPayment->setTransactions([$transaction]);
         $requestPayment->setApplicationContext($applicationContext);
 
         return $requestPayment;
@@ -112,7 +108,7 @@ class OrderPaymentBuilder extends AbstractPaymentBuilder implements OrderPayment
         if ($this->systemConfigService->getBool(Settings::SUBMIT_CART, $salesChannelContext->getSalesChannelId())) {
             $items = $this->getItemList($order, $currency);
 
-            if ($items->count() > 0) {
+            if ($items !== []) {
                 $itemList = new ItemList();
                 $itemList->setItems($items);
                 $transaction->setItemList($itemList);
@@ -135,7 +131,7 @@ class OrderPaymentBuilder extends AbstractPaymentBuilder implements OrderPayment
         $criteria = new Criteria([$currencyId]);
 
         /** @var CurrencyCollection $currencyCollection */
-        $currencyCollection = $this->currencyRepository->search($criteria, $context)->getEntities();
+        $currencyCollection = $this->currencyRepository->search($criteria, $context);
 
         $currency = $currencyCollection->get($currencyId);
         if ($currency === null) {
@@ -145,32 +141,35 @@ class OrderPaymentBuilder extends AbstractPaymentBuilder implements OrderPayment
         return $currency;
     }
 
-    private function getItemList(OrderEntity $order, string $currency): ItemCollection
+    /**
+     * @return Item[]
+     */
+    private function getItemList(OrderEntity $order, string $currency): array
     {
-        $items = new ItemCollection();
+        $items = [];
         $lineItems = $order->getNestedLineItems();
         if ($lineItems === null) {
-            return $items;
+            return [];
         }
 
         foreach ($lineItems->getElements() as $lineItem) {
-            $items->add($this->createItemFromLineItem($lineItem, $currency));
+            $items[] = $this->createItemFromLineItem($lineItem, $currency);
         }
 
         return $items;
     }
 
-    private function createItemFromLineItem(OrderLineItemEntity $lineItem, string $currencyCode): Item
+    private function createItemFromLineItem(OrderLineItemEntity $lineItem, string $currency): Item
     {
         $item = new Item();
 
         $this->setName($lineItem, $item);
         $this->setSku($lineItem, $item);
 
-        $item->setCurrency($currencyCode);
+        $item->setCurrency($currency);
         $item->setQuantity($lineItem->getQuantity());
-        $item->setTax($this->priceFormatter->formatPrice(0, $currencyCode));
-        $item->setPrice($this->priceFormatter->formatPrice($lineItem->getUnitPrice(), $currencyCode));
+        $item->setTax($this->priceFormatter->formatPrice(0));
+        $item->setPrice($this->priceFormatter->formatPrice($lineItem->getUnitPrice()));
 
         $event = new PayPalV1ItemFromOrderEvent($item, $lineItem);
         $this->eventDispatcher->dispatch($event);

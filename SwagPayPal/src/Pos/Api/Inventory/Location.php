@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Pos\Api\Inventory;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Common\PosStruct;
 
-#[Package('checkout')]
 class Location extends PosStruct
 {
     protected string $uuid;

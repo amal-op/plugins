@@ -7,11 +7,8 @@
 
 namespace Swag\PayPal\Pos\Webhook;
 
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Webhook\Exception\WebhookException;
-use Swag\PayPal\Pos\Webhook\Exception\WebhookHandlerNotFoundException;
 
-#[Package('checkout')]
 class WebhookRegistry
 {
     /**
@@ -32,12 +29,12 @@ class WebhookRegistry
     /**
      * @see WebhookEventNames
      *
-     * @throws WebhookHandlerNotFoundException
+     * @throws WebhookException
      */
     public function getWebhookHandler(string $eventType): WebhookHandler
     {
         if (!isset($this->registeredWebhooks[$eventType])) {
-            throw new WebhookHandlerNotFoundException($eventType);
+            throw new WebhookException($eventType, 'The specified event-type does not exist.');
         }
 
         return $this->registeredWebhooks[$eventType];

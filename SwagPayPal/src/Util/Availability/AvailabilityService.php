@@ -11,13 +11,9 @@ use Shopware\Core\Checkout\Cart\Cart;
 use Shopware\Core\Checkout\Order\OrderEntity;
 use Shopware\Core\Checkout\Payment\PaymentMethodCollection;
 use Shopware\Core\Checkout\Payment\PaymentMethodEntity;
-use Shopware\Core\Content\Product\State;
-use Shopware\Core\Framework\Log\Package;
-use Shopware\Core\Framework\Struct\ArrayStruct;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 use Swag\PayPal\Util\Lifecycle\Method\PaymentMethodDataRegistry;
 
-#[Package('checkout')]
 class AvailabilityService
 {
     private PaymentMethodDataRegistry $paymentMethodDataRegistry;
@@ -56,11 +52,7 @@ class AvailabilityService
         $handlers = [];
 
         $context = $this->buildAvailabilityContext($cart, $salesChannelContext);
-        $context->assign([
-            'totalAmount' => $order->getPrice()->getTotalPrice(),
-            'subscription' => $order->getExtensionOfType('foreignKeys', ArrayStruct::class)?->get('subscriptionId') !== null,
-            'hasDigitalProducts' => (bool) $order->getLineItems()?->hasLineItemWithState(State::IS_DOWNLOAD),
-        ]);
+        $context->assign(['totalAmount' => $order->getPrice()->getTotalPrice()]);
 
         foreach ($paymentMethods as $paymentMethod) {
             if (!$this->isAvailable($paymentMethod, $context)) {
@@ -105,9 +97,6 @@ class AvailabilityService
             'billingCountryCode' => $billingCountryCode,
             'currencyCode' => $salesChannelContext->getCurrency()->getIsoCode(),
             'totalAmount' => $cart->getPrice()->getTotalPrice(),
-            'subscription' => $salesChannelContext->hasExtension('subscription'),
-            'salesChannelId' => $salesChannelContext->getSalesChannelId(),
-            'hasDigitalProducts' => $cart->getLineItems()->hasLineItemWithState(State::IS_DOWNLOAD),
         ]);
 
         return $context;

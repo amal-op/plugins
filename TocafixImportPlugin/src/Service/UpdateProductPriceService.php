@@ -228,7 +228,7 @@ class UpdateProductPriceService
         $price = null;
         foreach ($productSalesChannel->getCurrencies() as $currency)
         {
-            $netPrice = $product->getPrice()->getCurrencyPrice($currency->getId())->getNet();
+            $netPrice = $product->getPrice()?->getCurrencyPrice($currency->getId())?->getNet() ?? 0;
             if ($netPrice > 0) {
                 $basicUnit = $product->getReferenceUnit();
                 if ($basicUnit) {

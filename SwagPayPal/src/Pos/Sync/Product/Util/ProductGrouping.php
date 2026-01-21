@@ -8,10 +8,8 @@
 namespace Swag\PayPal\Pos\Sync\Product\Util;
 
 use Shopware\Core\Content\Product\SalesChannel\SalesChannelProductEntity;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Product;
 
-#[Package('checkout')]
 class ProductGrouping
 {
     private SalesChannelProductEntity $identifyingEntity;

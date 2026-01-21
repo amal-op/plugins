@@ -7,18 +7,22 @@
 
 namespace Swag\PayPal\RestApi\V2\Api\Common;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(schema: 'swag_paypal_v2_common_phone_number')]
-#[Package('checkout')]
-class PhoneNumber extends PayPalApiStruct
+/**
+ * @OA\Schema(schema="swag_paypal_v2_common_phone_number")
+ */
+abstract class PhoneNumber extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $nationalNumber;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $countryCode;
 
     public function getNationalNumber(): string

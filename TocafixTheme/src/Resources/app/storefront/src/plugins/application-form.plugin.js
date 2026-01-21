@@ -1,21 +1,24 @@
 import Plugin from 'src/plugin-system/plugin.class';
 
-export default class applicationFormPlugin extends Plugin {
+export default class ApplicationFormPlugin extends Plugin {
     init() {
-        $("#anschreiben_file").change(function () {
-            $('#anschreiben').attr("placeholder", $(this).val().split('\\').pop());
-        });
+        const fileInputs = [
+            { input: 'anschreiben_file', placeholder: 'anschreiben' },
+            { input: 'lebenslauf_file', placeholder: 'lebenslauf' },
+            { input: 'zertifikate_file', placeholder: 'zertifikate' },
+            { input: 'arbeitszeugnisse_file', placeholder: 'arbeitszeugnisse' }
+        ];
 
-        $("#lebenslauf_file").change(function () {
-            $('#lebenslauf').attr("placeholder", $(this).val().split('\\').pop());
-        });
+        fileInputs.forEach(({ input, placeholder }) => {
+            const fileInput = document.getElementById(input);
+            const placeholderElement = document.getElementById(placeholder);
 
-        $("#zertifikate_file").change(function () {
-            $('#zertifikate').attr("placeholder", $(this).val().split('\\').pop());
-        });
-
-        $("#arbeitszeugnisse_file").change(function () {
-            $('#arbeitszeugnisse').attr("placeholder", $(this).val().split('\\').pop());
+            if (fileInput && placeholderElement) {
+                fileInput.addEventListener('change', function() {
+                    const fileName = this.value.split('\\').pop();
+                    placeholderElement.setAttribute('placeholder', fileName);
+                });
+            }
         });
     }
 }

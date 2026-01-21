@@ -9,20 +9,15 @@ namespace Swag\PayPal\RestApi\Client;
 
 use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\RestApi\V1\RequestUriV1;
 
-#[Package('checkout')]
 class CredentialsClient extends AbstractClient
 {
     public function __construct(
         string $url,
         LoggerInterface $logger
     ) {
-        $client = new Client([
-            'base_uri' => $url,
-            'timeout' => 30,
-        ]);
+        $client = new Client(['base_uri' => $url]);
 
         parent::__construct($client, $logger);
     }

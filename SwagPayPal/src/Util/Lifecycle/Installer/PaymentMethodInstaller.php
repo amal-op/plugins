@@ -10,17 +10,12 @@ namespace Swag\PayPal\Util\Lifecycle\Installer;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Write\Validation\RestrictDeleteViolationException;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\Framework\Plugin\Util\PluginIdProvider;
 use Shopware\Core\Framework\Uuid\Uuid;
 use Swag\PayPal\SwagPayPal;
 use Swag\PayPal\Util\Lifecycle\Method\AbstractMethodData;
 use Swag\PayPal\Util\Lifecycle\Method\PaymentMethodDataRegistry;
 
-/**
- * @internal
- */
-#[Package('checkout')]
 class PaymentMethodInstaller
 {
     private EntityRepository $paymentMethodRepository;
@@ -48,19 +43,6 @@ class PaymentMethodInstaller
         $this->pluginIdProvider = $pluginIdProvider;
         $this->methodDataRegistry = $methodDataRegistry;
         $this->mediaInstaller = $mediaInstaller;
-    }
-
-    public function updateAllMedia(Context $context): void
-    {
-        $paymentMethods = $this->methodDataRegistry->getPaymentMethods();
-        foreach ($paymentMethods as $method) {
-            $entity = $this->methodDataRegistry->getEntityFromData($method, $context);
-            if ($entity === null) {
-                continue;
-            }
-
-            $this->mediaInstaller->installPaymentMethodMedia($method, $entity->getId(), $context, true);
-        }
     }
 
     public function installAll(Context $context): void

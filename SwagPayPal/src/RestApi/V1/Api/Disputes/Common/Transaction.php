@@ -7,47 +7,71 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Disputes\Common;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\Common\Money;
 
-#[OA\Schema(schema: 'swag_paypal_v1_disputes_common_transaction')]
-#[Package('checkout')]
-class Transaction extends PayPalApiStruct
+/**
+ * @OA\Schema(schema="swag_paypal_v1_disputes_common_transaction")
+ */
+abstract class Transaction extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $buyerTransactionId;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $sellerTransactionId;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $referenceId;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")*
+     */
     protected string $createTime;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $transactionStatus;
 
-    #[OA\Property(ref: Money::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_money")
+     */
     protected Money $grossAmount;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $invoiceNumber;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $custom;
 
-    #[OA\Property(ref: Buyer::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_disputes_common_buyer")
+     */
     protected Buyer $buyer;
 
-    #[OA\Property(ref: Seller::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_disputes_common_seller")
+     */
     protected Seller $seller;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: Item::class))]
-    protected ItemCollection $items;
+    /**
+     * @var Item[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_disputes_common_item"})
+     */
+    protected array $items;
 
     public function getBuyerTransactionId(): string
     {
@@ -149,12 +173,18 @@ class Transaction extends PayPalApiStruct
         $this->seller = $seller;
     }
 
-    public function getItems(): ItemCollection
+    /**
+     * @return Item[]
+     */
+    public function getItems(): array
     {
         return $this->items;
     }
 
-    public function setItems(ItemCollection $items): void
+    /**
+     * @param Item[] $items
+     */
+    public function setItems(array $items): void
     {
         $this->items = $items;
     }

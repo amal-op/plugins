@@ -8,13 +8,11 @@
 namespace Swag\PayPal\Pos\Sync\Product;
 
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Exception\PosApiException;
 use Swag\PayPal\Pos\Api\Service\Converter\UuidConverter;
 use Swag\PayPal\Pos\Resource\ProductResource;
 use Swag\PayPal\Pos\Sync\Context\ProductContext;
 
-#[Package('checkout')]
 class DeletedUpdater
 {
     private ProductResource $productResource;
@@ -62,8 +60,8 @@ class DeletedUpdater
         try {
             $this->productResource->deleteProducts($productContext->getPosSalesChannel(), $productUuids);
             $this->logger->info('Deleted products at Zettle: {productIds}', ['productIds' => \implode(', ', \array_keys($deletions))]);
-        } catch (PosApiException $e) {
-            $this->logger->error('Product deletion error: ' . $e->getMessage(), ['error' => $e]);
+        } catch (PosApiException $posApiException) {
+            $this->logger->error('Product deletion error: ' . $posApiException);
         }
 
         foreach ($deletions as $deletion) {

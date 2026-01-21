@@ -7,15 +7,15 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Subscription;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 use Swag\PayPal\RestApi\V1\Api\Subscription\BillingInfo\CycleExecution;
-use Swag\PayPal\RestApi\V1\Api\Subscription\BillingInfo\CycleExecutionCollection;
 use Swag\PayPal\RestApi\V1\Api\Subscription\BillingInfo\LastPayment;
 use Swag\PayPal\RestApi\V1\Api\Subscription\BillingInfo\OutstandingBalance;
 
 /**
+ * @OA\Schema(schema="swag_paypal_v1_subscription_billing_info")
+ *
  * @codeCoverageIgnore
  *
  * @experimental
@@ -23,23 +23,33 @@ use Swag\PayPal\RestApi\V1\Api\Subscription\BillingInfo\OutstandingBalance;
  * This class is experimental and not officially supported.
  * It is currently not used within the plugin itself. Use with caution.
  */
-#[OA\Schema(schema: 'swag_paypal_v1_subscription_billing_info')]
-#[Package('checkout')]
 class BillingInfo extends PayPalApiStruct
 {
-    #[OA\Property(ref: OutstandingBalance::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_common_money")
+     */
     protected OutstandingBalance $outstandingBalance;
 
-    #[OA\Property(type: 'array', items: new OA\Items(ref: CycleExecution::class))]
-    protected CycleExecutionCollection $cycleExecutions;
+    /**
+     * @var CycleExecution[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_subscription_cycle_execution"})
+     */
+    protected array $cycleExecutions = [];
 
-    #[OA\Property(ref: LastPayment::class)]
+    /**
+     * @OA\Property(ref="#/components/schemas/swag_paypal_v1_subscription_last_payment")
+     */
     protected LastPayment $lastPayment;
 
-    #[OA\Property(type: 'string', nullable: true)]
+    /**
+     * @OA\Property(type="string", nullable=true)
+     */
     protected ?string $nextBillingTime = null;
 
-    #[OA\Property(type: 'integer')]
+    /**
+     * @OA\Property(type="integer")
+     */
     protected int $failedPaymentsCount;
 
     public function getOutstandingBalance(): OutstandingBalance
@@ -52,12 +62,18 @@ class BillingInfo extends PayPalApiStruct
         $this->outstandingBalance = $outstandingBalance;
     }
 
-    public function getCycleExecutions(): CycleExecutionCollection
+    /**
+     * @return CycleExecution[]
+     */
+    public function getCycleExecutions(): array
     {
         return $this->cycleExecutions;
     }
 
-    public function setCycleExecutions(CycleExecutionCollection $cycleExecutions): void
+    /**
+     * @param CycleExecution[] $cycleExecutions
+     */
+    public function setCycleExecutions(array $cycleExecutions): void
     {
         $this->cycleExecutions = $cycleExecutions;
     }

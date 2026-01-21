@@ -9,7 +9,6 @@ namespace Swag\PayPal\Pos\MessageQueue\Handler\Sync;
 
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\Entity\SalesChannelRepository;
 use Swag\PayPal\Pos\DataAbstractionLayer\Entity\PosSalesChannelEntity;
 use Swag\PayPal\Pos\MessageQueue\Message\AbstractSyncMessage;
@@ -24,7 +23,6 @@ use Swag\PayPal\Pos\Util\PosSalesChannelTrait;
 /**
  * @internal
  */
-#[Package('checkout')]
 class ProductCleanupSyncHandler extends AbstractSyncHandler
 {
     use PosSalesChannelTrait;

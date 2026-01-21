@@ -213,7 +213,6 @@ class ImportProductsService
             $productNumbers[] = $this->processImportProducts($products, $progressBar);
         }
         $progressBar->finish();
-
         //Read and insert varient products
         $varientProducts = array_filter($importProducts, function ($product) {
             return $this->isChildProduct($product['agrzusid']);
@@ -436,12 +435,12 @@ class ImportProductsService
             (new Criteria())->addFilter(new EqualsAnyFilter('productId', $productIds)),
             $context
         );
-
         $productRelationsToDelete = [];
-        foreach ($productProperties->getIds() as $productProperty) {
+        $productPropertiesIds = $productProperties->getIds() ?? [];
+        foreach ($productPropertiesIds as $productProperty) {
             $productRelationsToDelete[] = [
-                'productId' => $productProperty['product_id'],
-                'optionId' => $productProperty['property_group_option_id']
+                'productId' => $productProperty['product_id'] ?? $productProperty['productId'],
+                'optionId' => $productProperty['property_group_option_id'] ?? $productProperty['optionId']
             ];
         }
 

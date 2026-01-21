@@ -7,10 +7,8 @@
 
 namespace Swag\PayPal\Pos\MessageQueue\Message\Sync\Traits;
 
-use Shopware\Core\Framework\Log\Package;
 use Shopware\Core\System\SalesChannel\SalesChannelContext;
 
-#[Package('checkout')]
 interface SalesChannelContextAwareMessageInterface
 {
     public function setSalesChannelContext(SalesChannelContext $salesChannelContext): void;

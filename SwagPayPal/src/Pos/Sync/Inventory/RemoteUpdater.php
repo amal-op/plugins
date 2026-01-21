@@ -9,14 +9,12 @@ namespace Swag\PayPal\Pos\Sync\Inventory;
 
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Content\Product\ProductCollection;
-use Shopware\Core\Framework\Log\Package;
 use Swag\PayPal\Pos\Api\Exception\PosApiException;
 use Swag\PayPal\Pos\Api\Inventory\BulkChanges;
 use Swag\PayPal\Pos\Resource\InventoryResource;
 use Swag\PayPal\Pos\Sync\Context\InventoryContext;
 use Swag\PayPal\Pos\Sync\Inventory\Calculator\RemoteCalculator;
 
-#[Package('checkout')]
 class RemoteUpdater
 {
     private InventoryResource $inventoryResource;
@@ -68,8 +66,8 @@ class RemoteUpdater
 
         try {
             $status = $this->inventoryResource->changeInventoryBulk($inventoryContext->getPosSalesChannel(), $remoteChanges);
-        } catch (PosApiException $e) {
-            $this->logger->error('Inventory sync error: ' . $e->getMessage(), ['error' => $e]);
+        } catch (PosApiException $posApiException) {
+            $this->logger->error('Inventory sync error: ' . $posApiException);
 
             return $changedProducts;
         }

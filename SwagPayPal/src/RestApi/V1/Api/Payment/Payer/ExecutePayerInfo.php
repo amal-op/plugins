@@ -7,15 +7,17 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\Payment\Payer;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(schema: 'swag_paypal_v1_payment_payer_execute_payer_info')]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_payment_execute_payer_info")
+ */
 class ExecutePayerInfo extends PayPalApiStruct
 {
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $payerId;
 
     public function getPayerId(): string

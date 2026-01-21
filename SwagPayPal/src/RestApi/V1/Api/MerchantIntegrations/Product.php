@@ -7,30 +7,32 @@
 
 namespace Swag\PayPal\RestApi\V1\Api\MerchantIntegrations;
 
-use OpenApi\Attributes as OA;
-use Shopware\Core\Framework\Log\Package;
+use OpenApi\Annotations as OA;
 use Swag\PayPal\RestApi\PayPalApiStruct;
 
-#[OA\Schema(
-    schema: 'swag_paypal_v1_merchant_integrations_product',
-    required: ['name'],
-)]
-#[Package('checkout')]
+/**
+ * @OA\Schema(schema="swag_paypal_v1_merchant_integrations_product")
+ */
 class Product extends PayPalApiStruct
 {
     public const VETTING_STATUS_APPROVED = 'APPROVED';
     public const VETTING_STATUS_SUBSCRIBED = 'SUBSCRIBED';
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $name;
 
-    #[OA\Property(type: 'string')]
+    /**
+     * @OA\Property(type="string")
+     */
     protected string $vettingStatus;
 
     /**
-     * @var string[]
+     * @var Capability[]
+     *
+     * @OA\Property(type="array", items={"$ref": "#/components/schemas/swag_paypal_v1_merchant_integrations_capability"})
      */
-    #[OA\Property(type: 'array', items: new OA\Items(type: 'string'))]
     protected array $capabilities;
 
     public function getName(): string
@@ -53,17 +55,11 @@ class Product extends PayPalApiStruct
         $this->vettingStatus = $vettingStatus;
     }
 
-    /**
-     * @return string[]
-     */
     public function getCapabilities(): array
     {
         return $this->capabilities;
     }
 
-    /**
-     * @param string[] $capabilities
-     */
     public function setCapabilities(array $capabilities): void
     {
         $this->capabilities = $capabilities;
