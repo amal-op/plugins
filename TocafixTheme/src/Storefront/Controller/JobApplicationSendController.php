@@ -1,6 +1,7 @@
 <?php
 
-declare (strict_types=1);
+declare(strict_types=1);
+
 namespace TocafixTheme\Storefront\Controller;
 
 use TocafixTheme\Storefront\Route\JobApplicationFormRoute;
@@ -27,18 +28,18 @@ use Symfony\Component\Validator\Exception\ValidatorException;
  * These operations ensure a streamlined and secure application submission experience, with proper validation
  * and error handling for form inputs and file uploads.
  * 
- * @Route(defaults={"_routeScope"={"storefront"}})
  */
+#[Route(defaults: ["_routeScope" => ["storefront"]])]
 class JobApplicationSendController extends StorefrontController
 {
-    
+
     /**
      * The route for the job application form.
      *
      * @var JobApplicationFormRoute
      */
     private $applicationFormRoute;
-    
+
     /**
      * Constructor method for initializing the JobApplicationFormRoute.
      *
@@ -50,19 +51,19 @@ class JobApplicationSendController extends StorefrontController
     {
         $this->applicationFormRoute = $applicationFormRoute;
     }
-    
+
     /**
      * Handles the submission of the job application form. Processes the form data, validates it, 
      * and returns a JSON response with success or error messages based on the outcome.
      *
      * @Since("6.1.0.0")
-     * @Route("/job/tocafix-form-submit", name="frontend.tocafix-job-form.send", defaults={"XmlHttpRequest"=true}, methods={"POST"})
      *
      * @param RequestDataBag $data The data bag containing the form submission data.
      * @param SalesChannelContext $context The context of the current sales channel.
      * 
      * @return JsonResponse A JSON response indicating the result of the form submission.
      */
+    #[Route("/job/tocafix-form-submit", name: "frontend.tocafix-job-form.send", methods: ["POST"], defaults: ["XmlHttpRequest" => true])]
     public function sendApplicationForm(RequestDataBag $data, SalesChannelContext $context): JsonResponse
     {
         $response = [];
@@ -71,23 +72,38 @@ class JobApplicationSendController extends StorefrontController
             if (!$message) {
                 $message = $this->trans('job.detail.applicationForm.successMessage');
             }
-            $response[] = ['type' => 'success', 'alert' => $this->renderView('@Storefront/storefront/utilities/alert.html.twig', ['type' => 'success', 'content' => $message])];
+            $response[] = [
+                'type' => 'success',
+                'alert' => $message,
+            ];
         } catch (ConstraintViolationException $formViolations) {
             $violations = [];
             foreach ($formViolations->getViolations() as $violation) {
                 $violations[] = $violation->getMessage();
             }
-            $response[] = ['type' => 'danger', 'alert' => $this->renderView('@Storefront/storefront/utilities/alert.html.twig', ['type' => 'danger', 'list' => $violations])];
+            $response[] = [
+                'type' => 'danger',
+                'alert' => $violations,
+            ];
         } catch (RateLimitExceededException $exception) {
-            $response[] = ['type' => 'info', 'alert' => $this->renderView('@Storefront/storefront/utilities/alert.html.twig', ['type' => 'info', 'content' => $this->trans('error.rateLimitExceeded', ['%seconds%' => $exception->getWaitTime()])])];
+            $response[] = [
+                'type' => 'info',
+                'alert' => $this->trans('error.rateLimitExceeded', ['%seconds%' => $exception->getWaitTime()]),
+            ];
         } catch (FileTypeNotAllowedException $exception) {
-            $response[] = ['type' => 'danger', 'alert' => $this->renderView('@Storefront/storefront/utilities/alert.html.twig', ['type' => 'danger', 'content' => $this->trans('error.VIOLATION::STRICT_CHECK_FAILED_ERROR', ['%field%' => 'document'])])];
+            $response[] = [
+                'type' => 'danger',
+                'alert' => $this->trans('error.VIOLATION::STRICT_CHECK_FAILED_ERROR', ['%field%' => 'document']),
+            ];
         } catch (ValidatorException $exception) {
-            $response[] = ['type' => 'danger', 'alert' => $this->renderView('@Storefront/storefront/utilities/alert.html.twig', ['type' => 'danger', 'content' => $this->trans('error.VIOLATION::STRICT_CHECK_FAILED_ERROR', ['%field%' => 'document'])])];
+            $response[] = [
+                'type' => 'danger',
+                'alert' => $this->trans('error.VIOLATION::STRICT_CHECK_FAILED_ERROR', ['%field%' => 'document']),
+            ];
         }
         return new JsonResponse($response);
     }
-    
+
     public function sendMail(array $recipients, string $senderName, string $subject, string $messageHtml, array $attachments, SalesChannelContext $salesChannelContext)
     {
         $data = new DataBag();

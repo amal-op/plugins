@@ -34,4 +34,14 @@
             }
         }
     }
+
+    .offcanvas-cart-promotion-button{
+        background: $black-color;
+        color: $white-color;
+        &:hover{
+            background: $primary-color;
+            border-color: $primary-color;
+        }
+    }
 }
+

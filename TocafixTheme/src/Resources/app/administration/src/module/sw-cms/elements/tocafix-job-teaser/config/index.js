@@ -57,13 +57,14 @@ Shopware.Component.register('sw-cms-el-config-tocafix-job-teaser', {
                 });
         },
 
-        onJobChange(jobId) {
-            this.element.config.job.value = this.jobCollection.getIds();
+        onJobChange(collection) {
+            this.jobCollection = collection;
+            this.element.config.job.value = collection.getIds();
 
             if (!this.element?.data) {
                 return;
             }
-            this.element.data.job = this.jobCollection;
+            this.element.data.job = collection;
             this.$emit('element-update', this.element);
         },
     },

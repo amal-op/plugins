@@ -1,19 +1,19 @@
 {% block tocafix_job_content %}
- {% block cms_breadcrumb %}
-        {% block cms_page_category_title %}
-            <div class="col-lg-12 col-xl-12 listing-page-heading">
-                <h1>{{ page.header.navigation.active.translated.name }}</h1>
-            </div>
-        {% endblock %}
-        <div class="col-12 p-0">
-            <div class="breadcrumb cms-listing-breadcrumb container">
-                {% sw_include '@Storefront/storefront/layout/breadcrumb-listing.html.twig' with {
+	{% block cms_breadcrumb %}
+		{% block cms_page_category_title %}
+			<div class="col-lg-12 col-xl-12 listing-page-heading">
+				<h1>{{ page.header.navigation.active.translated.name }}</h1>
+			</div>
+		{% endblock %}
+		<div class="col-12 p-0">
+			<div class="breadcrumb cms-listing-breadcrumb container">
+				{% sw_include '@Storefront/storefront/layout/breadcrumb-listing.html.twig' with {
                     context: context,
                     category: page.header.navigation.active
                 } only %}
-            </div>
-        </div>
-    {% endblock %}
+			</div>
+		</div>
+	{% endblock %}
 	{% set searchResult = element.data.result %}
 	<div class="job-list">
 		{% block tocafix_job_content_inner %}
@@ -38,13 +38,13 @@
 						</div>
 						<div class="col-md-7 col-lg-7 col-xl-7">
 							<div class="job-list__content">
-                            <div>
-                            <div class="job-list__date">{{ post.jobDate|format_date(pattern="dd.MM.Y", locale=app.request.locale) }}</div>
-								<h4 class="job-list__title">{{ post.name }}</h4>
-								<p class="job-list__description">{{ post.shortDescriptionTeaser|raw }}</p>
-                            </div>
-							
-                            {% set postDetailUrl = seoUrl('frontend.detail.job', {'id': post.id} ) %}
+								<div>
+									<div class="job-list__date">{{ post.jobDate|format_date(pattern="dd.MM.Y", locale=app.request.locale) }}</div>
+									<h4 class="job-list__title">{{ post.name }}</h4>
+									<p class="job-list__description">{{ post.shortDescriptionTeaser|raw }}</p>
+								</div>
+
+								{% set postDetailUrl = seoUrl('frontend.detail.job', {'id': post.id} ) %}
 								<a href="{{ postDetailUrl }}" class="btn btn-plane">
 									<span class="tf-icon icon-angle"></span>
 									<span class="link-text">{{ "button.moreText"|trans }}</span>

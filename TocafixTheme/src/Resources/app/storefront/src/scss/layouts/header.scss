@@ -270,12 +270,20 @@
         .form-control{
             border-right: 0;
             box-shadow: none;
+            border-color: $grey-color;
+            &:focus{
+                border-color: $primary-color;
+            }
         }
 
         .form-control, .btn{
             border-radius: 0;
         }
+        .header-search-btn, .header-close-btn{
+           background-color: $white-color;
+        }
     }
+    
 }
 
 .header{

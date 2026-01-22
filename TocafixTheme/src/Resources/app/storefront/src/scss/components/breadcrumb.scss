@@ -1,5 +1,5 @@
 ol.breadcrumb{
-    margin-bottom: 0;
+    margin-bottom: rem(20);
     text-transform: uppercase;
     line-height: rem(22);
     color: $border-grey-color;
@@ -31,6 +31,7 @@ ol.breadcrumb{
 }
 
 .is-ctl-product{
+    .cms-element-manufacturer-logo{display: none;}
     ol.breadcrumb{
         margin-top: rem(30);
 

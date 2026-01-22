@@ -11,21 +11,21 @@ Shopware.Service('cmsService').registerCmsBlock({
 
     },
     slots: {
-        settings: {
-            type: 'tocafix-title',
-            default: {
-                config: {
-                    title: {
-                        source: 'static',
-                        value: 'Offene Stellen',
-                    },
-                    subTitle: {
-                        source: 'static',
-                        value: 'Entdecken Sie unsere aktuellen Stellenangebote'
-                    }
-                }
-            }
-        },
+        // settings: {
+        //     type: 'tocafix-title',
+        //     default: {
+        //         config: {
+        //             title: {
+        //                 source: 'static',
+        //                 value: 'Offene Stellen',
+        //             },
+        //             subTitle: {
+        //                 source: 'static',
+        //                 value: 'Entdecken Sie unsere aktuellen Stellenangebote'
+        //             }
+        //         }
+        //     }
+        // },
         content: {
             type: 'tocafix-job-teaser'
         }

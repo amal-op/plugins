@@ -1,60 +1,64 @@
 {% sw_extends '@Storefront/storefront/layout/header/search.html.twig' %}
 
-{% set searchWidgetOptions = {
-    searchWidgetMinChars: page.header.activeLanguage.productSearchConfig.minSearchLength ?: 3
-} %}
+{% set searchWidgetOptions = { searchWidgetMinChars: shopware.minSearchLength } %}
 
 {% block layout_header_search %}
-    <div class="search-input-wrap">
-        <div class="collapse"
-            id="searchCollapse">
-            <div class="header-search">
+<div class="search-input-wrap">
+    <div class="collapse"
+         id="searchCollapse">
+        <div class="header-search my-2 m-sm-auto">
+            {% block layout_header_search_form %}
                 <form action="{{ path('frontend.search.page') }}"
-                    method="get"
-                    data-search-form="true"
-                    data-search-widget-options='{{ searchWidgetOptions|json_encode }}'
-                    data-url="{{ path('frontend.search.suggest') }}?search="
-                    class="header-search-form">
+                      method="get"
+                      data-search-widget="true"
+                      data-search-widget-options="{{ searchWidgetOptions|json_encode }}"
+                      data-url="{{ path('frontend.search.suggest') }}?search="
+                      class="header-search-form">
                     {% block layout_header_search_input_group %}
                         <div class="input-group">
                             {% block layout_header_search_input %}
-                                <input type="search"
+                                <input
+                                    type="search"
+                                    id="header-main-search-input"
                                     name="search"
                                     class="form-control header-search-input"
                                     autocomplete="off"
                                     autocapitalize="off"
-                                    placeholder="{{ "header.searchPlaceholder"|trans|striptags }}"
-                                    aria-label="{{ "header.searchPlaceholder"|trans|striptags }}"
-                                    value="{{ page.searchTerm }}"
-                                >
+                                    placeholder="{{ 'header.searchPlaceholder'|trans|striptags }}"
+                                    aria-label="{{ 'header.searchPlaceholder'|trans|striptags }}"
+                                    role="combobox"
+                                    aria-autocomplete="list"
+                                    aria-controls="search-suggest-listbox"
+                                    aria-expanded="false"
+                                    aria-describedby="search-suggest-result-info"
+                                    value="{{ page.searchTerm }}">
                             {% endblock %}
 
                             {% block layout_header_search_button %}
-                                {# @deprecated tag:v6.5.0 - Bootstrap v5 removes `input-group-append` wrapper and uses elements as direct children of `input-group` #}
-                                {% if feature('v6.5.0.0') %}
-                                    <button type="submit"
-                                            class="btn header-search-btn"
-                                            aria-label="{{ "header.searchButton"|trans|striptags }}">
-                                        <span class="header-search-icon">
-                                            {% sw_icon 'search' %}
-                                        </span>
-                                    </button>
-                                {% else %}
-                                    <div class="input-group-append">
-                                        <button type="submit"
-                                                class="btn header-search-btn"
-                                                aria-label="{{ "header.searchButton"|trans|striptags }}">
-                                            <span class="header-search-icon">
-                                                {% sw_icon 'search' %}
-                                            </span>
-                                        </button>
-                                    </div>
-                                {% endif %}
+                                <button type="submit"
+                                        class="btn header-search-btn"
+                                        aria-label="{{ 'header.searchButton'|trans|striptags }}">
+                                    <span class="header-search-icon">
+                                        {% sw_icon 'search' %}
+                                    </span>
+                                </button>
+                            {% endblock %}
+
+                            {% block layout_header_close_button %}
+                                <button class="btn header-close-btn js-search-close-btn d-none"
+                                        type="button"
+                                        aria-label="{{ 'header.searchCloseButton'|trans|striptags }}">
+                                    <span class="header-close-icon">
+                                        {% sw_icon 'x' %}
+                                    </span>
+                                </button>
                             {% endblock %}
                         </div>
                     {% endblock %}
                 </form>
-            </div>
+            {% endblock %}
         </div>
     </div>
+</div>
 {% endblock %}
+

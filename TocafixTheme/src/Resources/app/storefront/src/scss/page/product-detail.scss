@@ -452,6 +452,7 @@
 
 
 .product-detail-tabs-content{
+    margin-top: rem(30);
     .offcanvas-close{
         opacity: 0;
         visibility: hidden;
@@ -462,6 +463,7 @@
     @include mobile-lg() {
         .product-heading-name-container{
             padding: 0;
+            padding-bottom: rem(10);
         }
         .cms-block-gallery-buybox{
             .product-detail-media{

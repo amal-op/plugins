@@ -1,0 +1,82 @@
+{% block swag_customerPrice_detail %}
+<sw-page class="vio-customer-price-detail">
+    <template #smart-bar-actions>
+        <sw-button :routerLink="{ name: 'vio.customer.price.list' }">
+            {{ $tc('global.default.cancel') }}
+        </sw-button>
+
+        <sw-button-process
+                :isLoading="isLoading"
+                :processSuccess="processSuccess"
+                variant="primary"
+                @process-finish="saveFinish"
+                @click="onClickSave">
+            {{ $tc('global.default.save') }}
+        </sw-button-process>
+    </template>
+
+    <template #content>
+        <sw-card-view>
+            <sw-card v-if="customerPrice" :isLoading="isLoading">
+                <sw-number-field
+                        :label="$t('vio-customer-price.detail.quantityStartLabel')"
+                        v-model:value="customerPrice.quantityStart"
+                ></sw-number-field>
+                <sw-number-field
+                        :label="$t('vio-customer-price.detail.quantityEndLabel')"
+                        :disabled="true" v-model:value="customerPrice.quantityEnd"
+                ></sw-number-field>
+                <sw-number-field
+                        :label="$t('vio-customer-price.detail.priceLabel')"
+                        v-model:value="customerPrice.price"
+                        type="number"
+                ></sw-number-field>
+                <sw-number-field
+                        :label="$t('vio-customer-price.detail.discountLabel')"
+                        v-model:value="customerPrice.discount"
+                ></sw-number-field>
+
+                <sw-entity-single-select
+                        :label="$t('vio-customer-price.detail.assignProductLabel')"
+                        entity="product"
+                        v-model:value="customerPrice.productId"
+                >
+                    <template #selection-label-property="{ item }">
+                        {{ item.translated.name }} ({{ item.productNumber }})
+                    </template>
+                    <template #result-label-property="{ item }">
+                        {{ item.translated.name }} ({{ item.productNumber }})
+                    </template>
+                </sw-entity-single-select>
+
+
+                <sw-entity-single-select
+                        :label="$t('vio-customer-price.detail.assignCustomerLabel')"
+                        entity="customer"
+                        v-model:value="customerPrice.customerId"
+                >
+                    <template #selection-label-property="{ item }">
+                        {{ item.company }} {{ item.firstName }} {{ item.lastName }} ({{ item.customerNumber }})
+                    </template>
+                    <template #result-label-property="{ item }">
+                        {{ item.company }} {{ item.firstName }} {{ item.lastName }} ({{ item.customerNumber }})
+                    </template>
+                </sw-entity-single-select>
+            </sw-card>
+            <!-- eslint-disable-next-line sw-deprecation-rules/no-twigjs-blocks -->
+            <sw-card
+                v-if="customFieldSets.length > 0"
+                :title="$tc('sw-settings-custom-field.general.mainMenuItemGeneral')"
+                :is-loading="isLoading"
+            >
+                <sw-custom-field-set-renderer
+                    :entity="customerPrice"
+                    :sets="customFieldSets"
+                    v-model:value="customerPrice.customFields"
+                >
+                </sw-custom-field-set-renderer>
+            </sw-card>
+        </sw-card-view>
+    </template>
+</sw-page>
+{% endblock %}
